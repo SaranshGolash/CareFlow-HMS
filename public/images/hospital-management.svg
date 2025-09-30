@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+    <!-- Hospital Building -->
+    <rect x="200" y="100" width="400" height="400" fill="#ffffff" stroke="#0d6efd" stroke-width="8"/>
+    
+    <!-- Windows -->
+    <rect x="250" y="150" width="60" height="60" fill="#e9ecef"/>
+    <rect x="370" y="150" width="60" height="60" fill="#e9ecef"/>
+    <rect x="490" y="150" width="60" height="60" fill="#e9ecef"/>
+    
+    <rect x="250" y="250" width="60" height="60" fill="#e9ecef"/>
+    <rect x="370" y="250" width="60" height="60" fill="#e9ecef"/>
+    <rect x="490" y="250" width="60" height="60" fill="#e9ecef"/>
+    
+    <!-- Entrance -->
+    <rect x="370" y="400" width="60" height="100" fill="#0d6efd"/>
+    
+    <!-- Medical Cross -->
+    <rect x="365" y="40" width="70" height="20" fill="#dc3545"/>
+    <rect x="390" y="15" width="20" height="70" fill="#dc3545"/>
+    
+    <!-- Digital Elements -->
+    <circle cx="150" cy="200" r="40" fill="none" stroke="#0d6efd" stroke-width="4"/>
+    <circle cx="650" cy="200" r="40" fill="none" stroke="#0d6efd" stroke-width="4"/>
+    
+    <!-- Connecting Lines (representing digital connection) -->
+    <line x1="190" y1="200" x2="250" y2="200" stroke="#0d6efd" stroke-width="4"/>
+    <line x1="550" y1="200" x2="610" y2="200" stroke="#0d6efd" stroke-width="4"/>
+    
+    <!-- Pulse Line -->
+    <path d="M 100 500 L 150 500 L 175 450 L 200 550 L 225 450 L 250 550 L 275 500 L 300 500" 
+          fill="none" stroke="#dc3545" stroke-width="4"/>
+</svg>
