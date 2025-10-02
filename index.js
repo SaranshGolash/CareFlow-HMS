@@ -70,6 +70,10 @@ app.get('/', (req, res) => {
     res.render('index');
 });
 
+app.get('/appointments', (req, res) => {
+    res.render('appointments');
+})
+
 // Error handling
 app.use((req, res, next) => {
     res.status(404).render('error', { 

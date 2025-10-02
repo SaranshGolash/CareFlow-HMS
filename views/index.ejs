@@ -1,4 +1,5 @@
 <%- include('initials/header.ejs', { title: 'CareFlow HMS' }) %>
+</head>
 <body>
     <!-- Hero Section -->
     <section class="hero bg-primary text-white py-5">
@@ -27,9 +28,11 @@
                 <div class="col-md-4">
                     <div class="card h-100">
                         <div class="clickable-card card-body text-center">
-                            <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
-                            <h3 class="card-title">Doctor Appointments</h3>
-                            <p class="card-text">Schedule and manage appointments with our experienced healthcare professionals.</p>
+                            <a href="#" onclick="window.location.href='/appointments'">
+                                <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                                <h3 class="card-title">Doctor Appointments</h3>
+                                <p class="card-text">Schedule and manage appointments with our experienced healthcare professionals.</p>
+                            </a>
                         </div>
                     </div>
                 </div>

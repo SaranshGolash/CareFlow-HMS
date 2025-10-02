@@ -143,6 +143,32 @@ h1 {
     background-color: #e2e6ea;
 }
 
+.footer .btn {
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 600;
+    box-shadow: 0 6px 14px rgba(15,23,42,0.06);
+    transition: transform .12s ease, box-shadow .12s ease;
+    display: inline-block;
+}
+
+.footer .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(15,23,42,0.08);
+}
+
+.footer .btn-primary {
+    background: linear-gradient(90deg, var(--primary, #0d6efd), var(--accent, #6f42c1));
+    border: none;
+    color: #fff;
+}
+
+.footer .btn-light {
+    background: #fff;
+    border: 1px solid #e6e9ef;
+    color: #111;
+}
+
 /* Footer Section */
 .footer {
     background-color: #343a40; /* Dark background for contrast */
