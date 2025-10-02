@@ -1,0 +1,63 @@
+<%- include('initials/header.ejs', { title: 'CareFlow HMS' }) %>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <% if (success_msg) { %>
+                    <div class="alert alert-success"><%= success_msg %></div>
+                <% } %>
+                <% if (error_msg) { %>
+                    <div class="alert alert-danger"><%= error_msg %></div>
+                <% } %>
+
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4 text-primary">Book an Appointment</h3>
+
+                        <form action="/appointments" method="POST" class="row g-3">
+                            <div class="col-md-6">
+                                <label for="patientName" class="form-label">Patient Name</label>
+                                <input id="patientName" name="patientName" type="text" class="form-control" required placeholder="Full name">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="gender" class="form-label">Gender</label>
+                                <select id="gender" name="gender" class="form-select" required>
+                                    <option value="" disabled selected>Select gender</option>
+                                    <option>Male</option>
+                                    <option>Female</option>
+                                    <option>Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="phone" class="form-label">Phone Number</label>
+                                <input id="phone" name="phone" type="tel" inputmode="tel" pattern="[0-9]{7,15}" class="form-control" required placeholder="e.g. 9876543210">
+                                <div class="form-text">Numbers only, 7–15 digits.</div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="doctorName" class="form-label">Doctor Name</label>
+                                <input id="doctorName" name="doctorName" list="doctors" class="form-control" placeholder="Select or type doctor" required>
+                                <datalist id="doctors">
+                                    <option value="Dr. A. Sharma">
+                                    <option value="Dr. N. Patel">
+                                    <option value="Dr. S. Lee">
+                                    <option value="Dr. M. Johnson">
+                                </datalist>
+                            </div>
+
+                            <div class="col-12 text-end">
+                                <button type="submit" class="btn btn-primary">Request Appointment</button>
+                                <a href="/" class="btn btn-light ms-2">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
+</body>
+</html>
