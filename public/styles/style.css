@@ -19,6 +19,13 @@ h1 {
     font-weight: 700;
 }
 
+.container-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    width: 100%;
+}
+
 /* Hero Section */
 .hero {
     display: flex;
@@ -42,6 +49,53 @@ h1 {
     color: #191a1c;
     text-decoration: none;
     font-size: 18px;
+}
+
+/* Login and Sign Up Button Styles */
+.auth-buttons .btn {
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    border: none; /* Remove default border */
+}
+
+.auth-buttons .btn-login {
+    background-color: #0d6efd; /* Primary color */
+    color: white;
+}
+
+.auth-buttons .btn-login:hover {
+    background-color: #0056b3; /* Darker shade on hover */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.auth-buttons .btn-signup {
+    background-color: #28a745; /* Success color */
+    color: white;
+}
+
+.auth-buttons .btn-signup:hover {
+    background-color: #218838; /* Darker shade on hover */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Optional: Add a subtle pulse animation for the signup button */
+@keyframes subtle-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.auth-buttons .btn-signup {
+    animation: subtle-pulse 2s infinite;
+}
+
+.auth-buttons .btn-signup:hover {
+    animation: none; /* Stop animation on hover */
 }
 
 /* Features Section */
