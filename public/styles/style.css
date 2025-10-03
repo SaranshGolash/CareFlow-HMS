@@ -79,6 +79,28 @@ h1 {
     cursor: pointer;
 }
 
+/* Card Link Styling */
+.card-content-link {
+    color: #0056b3;
+    text-decoration: none;
+}
+
+.card-content-link:visited,
+.card-content-link:active,
+.card-content-link:hover {
+    color: inherit;
+    text-decoration: none;
+}
+
+/* Optional: Add a subtle transition for smooth color changes */
+.card-content-link {
+    transition: color 0.3s ease;
+}
+
+.card-title {
+    color: #0d6efd;
+}
+
 /* Statistics Section */
 .stats {
     display: flex;
