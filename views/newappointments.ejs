@@ -1,4 +1,4 @@
-<%- include('initials/header.ejs', { title: 'CareFlow HMS' }) %>
+<%- include('initials/header.ejs', { title: 'New Appointment' }) %>
 <link rel="stylesheet" href="/styles/newappointments.css">
 </head>
 <body>
@@ -14,39 +14,33 @@
 
                 <div class="card shadow-sm">
                     <div class="card-body">
-                        <h3 class="card-title mb-4 text-primary">Book an Appointment</h3>
+                        <h3 class="card-title mb-4 text-primary">Book a New Appointment</h3>
 
-                        <form action="/appointments" method="POST" class="card row g-3">
-                            <div class="card col-md-6">
+                        <form action="/newappointments" method="POST" class="card row g-3">
+                            <div class="col-md-6">
                                 <label for="patientName" class="form-label">Patient Name<span class="required-asterisk">*</span>:</label>
-                                <input id="patientName" name="patientName" type="text" class="form-control" required placeholder="Full name">
+                                <input id="patientName" name="patient_name" type="text" class="form-control" required placeholder="Full name">
                             </div>
 
                             <div class="col-md-6">
                                 <label for="gender" class="form-label">Gender<span class="required-asterisk">*</span>:</label>
                                 <select id="gender" name="gender" class="form-select" required>
                                     <option value="" disabled selected>Select gender</option>
-                                    <option>Male</option>
-                                    <option>Female</option>
-                                    <option>Other</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
                                 </select>
                             </div>
 
                             <div class="col-md-6">
                                 <label for="phone" class="form-label">Phone Number<span class="required-asterisk">*</span>:</label>
-                                <input id="phone" name="phone" type="tel" inputmode="numeric" pattern="[0-9]{7,15}" class="form-control" required placeholder="e.g. 9876543210">
-                                <div class="form-text">Numbers only, 7–15 digits.</div>
+                                <input id="phone" name="phone" type="tel" inputmode="numeric" pattern="[0-9]{7,15}" class="form-control" required placeholder="e.g. 9876543210" aria-describedby="phoneHelp">
+                                <div id="phoneHelp" class="form-text">Numbers only, 7–15 digits.</div>
                             </div>
 
                             <div class="col-md-6">
                                 <label for="doctorName" class="form-label">Doctor Name<span class="required-asterisk">*</span>:</label>
-                                <input id="doctorName" name="doctorName" list="doctors" class="form-control" placeholder="Select or type doctor" required>
-                                <datalist id="doctors">
-                                    <option value="Dr. A. Sharma">
-                                    <option value="Dr. N. Patel">
-                                    <option value="Dr. S. Lee">
-                                    <option value="Dr. M. Johnson">
-                                </datalist>
+                                <input id="doctorName" name="doctor_name" type="text" class="form-control" required placeholder="Doctor Name">
                             </div>
 
                             <div class="col-12 text-end">

@@ -67,8 +67,13 @@ app.get('/appointments', async (req, res) => {
     }
 });
 
+app.get('/newappointments', async (req, res) => {
+    res.render('newappointments');
+});
+
 // Post request to add an appointment
-app.post('/appointments', async (req, res) => {
+app.post('/newappointments', async (req, res) => {
+    console.log(req.body);
     const { patient_name, gender, phone, doctor_name } = req.body;
     try {
         await db.query('INSERT INTO appointments (patient_name, gender, phone, doctor_name) VALUES ($1, $2, $3, $4)', [patient_name, gender, phone, doctor_name]);
@@ -77,7 +82,7 @@ app.post('/appointments', async (req, res) => {
     } catch (err) {
         console.error(err);
         req.flash('error_msg', 'Error adding appointment');
-        res.redirect('/appointments'); // Redirect back to appointments page
+        res.redirect('/newappointments'); // Redirect back to new appointments page
     }
 });
 
