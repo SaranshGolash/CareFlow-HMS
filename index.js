@@ -1,5 +1,5 @@
 const express = require('express');
-const { Sequelize } = require('sequelize');
+const pg = require('pg');
 const session = require('express-session');
 const flash = require('connect-flash');
 const methodOverride = require('method-override');
@@ -9,32 +9,17 @@ require('dotenv').config();
 const app = express();
 
 // Database connection
-const sequelize = new Sequelize(
-    process.env.DB_NAME || 'careflow',
-    process.env.DB_USER || 'postgres',
-    process.env.DB_PASSWORD || 'your_password',
-    {
-        host: process.env.DB_HOST || 'localhost',
-        port: process.env.DB_PORT || 5432,
-        dialect: 'postgres',
-        logging: false,
-        pool: {
-            max: 5,
-            min: 0,
-            acquire: 30000,
-            idle: 10000
-        }
-    }
-);
+const db = new pg.Client({
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PASSWORD,
+    port: process.env.DB_PORT,
+});
 
-// Test database connection
-sequelize.authenticate()
-    .then(() => {
-        console.log('PostgreSQL Database Connected');
-    })
-    .catch(err => {
-        console.error('Database Connection Error:', err);
-    });
+db.connect()
+    .then(() => console.log('Database connected successfully'))
+    .catch(err => console.error('Database connection error:', err));
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -66,13 +51,34 @@ app.use((req, res, next) => {
 });
 
 // Routes
-app.get('/', (req, res) => {
+app.get('/', async (req, res) => {
     res.render('index');
 });
 
-app.get('/appointments', (req, res) => {
-    const appointments = []; 
-    res.render('appointments', { appointments });
+app.get('/appointments', async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM appointments');
+        const appointments = result.rows; // Fetch appointments from the database
+        res.render('appointments', { appointments });
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Error fetching appointments');
+        res.render('appointments', { appointments: [] }); // Render with empty appointments
+    }
+});
+
+// Post request to add an appointment
+app.post('/appointments', async (req, res) => {
+    const { patient_name, gender, phone, doctor_name } = req.body;
+    try {
+        await db.query('INSERT INTO appointments (patient_name, gender, phone, doctor_name) VALUES ($1, $2, $3, $4)', [patient_name, gender, phone, doctor_name]);
+        req.flash('success_msg', 'Appointment added successfully');
+        res.redirect('/appointments'); // Redirect to appointments page
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Error adding appointment');
+        res.redirect('/appointments'); // Redirect back to appointments page
+    }
 });
 
 // Error handling

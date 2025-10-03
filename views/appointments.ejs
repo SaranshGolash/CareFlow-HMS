@@ -21,10 +21,10 @@
                         <% if (typeof appointments !== 'undefined' && appointments.length > 0) { %>
                             <% for (let appointment of appointments) { %>
                                 <tr>
-                                    <td><%= appointment.name %></td>
+                                    <td><%= appointment.patient_name %></td>
                                     <td><%= appointment.gender %></td>
                                     <td><%= appointment.phone %></td>
-                                    <td><%= appointment.doctor %></td>
+                                    <td><%= appointment.doctor_name %></td>
                                 </tr>
                             <% } %>
                         <% } else { %>
