@@ -1,0 +1,40 @@
+/* Table Styles */
+.table-responsive {
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table thead th {
+    background-color: var(--primary);
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 12px 15px;
+}
+
+.table tbody td {
+    padding: 12px 15px;
+    vertical-align: middle;
+    border-color: #f0f0f0;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(0,0,0,.02);
+}
+
+.table-bordered {
+    border: none;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+    .table-responsive {
+        border-radius: 0;
+    }
+}
