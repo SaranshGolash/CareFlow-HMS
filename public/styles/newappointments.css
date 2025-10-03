@@ -76,14 +76,15 @@ form.row.g-3 {
 .form-control,
 .form-select,
 input[list] {
-    height: 46px;
-    padding: 10px 12px;
-    border-radius: 8px;
+    height: 22px;
+    width: 170px;
+    padding: 1px 2px;
+    border-radius: 2px;
     border: 1px solid #e6e9ef;
     background: linear-gradient(180deg,#ffffff,#fbfdff);
     transition: box-shadow .18s ease, border-color .18s ease, transform .12s ease;
     box-shadow: none;
-    font-size: 0.95rem;
+    font-size: 0.75rem;
     color:#111;
     outline: none;
 }
