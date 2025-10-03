@@ -205,3 +205,8 @@
         background-position: 0 50%;
     }
 }
+
+.quick-links {
+    color: #0056b3;
+    text-decoration: none;
+}

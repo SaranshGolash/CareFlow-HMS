@@ -236,6 +236,11 @@ h1 {
     color: #0d6efd; /* Change color on hover */
 }
 
+.quick-links {
+    color: #0056b3;
+    text-decoration: none;
+}
+
 .footer .copyright {
     text-align: center; /* Center align copyright text */
     margin-top: 20px; /* Spacing above copyright */
