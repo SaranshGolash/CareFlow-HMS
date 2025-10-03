@@ -1,40 +1,148 @@
-/* Table Styles */
+/* Variables */
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 16px rgba(13,110,253,0.08);
+    --transition: all 0.3s ease;
+}
+
+/* Table Container */
 .table-responsive {
     background: #fff;
-    border-radius: var(--radius);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
     overflow: hidden;
+    transition: var(--transition);
+    margin: 20px 0;
+    height: 470px;
 }
 
+.table-responsive:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+/* Table Styles */
 .table {
     margin-bottom: 0;
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
 }
 
+/* Header Styles */
 .table thead th {
-    background-color: var(--primary);
+    background: linear-gradient(45deg, var(--primary), #4287f5);
     color: #fff;
     font-weight: 600;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px 20px;
     border: none;
-    padding: 12px 15px;
+    position: relative;
 }
 
+.table thead th:first-child {
+    border-top-left-radius: var(--border-radius);
+}
+
+.table thead th:last-child {
+    border-top-right-radius: var(--border-radius);
+}
+
+/* Body Styles */
 .table tbody td {
-    padding: 12px 15px;
+    padding: 16px 20px;
     vertical-align: middle;
-    border-color: #f0f0f0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
+    color: #444;
+    transition: var(--transition);
+}
+
+/* Row Hover Effects */
+.table tbody tr {
+    transition: var(--transition);
+}
+
+.table tbody tr:hover {
+    background-color: var(--primary-light) !important;
+    cursor: pointer;
 }
 
 .table-striped tbody tr:nth-of-type(odd) {
-    background-color: rgba(0,0,0,.02);
+    background-color: rgba(0,0,0,0.02);
 }
 
-.table-bordered {
-    border: none;
+/* Empty State */
+.table tbody tr td[colspan] {
+    padding: 32px;
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
 }
 
-/* Responsive table */
+/* Responsive Design */
+@media (max-width: 992px) {
+    .table thead th {
+        padding: 14px 16px;
+        font-size: 0.9rem;
+    }
+
+    .table tbody td {
+        padding: 14px 16px;
+        font-size: 0.9rem;
+    }
+}
+
 @media (max-width: 768px) {
     .table-responsive {
         border-radius: 0;
+        margin: 0;
+    }
+
+    .table thead th {
+        padding: 12px;
+        font-size: 0.85rem;
+    }
+
+    .table tbody td {
+        padding: 12px;
+        font-size: 0.85rem;
+    }
+}
+
+/* Mobile Scroll Indicator */
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 10px;
+}
+
+/* Loading State */
+.table tbody tr.loading td {
+    padding: 40px;
+    text-align: center;
+    background: linear-gradient(90deg, #f6f7f8 25%, #e9ecef 37%, #f6f7f8 63%);
+    background-size: 400% 100%;
+    animation: loading 1.4s ease infinite;
+}
+
+@keyframes loading {
+    0% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0 50%;
     }
 }

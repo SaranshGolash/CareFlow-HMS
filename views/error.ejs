@@ -1,0 +1,12 @@
+<%- include('initials/header.ejs', { title: 'Error - CareFlow HMS' }) %>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <h1 class="display-1 text-muted"><%= error.status || 500 %></h1>
+            <h2 class="mb-4 text-danger"><%= message %></h2>
+            <p class="lead mb-4">We apologize for the inconvenience.</p>
+            <a href="/" class="btn btn-primary">Return Home</a>
+        </div>
+    </div>
+</div>
+<%- include('initials/footer.ejs') %>

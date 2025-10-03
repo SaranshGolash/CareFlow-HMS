@@ -71,8 +71,9 @@ app.get('/', (req, res) => {
 });
 
 app.get('/appointments', (req, res) => {
-    res.render('appointments');
-})
+    const appointments = []; 
+    res.render('appointments', { appointments });
+});
 
 // Error handling
 app.use((req, res, next) => {
