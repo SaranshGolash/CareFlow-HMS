@@ -136,6 +136,12 @@ body{
     transform: translateY(-1px);
 }
 
+.form-text {
+    margin-top: 6px;
+    font-size: 0.85rem;
+    color: var(--muted);
+}
+
 /* helper text */
 .pw-note{
     color:var(--muted); 
@@ -197,6 +203,101 @@ body{
     color:var(--primary);
     text-decoration:none;
     font-weight:600;
+}
+
+/* input-with-icon styles */
+.input-with-icon { 
+    position: relative; 
+    display: block; 
+}
+
+.input-with-icon .form-control { 
+    padding-right: 44px;
+}
+
+.pw-toggle-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    color: #6c757d;
+    transition: background .15s ease, color .15s ease;
+    padding: 0;
+}
+
+/* hover / focus */
+.pw-toggle-icon:hover { 
+    background: rgba(0,0,0,0.04); 
+    color: #0d6efd; 
+}
+
+.pw-toggle-icon:focus { 
+    outline: 2px solid rgba(13,110,253,0.12); 
+}
+
+/* show/hide svg states */
+.pw-toggle-icon .icon-eye-off { 
+    display: none; 
+}
+
+.pw-toggle-icon.showing .icon-eye { 
+    display: none; 
+}
+
+.pw-toggle-icon.showing .icon-eye-off { 
+    display: inline-block; 
+}
+
+/* ensure SVG uses current color */
+.pw-toggle-icon svg { 
+    display: block; 
+    width: 18px; 
+    height: 18px; 
+    stroke: currentColor; 
+    fill: currentColor; 
+}
+
+/* small tweak for mobile */
+@media (max-width: 480px) {
+    .input-with-icon .form-control { 
+        padding-right: 48px; 
+    }
+
+    .pw-toggle-icon {
+        right: 8px; width: 36px; 
+        height: 36px; 
+    }
+}
+
+/* pw meter & note (keep previous styles) */
+.pw-meter { 
+    height: 6px; 
+    background: #eef2f7; 
+    border-radius: 6px; 
+    overflow: hidden; 
+    margin-bottom:8px; 
+}
+
+.pw-strength { 
+    width: 0; 
+    height: 100%; 
+    background: #28a745; 
+    transition: width .25s ease, background .18s ease; 
+}
+
+.pw-note { 
+    color: #6c757d; 
+    font-size: 0.9rem; 
+    min-height: 20px; 
 }
 
 /* responsive */

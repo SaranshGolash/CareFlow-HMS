@@ -1,5 +1,6 @@
-(
-    function () {
+(function () {
+    console.log('signup.js loaded');
+
     const pw = document.getElementById('password');
     const cpw = document.getElementById('confirmPassword');
     const note = document.getElementById('pwNote');
@@ -19,65 +20,72 @@
     }
 
     function updateUI() {
-        const p = pw.value || '';
-        const c = cpw.value || '';
+        const p = pw ? pw.value : '';
+        const c = cpw ? cpw.value : '';
         const s = scorePassword(p);
 
-        // strength bar
-        const pct = Math.round((s / 5) * 100);
-        strengthBar.style.width = pct + '%';
-        if (s <= 1) strengthBar.style.background = '#dc3545';
-        else if (s <= 3) strengthBar.style.background = '#f0ad4e';
-        else strengthBar.style.background = '#28a745';
+        if (strengthBar) {
+            const pct = Math.round((s / 5) * 100);
+            strengthBar.style.width = pct + '%';
+            if (s <= 1) strengthBar.style.background = '#dc3545';
+            else if (s <= 3) strengthBar.style.background = '#f0ad4e';
+            else strengthBar.style.background = '#28a745';
+        }
 
         if (!p && !c) {
-            note.textContent = '';
-            btn.disabled = true;
+            if (note) note.textContent = '';
+            if (btn) btn.disabled = true;
             return;
         }
 
         if (p.length < 6) {
-            note.textContent = 'Password must be at least 6 characters.';
-            btn.disabled = true;
+            if (note) note.textContent = 'Password must be at least 6 characters.';
+            if (btn) btn.disabled = true;
             return;
         }
 
         if (c && p !== c) {
-            note.textContent = 'Passwords do not match.';
-            btn.disabled = true;
+            if (note) note.textContent = 'Passwords do not match.';
+            if (btn) btn.disabled = true;
             return;
         }
 
-        note.textContent = 'Passwords look good.';
-        btn.disabled = false;
+        if (note) note.textContent = 'Passwords look good.';
+        if (btn) btn.disabled = false;
     }
 
     document.addEventListener('input', updateUI);
 
-    // show / hide password toggles
-    function toggle(id, btnId) {
-        const input = document.getElementById(id);
-        const t = document.getElementById(btnId);
-        t.addEventListener('click', function () {
-            const isPwd = input.type === 'password';
-            input.type = isPwd ? 'text' : 'password';
-            t.textContent = isPwd ? 'Hide' : 'Show';
-            t.setAttribute('aria-pressed', String(!isPwd));
+    // toggle eye icon inside input
+    function initToggleButtons() {
+        const toggles = document.querySelectorAll('.pw-toggle-icon');
+        toggles.forEach(t => {
+            const targetId = t.getAttribute('data-target');
+            const input = document.getElementById(targetId);
+            if (!input) return;
+            t.addEventListener('click', function (e) {
+                e.preventDefault();
+                const isHidden = input.type === 'password';
+                input.type = isHidden ? 'text' : 'password';
+                t.classList.toggle('showing', isHidden);
+                t.setAttribute('aria-pressed', String(isHidden));
+            });
         });
     }
-    toggle('password', 'togglePwd');
-    toggle('confirmPassword', 'toggleCpwd');
+    initToggleButtons();
 
     // prevent double submit and show simple spinner text
-    signupForm.addEventListener('submit', function (e) {
-        if (btn.disabled) {
-            e.preventDefault();
-            return;
-        }
-        btn.disabled = true;
-        const text = document.getElementById('signupBtnText');
-        text.textContent = 'Creating…';
-    });
+    if (signupForm && btn) {
+        signupForm.addEventListener('submit', function (e) {
+            if (btn.disabled) {
+                e.preventDefault();
+                return;
+            }
+            btn.disabled = true;
+            const text = document.getElementById('signupBtnText');
+            if (text) text.textContent = 'Creating…';
+        });
+    }
 
     // init
     updateUI();
