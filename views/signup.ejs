@@ -1,0 +1,126 @@
+<%- include('initials/header.ejs', { title: 'Sign Up - CareFlow' }) %>
+<link rel="stylesheet" href="/styles/signup.css">
+</head>
+<body>
+    <main class="signup-page">
+        <div class="signup-wrap">
+            <div class="signup-left">
+                <div class="brand">
+                    <h1>CareFlow</h1>
+                    <p class="tag">Patient-first healthcare management</p>
+                </div>
+
+                <div class="hero-illustration" aria-hidden="true">
+                    <!-- subtle decorative SVG -->
+                    <svg width="320" height="220" viewBox="0 0 320 220" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <linearGradient id="g" x1="0" x2="1">
+                                <stop offset="0" stop-color="#6f42c1" stop-opacity="0.9"/>
+                                <stop offset="1" stop-color="#0d6efd" stop-opacity="0.9"/>
+                            </linearGradient>
+                        </defs>
+                        <rect rx="18" width="320" height="220" fill="url(#g)"></rect>
+                        <g transform="translate(28,30)" fill="#fff" opacity="0.18">
+                            <circle cx="40" cy="40" r="40"></circle>
+                            <rect x="100" y="10" width="160" height="8" rx="4"></rect>
+                            <rect x="100" y="36" width="120" height="8" rx="4"></rect>
+                            <rect x="100" y="62" width="80" height="8" rx="4"></rect>
+                        </g>
+                    </svg>
+                </div>
+
+                <p class="left-note">Join CareFlow to manage appointments, track patients, and streamline clinic workflows.</p>
+            </div>
+
+            <div class="signup-right">
+                <% if (success_msg) { %>
+                    <div class="alert alert-success"><%= success_msg %></div>
+                <% } %>
+                <% if (error_msg) { %>
+                    <div class="alert alert-danger"><%= error_msg %></div>
+                <% } %>
+
+                <div class="card">
+                    <div class="card-body">
+                        <h2 class="card-title">Create an account</h2>
+                        <form action="/signup" method="POST" id="signupForm" novalidate>
+                            <div class="form-row">
+                                <label for="fullName" class="form-label">Full name</label>
+                                <input id="fullName" name="full_name" type="text" class="form-control" placeholder="Jane Doe" required>
+                            </div>
+
+                            <div class="form-row two-col">
+                                <div>
+                                    <label for="email" class="form-label">Email</label>
+                                    <input id="email" name="email" type="email" class="form-control" placeholder="you@email.com" required>
+                                </div>
+                                <div>
+                                    <label for="phone" class="form-label">Phone</label>
+                                    <input id="phone" name="phone" type="tel" class="form-control" placeholder="9876543210" pattern="[0-9]{7,15}">
+                                </div>
+                            </div>
+
+                            <div class="form-row two-col">
+                                <div>
+                                    <label for="password" class="form-label">Password</label>
+                                    <input id="password" name="password" type="password" class="form-control" minlength="6" required>
+                                </div>
+                                <div>
+                                    <label for="confirmPassword" class="form-label">Confirm password</label>
+                                    <input id="confirmPassword" name="confirm_password" type="password" class="form-control" minlength="6" required>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="pw-note" id="pwNote" aria-live="polite"></div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary" id="signupBtn" disabled>Create account</button>
+                                <a href="/" class="btn btn-light">Cancel</a>
+                            </div>
+
+                            <p class="small muted">By creating an account you agree to our <a href="/terms" class="muted-link">Terms</a> and <a href="/privacy" class="muted-link">Privacy Policy</a>.</p>
+                        </form>
+                        <div class="alt">
+                            <p>Already have an account? <a href="/login" class="link-primary">Log in</a></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+<%- include('initials/footer.ejs') %>
+
+<script>
+document.addEventListener('input', function (e) {
+    const pw = document.getElementById('password').value;
+    const cpw = document.getElementById('confirmPassword').value;
+    const note = document.getElementById('pwNote');
+    const btn = document.getElementById('signupBtn');
+
+    if (!pw && !cpw) {
+        note.textContent = '';
+        btn.disabled = true;
+        return;
+    }
+
+    if (pw.length < 6) {
+        note.textContent = 'Password should be at least 6 characters.';
+        btn.disabled = true;
+        return;
+    }
+
+    if (cpw && pw !== cpw) {
+        note.textContent = 'Passwords do not match.';
+        btn.disabled = true;
+        return;
+    }
+
+    note.textContent = 'Passwords match.';
+    btn.disabled = false;
+});
+</script>
+</body>
+</html>

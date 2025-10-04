@@ -71,6 +71,10 @@ app.get('/newappointments', async (req, res) => {
     res.render('newappointments');
 });
 
+app.get('/signup', (req, res) => {
+    res.render('signup');
+});
+
 // Post request to add an appointment
 app.post('/newappointments', async (req, res) => {
     console.log(req.body);
