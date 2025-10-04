@@ -1,0 +1,98 @@
+<%- include('initials/header.ejs', { title: 'Login - CareFlow' }) %>
+<link rel="stylesheet" href="/styles/login.css">
+</head>
+<body>
+  <main class="auth-page">
+    <div class="auth-wrap">
+      <section class="auth-visual" aria-hidden="true">
+        <div class="brand">
+          <h1>CareFlow</h1>
+          <p class="tag">Patient-first healthcare management</p>
+        </div>
+
+        <div class="visual-blob" role="img" aria-label="Decorative illustration">
+          <!-- simple SVG decorative illustration -->
+          <svg width="320" height="220" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <defs>
+              <linearGradient id="lg2" x1="0" x2="1">
+                <stop offset="0" stop-color="#6f42c1"/>
+                <stop offset="1" stop-color="#0d6efd"/>
+              </linearGradient>
+            </defs>
+            <rect rx="22" width="320" height="220" fill="url(#lg2)"></rect>
+            <g transform="translate(28,30)" fill="#fff" opacity="0.14">
+              <circle cx="40" cy="40" r="40"></circle>
+              <rect x="100" y="10" width="160" height="8" rx="4"></rect>
+              <rect x="100" y="36" width="120" height="8" rx="4"></rect>
+            </g>
+          </svg>
+        </div>
+
+        <p class="visual-note">Fast, secure login to manage appointments and patient records.</p>
+      </section>
+
+      <aside class="auth-form" aria-label="Login form area">
+        <% if (success_msg) { %>
+          <div class="alert alert-success"><%= success_msg %></div>
+        <% } %>
+        <% if (error_msg) { %>
+          <div class="alert alert-danger"><%= error_msg %></div>
+        <% } %>
+
+        <div class="card">
+          <div class="card-body">
+            <h2 class="card-title">Welcome back</h2>
+            <p class="muted">Sign in to continue to CareFlow</p>
+
+            <form action="/login" method="POST" id="loginForm" autocomplete="on" novalidate>
+              <div class="form-row">
+                <label for="email" class="form-label">Email</label>
+                <input id="email" name="email" type="email" class="form-control" required autocomplete="email" placeholder="you@example.com">
+              </div>
+
+              <div class="form-row">
+                <label for="password" class="form-label">Password</label>
+                <div class="input-with-icon">
+                  <input id="password" name="password" type="password" class="form-control" required autocomplete="current-password" placeholder="Enter password">
+                  <button type="button" class="pw-toggle-icon" data-target="password" aria-label="Toggle password visibility" title="Show / hide password">
+                    <svg class="icon-eye" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"></path>
+                      <circle cx="12" cy="12" r="3" fill="currentColor"></circle>
+                    </svg>
+                    <svg class="icon-eye-off" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                      <path d="M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-row form-meta">
+                <label class="checkbox">
+                  <input type="checkbox" name="remember" /> Remember me
+                </label>
+                <a href="/forgot" class="link-muted">Forgot password?</a>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Sign in</button>
+                <a href="/signup" class="btn btn-outline">Create account</a>
+              </div>
+
+              <div class="divider"><span>or</span></div>
+
+              <div class="socials">
+                <button type="button" class="btn btn-social btn-google" aria-label="Sign in with Google">Sign in with Google</button>
+                <button type="button" class="btn btn-social btn-apple" aria-label="Sign in with Apple">Sign in with Apple</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+<%- include('initials/footer.ejs') %>
+
+<script src="/functionality/login.js"></script>
+</body>
+</html>
