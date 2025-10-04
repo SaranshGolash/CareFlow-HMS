@@ -71,7 +71,11 @@ app.get('/newappointments', async (req, res) => {
     res.render('newappointments');
 });
 
-app.get('/signup', (req, res) => {
+app.get('/login', async (req, res) => {
+    res.render('login');
+});
+
+app.get('/signup', async (req, res) => {
     res.render('signup');
 });
 
