@@ -84,6 +84,7 @@ body{
     width:100%;
     overflow:hidden;
 }
+
 .card-body{
     padding:28px;
 }
@@ -175,6 +176,10 @@ body{
     background:#fff;
     border:1px solid #e6e9ef;
     color:#111;
+}
+
+.btn.btn-light {
+    text-decoration: none;
 }
 
 /* alt area */
