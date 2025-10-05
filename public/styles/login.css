@@ -20,6 +20,10 @@ body{
     color:#111;
 }
 
+.alert {
+    display: none !important;
+}
+
 .auth-page{
     min-height:100vh;
     display:flex;align-items:center;

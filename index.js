@@ -4,6 +4,7 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const methodOverride = require('method-override');
 const path = require('path');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
 
 const app = express();
@@ -31,11 +32,12 @@ app.use(methodOverride('_method'));
 
 // Session configuration
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET || 'your-secret-key-very-secure',
     resave: false,
-    saveUninitialized: true,
+    saveUninitialized: false,
     cookie: {
-        maxAge: 1000 * 60 * 60 * 24 // 24 hours
+        maxAge: 1000 * 60 * 60 * 24, // 24 hours
+        secure: process.env.NODE_ENV === 'production'
     }
 }));
 
@@ -47,17 +49,28 @@ app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
     res.locals.error = req.flash('error');
+    res.locals.user = req.session.user || null;
     next();
 });
+
+// Middleware to check if user is logged in
+const isAuthenticated = (req, res, next) => {
+    if (req.session.user) {
+        return next();
+    }
+    req.flash('error_msg', 'Please log in to view that resource');
+    res.redirect('/login');
+};
 
 // Routes
 app.get('/', async (req, res) => {
     res.render('index');
 });
 
-app.get('/appointments', async (req, res) => {
+app.get('/appointments', isAuthenticated, async (req, res) => {
     try {
-        const result = await db.query('SELECT * FROM appointments');
+        const userId = req.session.user.id; // Get ID of the logged-in user's ID
+        const result = await db.query('SELECT * FROM appointments WHERE user_id = $1 ORDER BY id DESC', [userId]);
         const appointments = result.rows; // Fetch appointments from the database
         res.render('appointments', { appointments });
     } catch (err) {
@@ -67,31 +80,111 @@ app.get('/appointments', async (req, res) => {
     }
 });
 
-app.get('/newappointments', async (req, res) => {
+app.get('/newappointments', isAuthenticated, async (req, res) => {
     res.render('newappointments');
 });
 
+// Post request to add an appointment
+app.post('/newappointments', isAuthenticated, async (req, res) => {
+    console.log(req.body);
+    const { patient_name, gender, phone, doctor_name } = req.body;
+    const userId = req.session.user.id; // Get the user ID from the session
+    try {
+        const query = 'INSERT INTO appointments (patient_name, gender, phone, doctor_name, user_id) VALUES ($1, $2, $3, $4, $5)';
+        await db.query(query, [patient_name, gender, phone, doctor_name, userId]);
+        req.flash('success_msg', 'Appointment added successfully');
+        res.redirect('/appointments'); // Redirect to appointments page
+    } catch (err) {
+        console.error(err);
+        req.flash('error_msg', 'Error adding appointment. Please try again.');
+        res.redirect('/newappointments'); // Redirect back to new appointments page
+    }
+});
+
+// Authentication routes (login, signup)
 app.get('/login', async (req, res) => {
     res.render('login');
+});
+
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = userResult.rows[0];
+
+        if (user) {
+            // Compare submitted password with stored hashed password
+            const isMatch = await bcrypt.compare(password, user.password_hash);
+            if (isMatch) {
+                // Set session and redirect to home page
+                req.session.user = { 
+                    id: user.id, 
+                    username: user.username,
+                    email: user.email
+                };
+                req.flash('success_msg', 'Login successful! Welcome back.');
+                res.redirect('/');
+            } else {
+                req.flash('error_msg', 'Invalid Credentials (password). Please try again.');
+                res.redirect('/login');
+            }
+        } else {
+            req.flash('error_msg', 'Invalid Credentials (username). Please try again.');
+            res.redirect('/login');
+        }
+    } catch (err) {
+            console.error('Login error:', err);
+            req.flash('error_msg', 'An internal error occurred during login.');
+            res.redirect('/login');
+        }
 });
 
 app.get('/signup', async (req, res) => {
     res.render('signup');
 });
 
-// Post request to add an appointment
-app.post('/newappointments', async (req, res) => {
-    console.log(req.body);
-    const { patient_name, gender, phone, doctor_name } = req.body;
+app.post('/signup', async (req, res) => {
+    const { username, email, password } = req.body;
+    const saltRounds = 10;
+
     try {
-        await db.query('INSERT INTO appointments (patient_name, gender, phone, doctor_name) VALUES ($1, $2, $3, $4)', [patient_name, gender, phone, doctor_name]);
-        req.flash('success_msg', 'Appointment added successfully');
-        res.redirect('/appointments'); // Redirect to appointments page
+        // Hash the password
+        const password_hash = await bcrypt.hash(password, saltRounds);
+
+        // Insert new user into the database
+        const query = 'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email';
+        const result = await db.query(query, [username, email, password_hash]);
+        const newUser = result.rows[0];
+
+        // Log the user in immediately after signup
+        req.session.user = {
+            id: newUser.id,
+            username: newUser.username,
+            email: newUser.email
+        };
+
+        req.flash('success_msg', 'Registration successful! Welcome to CareFlow HMS.');
+        res.redirect('/');
     } catch (err) {
-        console.error(err);
-        req.flash('error_msg', 'Error adding appointment');
-        res.redirect('/newappointments'); // Redirect back to new appointments page
+        if (err.code === '23505') {
+            // PostgreSQL unique vioalation error code
+            req.flash('error_msg', 'Username or email already exists.');
+        } else {
+            console.error('Signup error:', err);
+            req.flash('error_msg', 'An error occurred during registration.');
+        }
     }
+});
+
+app.post('/logout', async (req, res) => {
+    req.session.destroy(err => {
+        if (err) {
+            return res.redirect('/');
+        }
+        res.clearCookie('connect.sid'); // Clear session cookie by assuming default cookie name
+        req.flash('success_msg', 'You have been successfully logged out.');
+        res.redirect('/');
+    });
 });
 
 // Error handling

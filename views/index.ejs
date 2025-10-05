@@ -1,15 +1,14 @@
 <%- include('initials/header.ejs', { title: 'CareFlow HMS' }) %>
-</head>
-<body>
-    <!-- Hero Section -->
     <section class="hero bg-primary text-white py-5">
         <div class="container-hero">
             <div class="hero-section row align-items-center">
                 <div class="col-lg-6">
-                    <h1 class="hero-section-texts display-4 fw-bold">Welcome to CareFlow HMS</h1>
+                    <h1 class="hero-section-texts display-4 fw-bold">Welcome<% if (user) { %>, <%= user.username %><% } %> to CareFlow HMS</h1>
                     <p class="hero-section-texts lead">Streamlining healthcare management for better patient care</p>
                     <div class="d-flex gap-3">
-                        <a href="/register" class="btn btn-light btn-lg hero-section-btn">Get Started</a>
+                        <a href="<%= user ? '/appointments' : '/signup' %>" class="btn btn-light btn-lg hero-section-btn">
+                            <%= user ? 'Go to Appointments' : 'Get Started' %>
+                        </a>
                         <a href="/about" class="btn btn-outline-light btn-lg hero-section-btn">Learn More</a>
                     </div>
                 </div>
@@ -17,18 +16,10 @@
                     <img src="/images/CareFlow-HMS.png" alt="CareFlow HMS" class="img-fluid">
                 </div>
             </div>
-            <div class="auth-buttons mt-4 d-flex justify-content-center gap-3">
-                <a href="/login" class="btn btn-login-signup" onclick="window.location.href='/login'">
-                    <i class="fas fa-sign-in-alt me-2"></i>Login
-                </a>
-                <a href="/signup" class="btn btn-login-signup" onclick="window.location.href='/signup'">
-                    <i class="fas fa-user-plus me-2"></i>Sign Up
-                </a>
+            
             </div>
-        </div>
     </section>
 
-    <!-- Key Features Section -->
     <section class="features py-5">
         <div class="container">
             <h2 class="text-center mb-5">Our Core Features</h2>
@@ -36,7 +27,7 @@
                 <div class="col-md-4">
                     <div class="card h-100">
                         <div class="clickable-card card-body text-center">
-                            <a href="#" onclick="window.location.href='/appointments'" class="card-content-link text-decoration-none text-dark">
+                            <a href="<%= user ? '/appointments' : '/login' %>" class="card-content-link text-decoration-none text-dark">
                                 <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
                                 <h3 class="card-title">Doctor Appointments</h3>
                                 <p class="card-text">Schedule and manage appointments with our experienced healthcare professionals.</p>
@@ -47,7 +38,7 @@
                 <div class="col-md-4">
                     <div class="card h-100">
                         <div class="clickable-card card-body text-center">
-                            <a href="#" onclick="window.location.href='/records'" class="card-content-link text-decoration-none text-dark">
+                            <a href="<%= user ? '/records' : '/login' %>" class="card-content-link text-decoration-none text-dark">
                             <i class="fas fa-notes-medical fa-3x text-primary mb-3"></i>
                             <h3 class="card-title">Patient Records</h3>
                             <p class="card-text">Secure digital storage and easy access to patient medical records and history.</p>
@@ -58,7 +49,7 @@
                 <div class="col-md-4">
                     <div class="card h-100">
                         <div class="clickable-card card-body text-center">
-                            <a href="#" onclick="window.location.href='/monitoring'" class="card-content-link text-decoration-none text-dark">
+                            <a href="<%= user ? '/monitoring' : '/login' %>" class="card-content-link text-decoration-none text-dark">
                             <i class="fas fa-heartbeat fa-3x text-primary mb-3"></i>
                             <h3 class="card-title">Health Monitoring</h3>
                             <p class="card-text">Track and monitor patient health progress with comprehensive analytics.</p>
@@ -70,7 +61,6 @@
         </div>
     </section>
 
-    <!-- Statistics Section -->
     <section class="stats bg-light py-5">
         <div class="container">
             <div class="row text-center">
@@ -94,14 +84,15 @@
         </div>
     </section>
 
-    <!-- Call to Action -->
     <section class="cta py-5">
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-md-8 text-center">
                     <h2 class="mb-4">Ready to Experience Better Healthcare Management?</h2>
                     <p class="lead mb-4">Join CareFlow HMS today and transform your healthcare facility's efficiency.</p>
-                    <a href="/demo" class="btn btn-primary btn-lg">Request Demo</a>
+                    <a href="<%= user ? '/appointments' : '/signup' %>" class="btn btn-primary btn-lg">
+                        <%= user ? 'Manage Appointments' : 'Sign Up Now' %>
+                    </a>
                 </div>
             </div>
         </div>

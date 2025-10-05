@@ -16,6 +16,17 @@ body{
     color:#222;
 }
 
+.signup-right {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-flow: column nowrap;
+}
+
+.alert {
+    display: none !important;
+}
+
 .signup-page{
     min-height:100vh; 
     display:flex; 

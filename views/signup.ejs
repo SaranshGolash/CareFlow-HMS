@@ -1,7 +1,5 @@
 <%- include('initials/header.ejs', { title: 'Sign Up - CareFlow' }) %>
 <link rel="stylesheet" href="/styles/signup.css">
-</head>
-<body>
     <main class="signup-page">
         <div class="signup-wrap">
             <section class="signup-left" aria-hidden="true">
@@ -44,8 +42,8 @@
                         <h2 id="createAccountTitle" class="card-title">Create an account</h2>
                         <form action="/signup" method="POST" id="signupForm" novalidate>
                             <div class="form-row">
-                                <label for="fullName" class="form-label">Full name</label>
-                                <input id="fullName" name="full_name" type="text" class="form-control" placeholder="Jane Doe" required autocomplete="name" aria-required="true">
+                                <label for="username" class="form-label">Full name</label>
+                                <input id="username" name="username" type="text" class="form-control" placeholder="Jane Doe" required autocomplete="name" aria-required="true">
                             </div>
 
                             <div class="form-row two-col">

@@ -11,28 +11,33 @@ h1 {
     color: #e0e0e0;
 }
 
+/* Ensure primary color (Bootstrap's blue) is used for titles */
 .card-body > h3 {
-    color: #0d6efd;
+    color: #0d6efd; 
 }
 
 .lead {
     font-weight: 700;
 }
 
+/* Hero Section Container (Adjusted for better flow with Bootstrap rows) */
 .container-hero {
-    display: flex;
-    justify-content: space-between;
-    align-items: start;
     width: 100%;
+    /* Keep padding and centering handled by .hero and Bootstrap container */
 }
 
 /* Hero Section */
 .hero {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 50px 20px;
+    /* Use the custom gradient background */
     background: linear-gradient(to right, #0d6efd, #6f42c1);
+    color: white; /* Ensure text is white against dark background */
+}
+
+.hero .hero-section {
+    /* Ensures the row inside the hero container works correctly */
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 .hero img {
@@ -50,64 +55,52 @@ h1 {
     padding-bottom: 10px;
 }
 
+/* Style for the buttons inside the hero section */
 .hero-section-btn {
-    color: #191a1c;
     text-decoration: none;
     font-size: 18px;
+    /* Customizing the light button's text color */
+    color: #191a1c; 
 }
 
-/* Login and Sign Up Button Styles */
-.auth-buttons .btn {
-    padding: 12px 24px;
-    font-size: 1rem;
+/* --- Authentication Button Styles (Applying custom colors to Bootstrap classes) --- */
+
+/* Customizing the Bootstrap Primary Button for use in CTA, Signup, and other primary actions */
+.btn-primary {
+    /* Applying the desired gradient background to the primary button */
+    background: linear-gradient(90deg, #0056b3, #0d6efd);
+    border: none;
+    color: white;
     font-weight: 600;
-    border-radius: 8px;
     transition: all 0.3s ease;
-    position: relative;
-    overflow: hidden;
-    border: none; /* Remove default border */
+    animation: subtle-pulse 2s infinite; /* Keep pulse animation for the main CTA/Signup button */
 }
 
-.auth-buttons {
-    padding: 10px;
-}
-
-.auth-buttons .btn-login-signup {
-    background: linear-gradient(50deg, var(--primary, #0d6efd), var(--accent, #0056b3));
-    color: white;
-}
-
-.btn.btn-login-signup {
-    text-decoration: none;
-}
-
-.auth-buttons .btn-login-signup:hover {
-    background-color: #0056b3; /* Darker shade on hover */
+.btn-primary:hover {
+    background: linear-gradient(90deg, #0d6efd, #0056b3); /* Subtle gradient shift on hover */
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    animation: none; /* Stop pulse animation on hover */
+    border: none;
 }
 
-.auth-buttons .btn-login-signup {
-    background: linear-gradient(90deg, var(--primary, #0056b3), var(--accent, #0d6efd));
+/* Customizing the Bootstrap Outline Light Button (used for Login in the Header) */
+.btn-outline-light {
     color: white;
+    border-color: white;
+    transition: all 0.3s ease;
 }
 
-.auth-buttons .btn-login-signup:hover {
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+.btn-outline-light:hover {
+    color: #0d6efd; /* Primary color text on hover */
+    background-color: white; /* White background on hover */
+    border-color: white;
 }
 
-/* Optional: Add a subtle pulse animation for the signup button */
+/* Animation for subtle pulse (kept for primary buttons) */
 @keyframes subtle-pulse {
     0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
+    50% { transform: scale(1.01); } /* Reduced scale for a truly subtle effect */
     100% { transform: scale(1); }
-}
-
-.auth-buttons .btn-login-signup {
-    animation: subtle-pulse 2s infinite;
-}
-
-.auth-buttons .btn-login-signup:hover {
-    animation: none; /* Stop animation on hover */
 }
 
 /* Features Section */
@@ -147,8 +140,9 @@ h1 {
 
 /* Card Link Styling */
 .card-content-link {
-    color: #0056b3;
+    color: inherit; /* Inherit color from parent for a cleaner look */
     text-decoration: none;
+    display: block; /* Make the whole card body link */
 }
 
 .card-content-link:visited,
@@ -158,7 +152,6 @@ h1 {
     text-decoration: none;
 }
 
-/* Optional: Add a subtle transition for smooth color changes */
 .card-content-link {
     transition: color 0.3s ease;
 }
@@ -169,17 +162,11 @@ h1 {
 
 /* Statistics Section */
 .stats {
-    display: flex;
-    justify-content: space-around;
     padding: 50px 20px;
     background-color: #e9ecef;
 }
 
-.stats .col-md-3 {
-    flex: 1;
-    margin: 10px;
-}
-
+/* Bootstrap's grid handles the column layout now, no need for flex/margin adjustments here */
 .stats h2 {
     font-size: 3rem;
     margin: 0;
@@ -187,10 +174,6 @@ h1 {
 
 /* Call to Action Section */
 .cta {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
     padding: 50px 20px;
     background-color: #0d6efd;
     color: white;
@@ -204,36 +187,48 @@ h1 {
     margin-bottom: 30px;
 }
 
-/* Responsive Styles for Body */
+/* --- Responsive Styles --- */
+
+@media (max-width: 992px) {
+    /* For medium screens (Bootstrap lg breakpoint) */
+    .hero-section-texts {
+        text-align: center;
+    }
+    .hero-section .d-flex {
+        justify-content: center;
+    }
+}
+
 @media (max-width: 768px) {
-    .hero {
+    /* For small screens (Bootstrap md breakpoint) */
+    .hero-section {
         flex-direction: column;
         text-align: center;
     }
+
+    /* .hero img (inside col-lg-6) will automatically stack below the text */
 
     .features .row {
         flex-direction: column;
         align-items: center;
     }
 
-    .stats {
-        flex-direction: column;
-        align-items: center;
-    }
-
+    /* Stats are handled by Bootstrap's column wrapping, but minor adjustment for centering */
     .stats .col-md-3 {
         margin-bottom: 20px;
     }
-}
 
-/* Responsive Styles for Footer */
-@media (max-width: 768px) {
     .footer .row {
-        flex-direction: column; /* Stack items vertically on small screens */
-        align-items: center; /* Center align items */
+        flex-direction: column; 
+        align-items: center; 
     }
 
     .footer .social-links {
-        justify-content: center; /* Center social links */
+        justify-content: center; 
     }
+}
+
+/* Styling for the new Login/Signup views (Keep for consistency) */
+.auth-container { 
+    border: 1px solid #ccc; /* Added visible border */
 }
