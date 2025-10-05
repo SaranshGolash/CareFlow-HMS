@@ -41,6 +41,11 @@ h1 {
     padding-top: 20px;
 }
 
+.img-fluid {
+    width: 300px;
+    height: auto;
+}
+
 .hero-section-texts {
     padding-bottom: 10px;
 }
