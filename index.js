@@ -177,12 +177,13 @@ app.post('/signup', async (req, res) => {
 });
 
 app.post('/logout', async (req, res) => {
+    req.flash('success_msg', 'You have been successfully logged out.');
+    
     req.session.destroy(err => {
         if (err) {
             return res.redirect('/');
         }
         res.clearCookie('connect.sid'); // Clear session cookie by assuming default cookie name
-        req.flash('success_msg', 'You have been successfully logged out.');
         res.redirect('/');
     });
 });
