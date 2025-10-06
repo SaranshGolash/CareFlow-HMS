@@ -35,11 +35,20 @@
     gap: 18px;
 }
 
+.alert {
+    display: none !important;
+}
+
 .card {
     display: flex;
     justify-content: center;
     align-items: start;
     flex-flow: column nowrap;
+}
+
+.col-lg-8 {
+    width: 500px;
+    height: 720px;
 }
 
 /* Title */
@@ -95,6 +104,18 @@ input[list]:focus {
     border-color: rgba(13,110,253,0.9);
     box-shadow: 0 6px 18px rgba(13,110,253,0.08);
     transform: translateY(-1px);
+}
+
+.form-control {
+    width: 300px;
+    height: 46px;
+    font-size: 14px;
+}
+
+.form-select {
+    width: 300px;
+    height: 46px;
+    font-size: 14px;
 }
 
 /* Small helper text */

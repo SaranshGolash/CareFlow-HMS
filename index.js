@@ -100,6 +100,67 @@ app.get('/records', isAuthenticated, async (req, res) => {
     }
 });
 
+// Middleware to check if user is an Admin
+const isAdmin = (req, res, next) => {
+    if (req.session.user && req.session.user.role === 'admin') {
+        return next();
+    }
+    req.flash('error_msg', 'Access denied. You must be an administrator.');
+    res.redirect('/');
+};
+
+// Route to show the form (Requires Admin Role)
+app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        // Fetch all users to populate a dropdown (so admin can select the patient)
+        const patientResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
+        const patients = patientResult.rows;
+
+        res.render('newrecord', { 
+            patients: patients,
+            // Assuming current user is the doctor/admin
+            doctor_name: req.session.user.username 
+        });
+
+    } catch (err) {
+        console.error('Error fetching patient list:', err);
+        req.flash('error_msg', 'Error preparing record form.');
+        res.redirect('/records');
+    }
+});
+
+// POST route to submit the new medical record (Requires Admin Role)
+app.post('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
+    const { patient_id, diagnosis, treatment_plan, doctor_notes, blood_pressure, allergies, record_date } = req.body;
+    
+    // Admin's username who is adding the record
+    const admin_user = req.session.user.username; 
+    
+    try {
+        const query = `INSERT INTO medical_records 
+            (user_id, diagnosis, treatment_plan, doctor_notes, blood_pressure, allergies, record_date) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7)`;
+        
+        await db.query(query, [
+            patient_id, 
+            diagnosis, 
+            treatment_plan, 
+            doctor_notes, 
+            blood_pressure, 
+            allergies, 
+            // Use the date from the form or fallback to today
+            record_date || new Date().toISOString().split('T')[0]
+        ]);
+
+        req.flash('success_msg', `Medical record successfully added for Patient ID ${patient_id}.`);
+        res.redirect('/records');
+    } catch (err) {
+        console.error('Error adding new medical record:', err);
+        req.flash('error_msg', 'Error adding record. Please check inputs and try again.');
+        res.redirect('/newrecord');
+    }
+});
+
 app.get('/newappointments', isAuthenticated, async (req, res) => {
     res.render('newappointments');
 });
@@ -140,7 +201,8 @@ app.post('/login', async (req, res) => {
                 req.session.user = { 
                     id: user.id, 
                     username: user.username,
-                    email: user.email
+                    email: user.email,
+                    role: user.role
                 };
                 req.flash('success_msg', 'Login successful! Welcome back.');
                 res.redirect('/');
