@@ -80,6 +80,35 @@ app.get('/appointments', isAuthenticated, async (req, res) => {
     }
 });
 
+app.get('/monitoring', isAuthenticated, async (req, res) => {
+    try {
+        const userId = req.session.user.id; // Get the logged in user's Id
+        const result = await db.query(`SELECT
+             reading_timestamp, heart_rate, temperature, spo2, systolic_bp, diastolic_bp 
+             FROM health_vitals
+             WHERE user_id = $1
+             ORDER BY reading_timestamp DESC
+             LIMIT 10`,
+            [userId]
+        );
+        const vitals = result.rows; // Fetching vitals from the database
+        const latestVitals = vitals.length > 0 ? vitals[0] : null; // Calculating the current/latest metrics
+        res.render('monitoring', {
+            vitals: vitals,
+            latest: latestVitals,
+            username: req.session.user.username
+        });
+    } catch (err) {
+        console.log('Error fetching health monitoring data:', err);
+        req.flash('error_msg', 'Error fetching your health monitoring data');
+        req.render('monitoring', {
+            vitals: [],
+            latest: null,
+            username: req.session.user.username
+        });
+    }
+});
+
 app.get('/records', isAuthenticated, async (req, res) => {
     try {
         const userId = req.session.user.id; // Getting the logged in user's Id

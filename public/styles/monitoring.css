@@ -1,0 +1,98 @@
+/* --- Variables (Consistency) --- */
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff; /* Lightest blue for backgrounds */
+    --secondary-accent: #4287f5;
+    --text-color: #1f2937;
+    --muted-color: #6c757d;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 16px rgba(13,110,253,0.1); /* Slightly more pronounced */
+    --transition: all 0.3s ease;
+
+    /* Custom Monitor Card Colors (Using primary/accent shades) */
+    --monitor-bg-blue: rgba(13, 110, 253, 0.08);
+    --monitor-bg-purple: rgba(111, 66, 193, 0.08);
+    --monitor-bg-green: rgba(40, 167, 69, 0.08);
+    --monitor-bg-red: rgba(220, 53, 69, 0.08);
+}
+
+/* --- Typography and Header --- */
+.container.py-5 h2 {
+    color: var(--primary);
+    font-weight: 700;
+}
+h3 {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* --- Monitor Summary Cards --- */
+.monitor-card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+}
+
+.monitor-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+/* Individual Card Backgrounds for visual separation */
+.bg-light-blue { background-color: var(--monitor-bg-blue) !important; }
+.bg-light-purple { background-color: var(--monitor-bg-purple) !important; }
+.bg-light-green { background-color: var(--monitor-bg-green) !important; }
+.bg-light-red { background-color: var(--monitor-bg-red) !important; }
+
+/* Icon Colors */
+.text-primary { color: var(--primary) !important; }
+.text-info { color: #17a2b8 !important; }
+.text-success { color: #28a745 !important; }
+.text-danger { color: #dc3545 !important; }
+
+/* --- Chart Placeholder --- */
+.monitor-chart {
+    border: 1px solid #e9ecef;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.monitor-chart .card-header {
+    background-color: var(--primary-light) !important;
+    border-bottom: 1px solid #e9ecef !important;
+    padding: 15px 20px;
+}
+
+/* --- History Table (Reusing appointments.css styles) --- */
+.monitor-table {
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.monitor-table .table thead th {
+    /* Same gradient as appointments table header */
+    background: linear-gradient(45deg, var(--primary), var(--secondary-accent));
+    color: #fff;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 14px 20px;
+    border: none;
+}
+
+.monitor-table .table tbody td {
+    padding: 14px 20px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.95rem;
+    color: var(--text-color);
+}
+
+.monitor-table .table tbody tr:hover {
+    background-color: var(--primary-light) !important;
+    cursor: pointer;
+}
