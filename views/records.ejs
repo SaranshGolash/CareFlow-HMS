@@ -1,0 +1,69 @@
+<%- include('initials/header.ejs', { title: 'Medical Records' }) %>
+<link rel="stylesheet" href="/styles/records.css">
+</head>
+<body>
+    <div class="container py-5">
+        <h2 class="mb-4 text-primary">
+            <% if (username) { %>
+                <%= username %>'s 
+            <% } %>
+            Medical History
+        </h2>
+
+        <% if (records.length > 0) { %>
+            <div class="row g-4">
+                <% records.forEach(record => { %>
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100 shadow-sm border-0">
+                            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                                <i class="fas fa-file-medical me-2"></i>
+                                Record ID: <%= record.record_id %>
+                            </div>
+                            <div class="card-body">
+                                <h5 class="card-title text-dark mb-3">Diagnosis: <%= record.diagnosis %></h5>
+                                
+                                <p class="card-text text-muted mb-1">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    <strong>Date:</strong> <%= new Date(record.record_date).toLocaleDateString() %>
+                                </p>
+                                
+                                <p class="card-text mb-2">
+                                    <i class="fas fa-stethoscope me-2 text-info"></i>
+                                    <strong>Notes:</strong> <%= record.doctor_notes ? record.doctor_notes.substring(0, 70) + '...' : 'N/A' %>
+                                </p>
+
+                                <hr>
+
+                                <ul class="list-unstyled small">
+                                    <li><i class="fas fa-vial me-2 text-success"></i> 
+                                        <strong>BP:</strong> <%= record.blood_pressure || 'N/A' %>
+                                    </li>
+                                    <li><i class="fas fa-hand-holding-medical me-2 text-danger"></i> 
+                                        <strong>Allergies:</strong> <%= record.allergies || 'None recorded' %>
+                                    </li>
+                                </ul>
+
+                            </div>
+                            <div class="card-footer bg-light border-0 text-end">
+                                <a href="/records/<%= record.record_id %>" class="btn btn-sm btn-outline-primary">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+        <% } else { %>
+            <div class="alert alert-info mt-4" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                No medical records found for your account.
+            </div>
+        <% } %>
+
+        <div class="mt-5 text-center">
+            <a href="/newrecord" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus-circle me-2"></i> Add New Record (Admin Use)
+            </a>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
+</body>
+</html>
