@@ -1,0 +1,75 @@
+/* --- Variables (Consistency) --- */
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --secondary-accent: #4287f5;
+    --border-radius: 12px;
+    --shadow-md: 0 4px 16px rgba(13,110,253,0.08);
+    --transition: all 0.3s ease;
+}
+
+.alert {
+    display: none !important;
+}
+
+/* --- Form Container --- */
+.card.shadow-md {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+.card-title {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* --- Form Fields (Matching Input/Table Style) --- */
+.form-control, .form-select {
+    height: 50px; /* Taller inputs for modern look */
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    font-size: 1rem;
+}
+
+/* Ensure datetime-local doesn't look strange */
+input[type="datetime-local"].form-control {
+    padding-right: 8px;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #333;
+}
+
+/* --- Buttons (Matching Primary Button Gradient) --- */
+.btn-primary {
+    background: linear-gradient(45deg, var(--primary), var(--secondary-accent));
+    border: none;
+    font-weight: 600;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+    transform: translateY(-1px);
+}
+
+.btn-light {
+    border: 1px solid #ccc;
+    font-weight: 600;
+    padding: 10px 20px;
+    transition: all 0.3s ease;
+}
+
+.btn-light:hover {
+    background-color: #f0f0f0;
+}
