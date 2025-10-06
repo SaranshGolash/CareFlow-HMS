@@ -1,0 +1,86 @@
+<%- include('initials/header.ejs', { title: 'Settings - CareFlow' }) %>
+<link rel="stylesheet" href="/styles/settings.css">
+</head>
+<body>
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-md">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4 text-primary"><i class="fas fa-user-cog me-2"></i> Profile Settings</h3>
+                        <p class="text-muted small mb-4">Update your profile information and manage your password. You must provide your **current password** to save changes.</p>
+
+                        <form action="/settings" method="POST" class="row g-4">
+                            
+                            <!-- Personal Info Section -->
+                            <div class="col-12">
+                                <h5 class="section-title">Account Details</h5>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="username" class="form-label">Username</label>
+                                <input id="username" name="username" type="text" class="form-control" value="<%= currentUser.username %>" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="email" class="form-label">Email</label>
+                                <input id="email" name="email" type="email" class="form-control" value="<%= currentUser.email %>" required>
+                            </div>
+                            
+                            <!-- Password Change Section -->
+                            <div class="col-12 mt-5">
+                                <h5 class="section-title">Change Password</h5>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="new_password" class="form-label">New Password (Optional)</label>
+                                <input id="new_password" name="new_password" type="password" class="form-control" placeholder="Leave blank to keep current password">
+                                <div class="form-text text-muted">Min 6 characters.</div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="confirm_new_password" class="form-label">Confirm New Password</label>
+                                <input id="confirm_new_password" name="confirm_new_password" type="password" class="form-control" placeholder="Re-enter new password">
+                            </div>
+
+                            <!-- Required Current Password Verification -->
+                            <div class="col-12 mt-5 bg-light p-3 rounded-lg border">
+                                <label for="current_password" class="form-label text-danger">Verify Current Password<span class="required-asterisk">*</span>:</label>
+                                <input id="current_password" name="current_password" type="password" class="form-control" required placeholder="Enter your current password to save changes">
+                            </div>
+                            
+                            <!-- Actions -->
+                            <div class="col-12 text-end pt-3">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-save me-2"></i> Save Profile
+                                </button>
+                                <a href="/dashboard" class="btn btn-light btn-lg ms-2">
+                                    <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Simple JS to check password match before submission -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.querySelector('form');
+            form.addEventListener('submit', function(e) {
+                const newPass = document.getElementById('new_password').value;
+                const confirmPass = document.getElementById('confirm_new_password').value;
+
+                if (newPass && newPass !== confirmPass) {
+                    e.preventDefault();
+                    alert('Error: New Password and Confirm New Password fields do not match.');
+                }
+            });
+        });
+    </script>
+<%- include('initials/footer.ejs') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -67,6 +67,111 @@ app.get('/', async (req, res) => {
     res.render('index');
 });
 
+// Route to dashboard
+app.get('/dashboard', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    try {
+        // Count Appointments
+        const apptResult = await db.query('SELECT COUNT(*) AS count FROM appointments WHERE user_id = $1', [userId]);
+        
+        // Count Medical Records
+        const recordResult = await db.query('SELECT COUNT(*) AS count FROM medical_records WHERE user_id = $1', [userId]);
+
+        // Get Latest Vital Reading Timestamp
+        const vitalDateResult = await db.query(
+            'SELECT reading_timestamp FROM health_vitals WHERE user_id = $1 ORDER BY reading_timestamp DESC LIMIT 1', 
+            [userId]
+        );
+
+        res.render('dashboard', {
+            apptCount: apptResult.rows[0].count,
+            recordCount: recordResult.rows[0].count,
+            latestVitalDate: vitalDateResult.rows[0] ? vitalDateResult.rows[0].reading_timestamp : null
+        });
+
+    } catch (err) {
+        console.error('Error fetching dashboard data:', err);
+        req.flash('error_msg', 'Could not load dashboard data.');
+        res.render('dashboard', { apptCount: 0, recordCount: 0, latestVitalDate: null });
+    }
+});
+
+// Route to settings
+app.get('/settings', isAuthenticated, async (req, res) => {
+    res.render('settings', { currentUser: req.session.user });
+});
+
+app.post('/settings', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const { username, email, current_password, new_password } = req.body;
+    const saltRounds = 10;
+
+    try {
+        // Fetch user to verify current password and get stored hash
+        const userResult = await db.query('SELECT password_hash FROM users WHERE id = $1', [userId]);
+        const user = userResult.rows[0];
+
+        if (!user) {
+            req.flash('error_msg', 'User not found.');
+            return res.redirect('/settings');
+        }
+
+        // Verify current password
+        const isMatch = await bcrypt.compare(current_password, user.password_hash);
+        if (!isMatch) {
+            req.flash('error_msg', 'The current password you entered is incorrect.');
+            return res.redirect('/settings');
+        }
+
+        let updateQuery = 'UPDATE users SET username = $1, email = $2';
+        let queryParams = [username, email, userId];
+        let paramIndex = 3;
+
+        // Handle Password Change (if new_password is provided)
+        if (new_password) {
+            if (new_password.length < 6) {
+                req.flash('error_msg', 'New password must be at least 6 characters long.');
+                return res.redirect('/settings');
+            }
+            const newPasswordHash = await bcrypt.hash(new_password, saltRounds);
+            updateQuery += `, password_hash = $${paramIndex++}`;
+            queryParams.splice(2, 0, newPasswordHash); // Inserts a new hash before userId
+        }
+        
+        updateQuery += ' WHERE id = $3 RETURNING id, username, email, role';
+
+        queryParams = [username, email];
+        if (new_password) {
+             queryParams.push(newPasswordHash);
+        }
+        queryParams.push(userId);
+        
+        // Executing update
+        const updatedUserResult = await db.query(updateQuery, queryParams);
+        const updatedUser = updatedUserResult.rows[0];
+
+        // Updating Session
+        req.session.user = {
+            id: updatedUser.id,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            role: updatedUser.role
+        };
+
+        req.flash('success_msg', 'Profile updated successfully!');
+        res.redirect('/settings');
+
+    } catch (err) {
+        console.error('Settings update error:', err);
+         if (err.code === '23505') { // Unique constraint violation
+            req.flash('error_msg', 'Username or Email already exists.');
+        } else {
+            req.flash('error_msg', 'An error occurred during profile update.');
+        }
+        res.redirect('/settings');
+    }
+});
+
 app.get('/appointments', isAuthenticated, async (req, res) => {
     try {
         const userId = req.session.user.id; // Get ID of the logged-in user's ID

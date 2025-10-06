@@ -1,0 +1,68 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --secondary-accent: #4287f5;
+    --text-color: #1f2937;
+    --muted-color: #6c757d;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-md: 0 6px 20px rgba(13,110,253,0.12); 
+    --transition: all 0.3s ease;
+}
+
+/* --- General Dashboard Styles --- */
+.container.py-5 h2 {
+    font-weight: 700;
+    color: var(--primary);
+}
+h3 {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* --- Dashboard Cards (Summary) --- */
+.dashboard-card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: var(--transition);
+    text-align: center;
+    cursor: pointer;
+    background-color: #fff;
+    border: 1px solid #eee;
+}
+
+.dashboard-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+}
+
+.dashboard-card h2 {
+    font-size: 2.5rem;
+    margin-top: 5px;
+    color: var(--primary);
+}
+
+/* Icon Colors for Cards (Matching existing palette) */
+.icon-blue { color: var(--primary); }
+.icon-purple { color: #6f42c1; }
+.icon-green { color: #28a745; }
+
+
+/* --- Call to Action Button (Consistent Styling) --- */
+.btn-primary {
+    background: linear-gradient(45deg, var(--primary), var(--secondary-accent));
+    border: none;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+    transform: translateY(-1px);
+}
+
+.bg-light {
+    background-color: #f7f9fc !important;
+    border-radius: var(--border-radius);
+}
