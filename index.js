@@ -84,7 +84,7 @@ app.get('/monitoring', isAuthenticated, async (req, res) => {
     try {
         const userId = req.session.user.id; // Get the logged in user's Id
         const result = await db.query(`SELECT
-             reading_timestamp, heart_rate, temperature, spo2, systolic_bp, diastolic_bp 
+             reading_timestamp, heart_rate, temperature, spo2, glucose_level, systolic_bp, diastolic_bp 
              FROM health_vitals
              WHERE user_id = $1
              ORDER BY reading_timestamp DESC

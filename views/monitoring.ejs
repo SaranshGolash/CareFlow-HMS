@@ -51,6 +51,20 @@
                     </div>
                 </div>
             </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="monitor-card card h-100 bg-light-green shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-lungs fa-2x text-success me-3"></i>
+                            <div>
+                                <p class="text-uppercase text-muted mb-0 small">Glucose Level (%)</p>
+                                <h4 class="fw-bold mb-0 text-dark"><%= latest.glucose_level ? parseFloat(latest.glucose_level).toFixed(1) : '-' %></h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
             
             <div class="col-md-6 col-lg-3">
                 <div class="monitor-card card h-100 bg-light-red shadow-sm">
