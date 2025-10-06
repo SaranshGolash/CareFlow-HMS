@@ -211,6 +211,56 @@ app.post('/newappointments', isAuthenticated, async (req, res) => {
     }
 });
 
+// Route to show the form to add health vitals (Admin Only)
+app.get('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const patientResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
+        const patients = patientResult.rows;
+
+        res.render('add_vitals', {
+            patients: patients,
+            admin_username : req.session.user.username
+        });
+    } catch (err) {
+        console.error('Error fetching patient list for vitals form:', err);
+        req.flash('error_msg', 'Error preparing vitals input form.');
+        res.redirect('/monitoring');
+    }
+});
+
+//POST Route to submit the new health vitals data (Admin Only)
+app.post('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
+    const { patient_id, heart_rate, temperature, spo2, glucose_level, systolic_bp, diastolic_bp, reading_timestamp } = req.body;
+
+    if(!patient_id) {
+        req.flash('error_msg', 'Please select a patient.');
+        return res.redirect('/add-vitals');
+    }
+
+    try {
+        const query = `INSERT INTO health_vitals 
+            (user_id, heart_rate, temperature, spo2, glucose_level, systolic_bp, diastolic_bp, reading_timestamp) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`;
+        await db.query(query, [
+            patient_id,
+            heart_rate || null,
+            temperature || null, 
+            spo2 || null, 
+            glucose_level || null, 
+            systolic_bp || null, 
+            diastolic_bp || null, 
+            reading_timestamp || new Date().toISOString() // To provide current time
+        ]);
+
+        req.flash(`success_msg', 'Vitals successfully  added for Patient ID ${patient_id}.`);
+        res.redirect('/monitoring');
+    } catch (err) {
+        console.error('Error adding new health vitals data:', err);
+        req.flash('error_msg', 'Error adding vitals. Please check inputs and try again.');
+        res.redirect('/add-vitals');
+    }
+});
+
 // Authentication routes (login, signup)
 app.get('/login', async (req, res) => {
     res.render('login');
