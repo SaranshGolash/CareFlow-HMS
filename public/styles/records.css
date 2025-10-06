@@ -1,0 +1,152 @@
+/* Records Page Specific Styling (Card Layout) */
+
+/* --- Variables (Ensuring consistency with appointments.css) --- */
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --secondary-accent: #4287f5; /* Used in appointments gradient */
+    --text-color: #444;
+    --muted-color: #6c757d;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 16px rgba(13,110,253,0.08);
+    --transition: all 0.3s ease;
+}
+
+/* --- Page Structure --- */
+.container.py-5 h2 {
+    color: var(--primary);
+    margin-bottom: 25px;
+    font-weight: 600;
+}
+
+/* --- Card Styles (Mimicking the Table's Look/Feel) --- */
+
+.card {
+    /* Base styling from appointments table container */
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    transition: var(--transition);
+    border: none !important; /* Remove Bootstrap default border */
+}
+
+.card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+/* --- Card Header (Mimicking Table Header) --- */
+.card-header {
+    /* Applying the same header gradient */
+    background: linear-gradient(45deg, var(--primary), var(--secondary-accent)) !important;
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 16px 20px;
+    border-bottom: none !important;
+    border-top-left-radius: var(--border-radius) !important;
+    border-top-right-radius: var(--border-radius) !important;
+}
+
+.card-header .fas {
+    font-size: 1.1rem;
+}
+
+/* --- Card Body & Content --- */
+.card-body {
+    padding: 20px;
+    font-size: 0.95rem;
+}
+
+.card-body .card-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #222; /* Darker title text */
+}
+
+.card-text strong {
+    font-weight: 600;
+    color: #333;
+}
+
+.list-unstyled li {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    color: var(--muted-color);
+}
+
+/* Row-like hover effect on the entire card */
+.card-body:hover {
+    background-color: var(--primary-light);
+}
+
+/* --- Card Footer & Buttons --- */
+.card-footer {
+    background-color: #f8f9fa !important;
+    border-top: 1px solid #f0f0f0 !important;
+    padding: 12px 20px;
+}
+
+.btn-outline-primary {
+    color: var(--primary);
+    border-color: var(--primary);
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    color: #fff;
+}
+
+
+/* --- Call to Action Button (Mimicking New Appointment Button) --- */
+.mt-5.text-center .btn-primary.btn-lg {
+    padding: 12px 28px;
+    background: linear-gradient(45deg, var(--primary), var(--secondary-accent));
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mt-5.text-center .btn-primary.btn-lg:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(13, 110, 253, 0.25);
+    background: linear-gradient(45deg, var(--primary), #3478f3);
+}
+
+.mt-5.text-center .btn-primary.btn-lg:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
+}
+
+/* --- Info Alert (Mimicking Empty State) --- */
+.alert-info {
+    background-color: #f0f8ff; /* Light, subtle background */
+    border-color: #cce5ff;
+    color: #004085;
+    font-size: 1.1rem;
+    padding: 20px;
+    border-radius: var(--border-radius);
+}
+
+/* --- Responsive Design --- */
+@media (max-width: 768px) {
+    .card-header {
+        padding: 14px 16px;
+        font-size: 0.9rem;
+    }
+    .card-body {
+        padding: 16px;
+    }
+}
