@@ -80,6 +80,26 @@ app.get('/appointments', isAuthenticated, async (req, res) => {
     }
 });
 
+app.get('/records', isAuthenticated, async (req, res) => {
+    try {
+        const userId = req.session.user.id; // Getting the logged in user's Id
+        const result = await db.query('SELECT * FROM medical_records WHERE user_id = $1 ORDER BY record_date DESC', [userId]);
+        const records = result.rows; // Fetching records from the database
+
+        res.render('records', {
+            records: records,
+            username: req.session.user.username
+        });
+    } catch (err) {
+        console.log('Error fetching medical records', err);
+        req.flash('error_msg', 'Error fetching your medical records');
+        res.render('records', {
+            records: [],
+            username: req.session.user.username
+        });
+    }
+});
+
 app.get('/newappointments', isAuthenticated, async (req, res) => {
     res.render('newappointments');
 });
