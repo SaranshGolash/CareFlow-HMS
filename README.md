@@ -21,13 +21,13 @@ This application was built using a traditional <b>HTML, CSS</b> and <b>EJS</b> <
 ## ⚙️ Tech Stack
 <strong><strong>Backend & Database</strong></strong>:
 
-Node.js / Express: Core server framework.
+<b><i>Node.js / Express</i></b>: Core server framework.
 
-PostgreSQL (via pg): Primary database for persistence.
+<b><i>PostgreSQL</i></b>: Primary database for persistence.
 
-bcrypt: Secure password hashing.
+<b><i>bcrypt</i></b>: Secure password hashing.
 
-express-session / connect-flash: Session management and messaging.
+<b><i>express-session / connect-flash</i></b>: Session management and messaging.
 
 Frontend:
 
