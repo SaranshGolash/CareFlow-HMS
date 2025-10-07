@@ -77,7 +77,7 @@ CREATE TABLE users (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Create the APPOINTMENTS table
+-- 2. <b><i>Create the APPOINTMENTS table></i></b>
 CREATE TABLE appointments (
     id SERIAL PRIMARY KEY,
     patient_name VARCHAR(255) NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE appointments (
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
 );
 
--- 3. Create the MEDICAL_RECORDS table
+-- 3. <b><i>Create the MEDICAL_RECORDS table</i></b>
 CREATE TABLE medical_records (
     record_id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
@@ -99,7 +99,7 @@ CREATE TABLE medical_records (
     allergies TEXT
 );
 
--- 4. Create the HEALTH_VITALS table
+-- 4. <b><i>Create the HEALTH_VITALS table</i></b>
 CREATE TABLE health_vitals (
     vital_id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
@@ -112,12 +112,12 @@ CREATE TABLE health_vitals (
     diastolic_bp INTEGER
 );
 
-4. Run the Application
+4. <b>Run the Application</b>
 npm start
 
 The application will be accessible at http://localhost:3000.
 
-🔒 Admin Access
+## 🔒 Admin Access
 To test the full system functionality:
 
 Sign Up a new user on the /signup page (e.g., email: admin@careflow.com).
