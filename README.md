@@ -18,8 +18,8 @@ This application was built using a traditional <b>HTML, CSS</b> and <b>EJS</b> <
 
 <b><i>User Settings</i></b>: Logged-in users can update their username/email and securely change their password.
 
-⚙️ Tech Stack
-Backend & Database:
+## ⚙️ Tech Stack
+<strong><strong>Backend & Database</strong></strong>:
 
 Node.js / Express: Core server framework.
 
