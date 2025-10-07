@@ -45,12 +45,12 @@ Node.js (v18+)
 
 PostgreSQL installed and running locally.
 
-1. Clone the Repository & Install Dependencies
+1. <b>Clone the Repository & Install Dependencies</b>
 git clone <repository_url> careflow-hms
 cd careflow-hms
 npm install
 
-2. Configure Environment Variables
+2. <b>Configure Environment Variables</b>
 Create a file named .env in the root directory and fill it with your local PostgreSQL credentials:
 
 # Server Configuration
@@ -64,10 +64,10 @@ DB_NAME=careflow_db
 DB_PASSWORD=your_local_password
 DB_PORT=5432
 
-3. Initialize Database Schema
+3. <b>Initialize Database Schema</b>
 Access your local PostgreSQL client (pgAdmin, DBeaver, or psql) and run the following schema creation scripts to build all necessary tables:
 
--- 1. Create the USERS table
+-- 1. <b><i>Create the USERS table</i></b>
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
