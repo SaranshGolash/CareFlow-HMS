@@ -3,20 +3,20 @@ CareFlow HMS is a modern, full-stack Hospital Management System designed to stre
 
 This application was built using a traditional <b>HTML, CSS</b> and <b>EJS</b> <b>Node.js/Express</b> for backend and <b>PostgreSQL</b> for persistence, making it robust, scalable, and production-ready.
 
-✨ Key Features
-Secure Authentication: User registration and login using bcrypt for password hashing and secure session management.
+## ✨ Key Features
+<b><i>Secure Authentication</i></b>: User registration and login using bcrypt for password hashing and secure session management.
 
-Role-Based Access Control (RBAC): Users are classified as user (Patient) or admin (Staff/Doctor), restricting access to sensitive functions.
+<b><i>Role-Based Access Control</i> (RBAC)</b>: Users are classified as user (Patient) or admin (Staff/Doctor), restricting access to sensitive functions.
 
-Appointments Management: Users can view their scheduled appointments, and staff can manage the overall schedule.
+<b><i>Appointments Management</i></b>: Users can view their scheduled appointments, and staff can manage the overall schedule.
 
-Patient Records (/records): Secure access for patients to view their medical history and diagnoses.
+<b><i>Patient Records</i></b>: Secure access for patients to view their medical history and diagnoses.
 
-Health Monitoring (/monitoring): Dashboard displaying latest vital signs (HR, BP, Glucose, SpO2) and historical trend data.
+<b><i>Health Monitoring</i></b>: Dashboard displaying latest vital signs (HR, BP, Glucose, SpO2) and historical trend data.
 
-Admin Data Entry: Staff can access dedicated interfaces to manually add new Medical Records and Health Vitals for patients.
+<b><i>Admin Data Entry</i></b>: Staff can access dedicated interfaces to manually add new Medical Records and Health Vitals for patients.
 
-User Settings: Logged-in users can update their username/email and securely change their password.
+<b><i>User Settings</i></b>: Logged-in users can update their username/email and securely change their password.
 
 ⚙️ Tech Stack
 Backend & Database:
