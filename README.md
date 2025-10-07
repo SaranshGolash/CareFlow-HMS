@@ -1,0 +1,129 @@
+🏥 CareFlow HMS (Hospital Management System)
+CareFlow HMS is a modern, full-stack Hospital Management System designed to streamline patient care workflows, manage appointments, and provide comprehensive health monitoring with secure, role-based access control.
+
+This application was built using a traditional Node.js/Express backend and PostgreSQL for persistence, making it robust, scalable, and production-ready.
+
+✨ Key Features
+Secure Authentication: User registration and login using bcrypt for password hashing and secure session management.
+
+Role-Based Access Control (RBAC): Users are classified as user (Patient) or admin (Staff/Doctor), restricting access to sensitive functions.
+
+Appointments Management: Users can view their scheduled appointments, and staff can manage the overall schedule.
+
+Patient Records (/records): Secure access for patients to view their medical history and diagnoses.
+
+Health Monitoring (/monitoring): Dashboard displaying latest vital signs (HR, BP, Glucose, SpO2) and historical trend data.
+
+Admin Data Entry: Staff can access dedicated interfaces to manually add new Medical Records and Health Vitals for patients.
+
+User Settings: Logged-in users can update their username/email and securely change their password.
+
+⚙️ Tech Stack
+Backend & Database:
+
+Node.js / Express: Core server framework.
+
+PostgreSQL (via pg): Primary database for persistence.
+
+bcrypt: Secure password hashing.
+
+express-session / connect-flash: Session management and messaging.
+
+Frontend:
+
+EJS (Embedded JavaScript Templating): Dynamic HTML rendering.
+
+Bootstrap 5: Fully responsive styling and UI components.
+
+Custom CSS: Maintaining a clean, blue/purple gradient color palette across the application.
+
+🚀 Setup and Installation (Local Development)
+Follow these steps to get CareFlow HMS running on your local machine.
+
+Prerequisites
+Node.js (v18+)
+
+PostgreSQL installed and running locally.
+
+1. Clone the Repository & Install Dependencies
+git clone <repository_url> careflow-hms
+cd careflow-hms
+npm install
+
+2. Configure Environment Variables
+Create a file named .env in the root directory and fill it with your local PostgreSQL credentials:
+
+# Server Configuration
+PORT=3000
+SESSION_SECRET="your-long-secret-key-for-sessions"
+
+# Local PostgreSQL Credentials (MUST MATCH your local setup)
+DB_USER=postgres
+DB_HOST=localhost
+DB_NAME=careflow_db
+DB_PASSWORD=your_local_password
+DB_PORT=5432
+
+3. Initialize Database Schema
+Access your local PostgreSQL client (pgAdmin, DBeaver, or psql) and run the following schema creation scripts to build all necessary tables:
+
+-- 1. Create the USERS table
+CREATE TABLE users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    role VARCHAR(10) NOT NULL DEFAULT 'user',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. Create the APPOINTMENTS table
+CREATE TABLE appointments (
+    id SERIAL PRIMARY KEY,
+    patient_name VARCHAR(255) NOT NULL,
+    gender VARCHAR(10),
+    phone VARCHAR(20),
+    doctor_name VARCHAR(255),
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
+);
+
+-- 3. Create the MEDICAL_RECORDS table
+CREATE TABLE medical_records (
+    record_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    record_date DATE DEFAULT CURRENT_DATE,
+    diagnosis TEXT NOT NULL,
+    treatment_plan TEXT,
+    doctor_notes TEXT,
+    blood_pressure VARCHAR(20),
+    allergies TEXT
+);
+
+-- 4. Create the HEALTH_VITALS table
+CREATE TABLE health_vitals (
+    vital_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    reading_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    heart_rate INTEGER,
+    temperature DECIMAL(4, 2),
+    spo2 DECIMAL(4, 1),
+    glucose_level DECIMAL(5, 2),
+    systolic_bp INTEGER,
+    diastolic_bp INTEGER
+);
+
+4. Run the Application
+npm start
+
+The application will be accessible at http://localhost:3000.
+
+🔒 Admin Access
+To test the full system functionality:
+
+Sign Up a new user on the /signup page (e.g., email: admin@careflow.com).
+
+Use your SQL client (pgAdmin) to manually update that user's role:
+
+UPDATE users SET role = 'admin' WHERE email = 'admin@careflow.com';
+
+Log in as this user to access admin-only forms.
