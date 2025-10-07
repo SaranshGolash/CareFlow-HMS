@@ -1,7 +1,7 @@
-🏥 CareFlow HMS (Hospital Management System)
+## 🏥 CareFlow HMS (Hospital Management System)
 CareFlow HMS is a modern, full-stack Hospital Management System designed to streamline patient care workflows, manage appointments, and provide comprehensive health monitoring with secure, role-based access control.
 
-This application was built using a traditional Node.js/Express backend and PostgreSQL for persistence, making it robust, scalable, and production-ready.
+This application was built using a traditional <b>HTML, CSS</b> and <b>EJS</b> <b>Node.js/Express</b> for backend and <b>PostgreSQL</b> for persistence, making it robust, scalable, and production-ready.
 
 ✨ Key Features
 Secure Authentication: User registration and login using bcrypt for password hashing and secure session management.
