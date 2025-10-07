@@ -29,15 +29,15 @@ This application was built using a traditional <b>HTML, CSS</b> and <b>EJS</b> <
 
 <b><i>express-session / connect-flash</i></b>: Session management and messaging.
 
-Frontend:
+## Frontend:
 
-EJS (Embedded JavaScript Templating): Dynamic HTML rendering.
+<b><i>EJS (Embedded JavaScript Templating)</i></b>: Dynamic HTML rendering.
 
-Bootstrap 5: Fully responsive styling and UI components.
+<b><i>Bootstrap 5</i></b>: Fully responsive styling and UI components.
 
-Custom CSS: Maintaining a clean, blue/purple gradient color palette across the application.
+<b><i>Custom CSS</i></b>: Maintaining a clean, blue/purple gradient color palette across the application.
 
-🚀 Setup and Installation (Local Development)
+## 🚀 Setup and Installation (Local Development)
 Follow these steps to get CareFlow HMS running on your local machine.
 
 Prerequisites
