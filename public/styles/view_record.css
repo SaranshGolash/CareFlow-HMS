@@ -1,0 +1,70 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --secondary-accent: #4287f5;
+    --text-color: #1f2937;
+    --muted-color: #6c757d;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-md: 0 8px 20px rgba(13,110,253,0.12); /* Slightly heavier shadow for detail page */
+    --transition: all 0.3s ease;
+}
+
+/* --- Main Card Container --- */
+.card.shadow-md {
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    transition: var(--transition);
+}
+
+/* --- Card Header (Same as records list) --- */
+.card-header {
+    background: linear-gradient(45deg, var(--primary), var(--secondary-accent)) !important;
+    color: #fff !important;
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 18px 24px;
+    border-top-left-radius: var(--border-radius) !important;
+    border-top-right-radius: var(--border-radius) !important;
+}
+
+/* --- Card Body --- */
+.card-body h4 {
+    font-weight: 600;
+    color: var(--text-color);
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Detail Boxes (Backgrounds for key info) */
+.detail-box {
+    border: 1px solid #e9ecef;
+    border-radius: 8px !important;
+}
+
+/* Specific Value Styling */
+.detail-value {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-top: 5px;
+}
+
+.text-info { color: #17a2b8 !important; }
+.text-danger { color: #dc3545 !important; }
+
+/* --- Card Footer & Button --- */
+.card-footer {
+    border-top: 1px solid #f0f0f0 !important;
+}
+
+.btn-outline-secondary {
+    color: var(--muted-color);
+    border-color: var(--muted-color);
+    font-weight: 500;
+}
+
+.btn-outline-secondary:hover {
+    background-color: var(--muted-color);
+    color: white;
+}
