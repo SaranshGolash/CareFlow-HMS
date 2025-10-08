@@ -199,12 +199,32 @@ app.get('/monitoring', isAuthenticated, async (req, res) => {
              LIMIT 10`,
             [userId]
         );
-        const vitals = result.rows; // Fetching vitals from the database
-        const latestVitals = vitals.length > 0 ? vitals[0] : null; // Calculating the current/latest metrics
-        res.render('monitoring', {
-            vitals: vitals,
+
+        // DATA PROCESSING FOR CHARTS
+        const rawVitals = result.rows.map(vital => ({
+            // Force conversion of DECIMAL/NUMERIC types to float for safe EJS rendering
+            ...vital,
+            glucose_level: vital.glucose_level ? parseFloat(vital.glucose_level) : null,
+            temperature: vital.temperature ? parseFloat(vital.temperature) : null,
+            spo2: vital.spo2 ? parseFloat(vital.spo2) : null
+        }));
+
+        // Extract data into Chart.js friendly arrays
+        const chartData = {
+            labels: rawVitals.map(v => new Date(v.reading_timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })),
+            heartRate: rawVitals.map(v => v.heart_rate),
+            systolicBP: rawVitals.map(v => v.systolic_bp),
+            diastolicBP: rawVitals.map(v => v.diastolic_bp),
+            glucose: rawVitals.map(v => v.glucose_level)
+        };
+
+        const latestVitals = rawVitals.length > 0 ? rawVitals[rawVitals.length - 1] : null;
+
+        res.render('monitoring', { 
+            vitals: rawVitals.slice(-10).reverse(), // Send only the last 10 for the table (DESC order)
             latest: latestVitals,
-            username: req.session.user.username
+            chartData: chartData, // <-- NEW: Send prepared chart data
+            username: req.session.user.username 
         });
     } catch (err) {
         console.log('Error fetching health monitoring data:', err);
