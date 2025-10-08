@@ -237,6 +237,39 @@ app.get('/records', isAuthenticated, async (req, res) => {
     }
 });
 
+// Route to view a specific medical record
+app.get('/records/:id', isAuthenticated, async (req, res) => {
+    // Get parameters and current user ID
+    const recordId = req.params.id;
+    const userId = req.session.user.id; // Security check
+
+    try {
+        // Query the database, ensuring the fetched record ID ($1) 
+        // also belongs to the currently logged-in user ID ($2).
+        const query = `
+            SELECT * FROM medical_records 
+            WHERE record_id = $1 AND user_id = $2
+        `;
+        const result = await db.query(query, [recordId, userId]);
+        const record = result.rows[0];
+
+        // Handle Unauthorized Access or Not Found
+        if (!record) {
+            // If the record exists but belongs to another user, or doesn't exist at all,
+            // the query returns no rows, triggering this block.
+            req.flash('error_msg', 'Medical record not found or access denied.');
+            return res.redirect('/records');
+        }
+
+        res.render('view_record', { record: record });
+
+    } catch (err) {
+        console.error(`Error fetching record ID ${recordId}:`, err);
+        req.flash('error_msg', 'An error occurred while retrieving the record.');
+        res.redirect('/records');
+    }
+});
+
 // Middleware to check if user is an Admin
 const isAdmin = (req, res, next) => {
     if (req.session.user && req.session.user.role === 'admin') {
