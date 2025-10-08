@@ -1,5 +1,10 @@
-<%- include('initials/header.ejs', { title: 'CareFlow - Health Monitoring' }) %>
+<%- include('initials/header.ejs', { title: 'Health Monitoring' }) %>
 <link rel="stylesheet" href="/styles/monitoring.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
+</head>
+<body>
     <div class="container py-5">
         <h2 class="mb-4 text-primary">
             <% if (username) { %>
@@ -51,20 +56,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="monitor-card card h-100 bg-light-green shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-lungs fa-2x text-success me-3"></i>
-                            <div>
-                                <p class="text-uppercase text-muted mb-0 small">Glucose Level (%)</p>
-                                <h4 class="fw-bold mb-0 text-dark"><%= latest.glucose_level ? parseFloat(latest.glucose_level).toFixed(1) : '-' %></h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
             
             <div class="col-md-6 col-lg-3">
                 <div class="monitor-card card h-100 bg-light-red shadow-sm">
@@ -85,15 +76,25 @@
 
         <h3 class="mb-3 text-dark">Historical Trends</h3>
         <div class="row g-4">
-            <div class="col-lg-12">
+            <div class="col-lg-6">
                 <div class="card shadow-sm monitor-chart">
-                    <div class="card-header bg-light-primary fw-bold text-dark">
-                        Heart Rate & Blood Pressure Trend (Placeholder for Chart)
+                    <div class="card-header bg-primary text-white fw-bold">
+                        Heart Rate & Blood Pressure Trend
                     </div>
-                    <div class="card-body text-center py-5">
-                        <i class="fas fa-chart-line fa-3x text-muted mb-3"></i>
-                        <p class="text-muted">Chart Integration Placeholder. Connect Chart.js or D3.js here to display trend data.</p>
-                        </div>
+                    <div class="card-body">
+                        <canvas id="bpChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-6">
+                <div class="card shadow-sm monitor-chart">
+                    <div class="card-header bg-secondary text-white fw-bold" style="background-color: #6f42c1!important;">
+                        Glucose Level Trend
+                    </div>
+                    <div class="card-body">
+                        <canvas id="glucoseChart"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -116,10 +117,10 @@
                         <tr>
                             <td><%= new Date(vital.reading_timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></td>
                             <td><%= vital.heart_rate || '-' %></td>
-                            <td><%= vital.temperature || '-' %></td>
-                            <td><%= vital.spo2 || '-' %></td>
+                            <td><%= vital.temperature ? vital.temperature.toFixed(1) : '-' %></td>
+                            <td><%= vital.spo2 ? vital.spo2.toFixed(1) : '-' %></td>
                             <td><%= (vital.systolic_bp || '-') + '/' + (vital.diastolic_bp || '-') %></td>
-                            <td><%= vital.glucose_level || '-' %></td>
+                            <td><%= vital.glucose_level ? vital.glucose_level.toFixed(1) : '-' %></td>
                         </tr>
                     <% }); %>
                 </tbody>
@@ -128,7 +129,7 @@
         <% } else { %>
             <div class="alert alert-info mt-4" role="alert">
                 <i class="fas fa-info-circle me-2"></i>
-                No health vital data found for your account.
+                No health vital data found for your account. Please ask an admin to add initial vitals.
             </div>
         <% } %>
 
@@ -140,7 +141,95 @@
             <% } %>
         </div>
     </div>
+
+    <% if (chartData && chartData.labels && chartData.labels.length > 0) { %>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const chartLabels = <%- JSON.stringify(chartData.labels) %>;
+            const primaryColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#0d6efd';
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--secondary-accent').trim() || '#4287f5';
+            
+            // BP and Heart Rate Chart
+            const bpCtx = document.getElementById('bpChart');
+            new Chart(bpCtx, {
+                type: 'line',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Heart Rate (BPM)',
+                        data: <%- JSON.stringify(chartData.heartRate) %>,
+                        borderColor: primaryColor,
+                        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        yAxisID: 'y'
+                    }, {
+                        label: 'Systolic BP',
+                        data: <%- JSON.stringify(chartData.systolicBP) %>,
+                        borderColor: '#dc3545', // Danger Red
+                        backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        hidden: true,
+                        yAxisID: 'y1'
+                    }, {
+                        label: 'Diastolic BP',
+                        data: <%- JSON.stringify(chartData.diastolicBP) %>,
+                        borderColor: '#ffc107', // Warning Yellow
+                        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.4,
+                        hidden: true,
+                        yAxisID: 'y1'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            title: { display: true, text: 'Heart Rate' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            grid: { drawOnChartArea: false }, // Only draw grid lines for the main Y axis
+                            title: { display: true, text: 'Blood Pressure' }
+                        }
+                    }
+                }
+            });
+
+            // Glucose Chart
+            const glucoseCtx = document.getElementById('glucoseChart');
+            new Chart(glucoseCtx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Glucose Level',
+                        data: <%- JSON.stringify(chartData.glucose) %>,
+                        backgroundColor: '#6f42c1', // Purple accent
+                        borderColor: '#5c35a8',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Glucose (mg/dL)' }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+    <% } %>
 <%- include('initials/footer.ejs') %>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>
