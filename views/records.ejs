@@ -1,4 +1,4 @@
-<%- include('initials/header.ejs', { title: 'Medical Records - CareFlow' }) %>
+<%- include('initials/header.ejs', { title: 'Medical Records' }) %>
 <link rel="stylesheet" href="/styles/records.css">
     <div class="container py-5">
         <h2 class="mb-4 text-primary">
@@ -43,6 +43,7 @@
 
                             </div>
                             <div class="card-footer bg-light border-0 text-end">
+                                <!-- UPDATED LINK TO VIEW DETAIL PAGE -->
                                 <a href="/records/<%= record.record_id %>" class="btn btn-sm btn-outline-primary">View Details</a>
                             </div>
                         </div>
@@ -57,9 +58,12 @@
         <% } %>
 
         <div class="mt-5 text-center">
-            <a href="/newrecord" class="btn btn-primary btn-lg">
-                <i class="fas fa-plus-circle me-2"></i> Add New Record (Admin Use)
-            </a>
+            <!-- Only show this if the user is an admin -->
+            <% if (user && user.role === 'admin') { %>
+                <a href="/newrecord" class="btn btn-primary btn-lg">
+                    <i class="fas fa-plus-circle me-2"></i> Add New Record (Admin Use)
+                </a>
+            <% } %>
         </div>
     </div>
 <%- include('initials/footer.ejs') %>
