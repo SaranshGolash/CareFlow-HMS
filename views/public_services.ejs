@@ -1,0 +1,51 @@
+<%- include('initials/header.ejs', { title: 'Our Services' }) %>
+<link rel="stylesheet" href="/styles/service_catalog.css">
+    <div class="container py-5">
+        <h2 class="mb-4 text-primary text-center">CareFlow HMS Service Catalog</h2>
+        <p class="lead text-center text-muted mb-5">A transparent view of our fixed consultation, procedure, and laboratory service costs.</p>
+
+        <% if (services && services.length > 0) { %>
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <div class="catalog-table-container shadow-md">
+                        <table class="table table-hover table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Service Name</th>
+                                    <th>Category</th>
+                                    <th class="text-end">Cost (USD)</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% services.forEach(service => { %>
+                                    <tr>
+                                        <td><strong><%= service.service_name %></strong></td>
+                                        <td><span class="badge bg-secondary"><%= service.category %></span></td>
+                                        <td class="text-end fw-bold text-success">$<%= service.cost %></td>
+                                        <td><%= service.description || 'No detailed description available.' %></td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        <% } else { %>
+            <div class="alert alert-info text-center mt-4" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                The service catalog is currently being updated. Please check back soon.
+            </div>
+        <% } %>
+        
+        <div class="text-center mt-5">
+            <p class="text-muted">Ready to schedule an appointment?</p>
+            <a href="<%= user ? '/appointments' : '/signup' %>" class="btn btn-primary btn-lg">
+                <%= user ? 'Book Appointment' : 'Sign Up to Book' %>
+            </a>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
