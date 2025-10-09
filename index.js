@@ -235,8 +235,35 @@ app.get('/monitoring', isAuthenticated, async (req, res) => {
 });
 
 // User Management Routes
-app.get('/dashboard', isAuthenticated, (req, res) => {
-    res.render('dashboard');
+app.get('/dashboard', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    try {
+        // Fetch Appointment Count
+        const apptResult = await db.query('SELECT COUNT(*) FROM appointments WHERE user_id = $1', [userId]);
+        const apptCount = parseInt(apptResult.rows[0].count, 10);
+
+        // Fetch Record Count
+        const recordResult = await db.query('SELECT COUNT(*) FROM medical_records WHERE user_id = $1', [userId]);
+        const recordCount = parseInt(recordResult.rows[0].count, 10);
+
+        // Fetch Vitals Count (example)
+        const vitalResult = await db.query('SELECT COUNT(*) FROM health_vitals WHERE user_id = $1', [userId]);
+        const vitalCount = parseInt(vitalResult.rows[0].count, 10);
+
+        res.render('dashboard', {
+            apptCount: apptCount,
+            recordCount: recordCount,
+            vitalCount: vitalCount
+        });
+    } catch (err) {
+        console.error('Dashboard data fetch error:', err);
+        req.flash('error_msg', 'Failed to load dashboard data.');
+        res.render('dashboard', {
+            apptCount: 0,
+            recordCount: 0,
+            vitalCount: 0
+        });
+    }
 });
 
 app.get('/settings', isAuthenticated, (req, res) => {
