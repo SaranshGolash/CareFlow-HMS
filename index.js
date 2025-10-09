@@ -246,14 +246,22 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
         const recordResult = await db.query('SELECT COUNT(*) FROM medical_records WHERE user_id = $1', [userId]);
         const recordCount = parseInt(recordResult.rows[0].count, 10);
 
-        // Fetch Vitals Count (example)
+        // Fetch Vitals Count
         const vitalResult = await db.query('SELECT COUNT(*) FROM health_vitals WHERE user_id = $1', [userId]);
         const vitalCount = parseInt(vitalResult.rows[0].count, 10);
+
+        // Fetch Latest Vital Date
+        const latestVitalResult = await db.query(
+            'SELECT reading_timestamp FROM health_vitals WHERE user_id = $1 ORDER BY reading_timestamp DESC LIMIT 1',
+            [userId]
+        );
+        const latestVitalDate = latestVitalResult.rows[0] ? latestVitalResult.rows[0].reading_timestamp : null;
 
         res.render('dashboard', {
             apptCount: apptCount,
             recordCount: recordCount,
-            vitalCount: vitalCount
+            vitalCount: vitalCount,
+            latestVitalDate: latestVitalDate // Pass the new variable
         });
     } catch (err) {
         console.error('Dashboard data fetch error:', err);
@@ -261,7 +269,8 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
         res.render('dashboard', {
             apptCount: 0,
             recordCount: 0,
-            vitalCount: 0
+            vitalCount: 0,
+            latestVitalDate: null // Ensure it's passed as null on error
         });
     }
 });
