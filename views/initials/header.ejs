@@ -27,17 +27,31 @@
                             <a class="nav-link disabled" href="#">Appointments</a>
                         <% } %>
                     </li>
-                    </ul>
+                    <li class="nav-item">
+                        <!-- Public Services Link -->
+                        <a class="nav-link" href="/public-services">Services</a>
+                    </li>
+                </ul>
                 
+                <!-- Authentication Buttons/Profile Dropdown -->
                 <ul class="navbar-nav">
                     <% if (user) { %>
+                        <!-- Logged In User Profile Dropdown -->
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-user-circle me-1"></i> <%= user.username %>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Settings</a></li>
                                 <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                                <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Settings</a></li>
+                                
+                                <% if (user.role === 'admin') { %>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><span class="dropdown-item-text text-uppercase fw-bold small text-primary">Admin Tools</span></li>
+                                    <li><a class="dropdown-item" href="/services"><i class="fas fa-plus-square me-2"></i>Manage Services</a></li>
+                                    <li><a class="dropdown-item" href="/newrecord"><i class="fas fa-file-medical me-2"></i>Add Record</a></li>
+                                <% } %>
+
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form action="/logout" method="POST" class="d-inline">
@@ -49,11 +63,12 @@
                             </ul>
                         </li>
                     <% } else { %>
+                        <!-- Login/Signup Buttons -->
                         <li class="nav-item">
-                            <a class="btn btn-outline-light me-2" href="/login"><i class="btn btn-login-signup fas fa-sign-in-alt me-1"></i> Login</a>
+                            <a class="btn btn-outline-light me-2" href="/login"><i class="fas fa-sign-in-alt me-1"></i> Login</a>
                         </li>
                         <li class="nav-item">
-                            <a class="btn btn-primary" href="/signup"><i class="btn btn-login-signup fas fa-user-plus me-1"></i> Sign Up</a>
+                            <a class="btn btn-primary" href="/signup"><i class="fas fa-user-plus me-1"></i> Sign Up</a>
                         </li>
                     <% } %>
                 </ul>
@@ -74,4 +89,3 @@
             </div>
         <% } %>
     </div>
-    
