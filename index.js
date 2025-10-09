@@ -23,9 +23,9 @@ const db = new pg.Client({
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
     // CRITICAL for Render deployment: Requires SSL connection
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false 
-    }
+    }*/
 });
 
 db.connect()
