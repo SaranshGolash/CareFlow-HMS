@@ -1,0 +1,101 @@
+<%- include('initials/header.ejs', { title: 'Service Catalog' }) %>
+<link rel="stylesheet" href="/styles/service_catalog.css">
+    <div class="container py-5">
+        <h2 class="mb-4 text-primary"><i class="fas fa-list-alt me-3"></i> Admin Service Catalog</h2>
+        <p class="text-muted">Define and manage all fixed-cost services offered by the clinic.</p>
+
+        <div class="row g-4 mt-3">
+            
+            <!-- ADD NEW SERVICE FORM (Left Column) -->
+            <div class="col-lg-4">
+                <div class="card shadow-md h-100 catalog-form-card">
+                    <div class="card-header bg-primary text-white fw-bold">
+                        Add New Service
+                    </div>
+                    <div class="card-body">
+                        <form action="/services" method="POST" class="row g-3">
+                            
+                            <div class="col-12">
+                                <label for="service_name" class="form-label">Service Name*</label>
+                                <input type="text" id="service_name" name="service_name" class="form-control" required placeholder="e.g., General Consultation">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="category" class="form-label">Category*</label>
+                                <select id="category" name="category" class="form-select form-control" required>
+                                    <option value="" disabled selected>Select Category</option>
+                                    <option value="Consultation">Consultation</option>
+                                    <option value="Lab Test">Lab Test</option>
+                                    <option value="Procedure">Procedure</option>
+                                    <option value="Imaging">Imaging</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="cost" class="form-label">Cost (USD)*</label>
+                                <input type="number" id="cost" name="cost" class="form-control" step="0.01" min="0.01" required placeholder="e.g., 50.00">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="description" class="form-label">Description (Optional)</label>
+                                <textarea id="description" name="description" class="form-control" rows="2" placeholder="Brief description of the service"></textarea>
+                            </div>
+
+                            <div class="col-12 pt-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus-circle me-1"></i> Save Service
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- EXISTING SERVICES LIST (Right Column) -->
+            <div class="col-lg-8">
+                <div class="table-responsive catalog-table-container shadow-md">
+                    <% if (services.length > 0) { %>
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Service Name</th>
+                                    <th>Category</th>
+                                    <th class="text-end">Cost (USD)</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% services.forEach(service => { %>
+                                    <tr>
+                                        <td><%= service.service_id %></td>
+                                        <td><%= service.service_name %></td>
+                                        <td><span class="badge bg-secondary"><%= service.category %></span></td>
+                                        <td class="text-end fw-bold">$<%= service.cost %></td>
+                                        <td class="text-center">
+                                            <form action="/services/<%= service.service_id %>?_method=DELETE" method="POST" class="d-inline" 
+                                                  onsubmit="return confirm('Are you sure you want to delete <%= service.service_name %>?');">
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-trash-alt"></i> Delete
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <div class="alert alert-warning text-center m-4" role="alert">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            No services defined in the catalog yet. Use the form to the left to add one.
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
