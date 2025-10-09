@@ -7,8 +7,7 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 require('dotenv').config();
 
-// Automatically convert Postgres NUMERIC (type code 1700) to JavaScript float
-// This is necessary because node-pg returns DECIMAL/NUMERIC as strings by default.
+// FIX: Automatically convert Postgres NUMERIC (type code 1700) to JavaScript float
 const NUMERIC_OID = 1700;
 pg.types.setTypeParser(NUMERIC_OID, (value) => {
     return value === null ? null : parseFloat(value);
@@ -66,7 +65,6 @@ app.use((req, res, next) => {
 
 // --- AUTHORIZATION MIDDLEWARE ---
 
-// Check if user is logged in
 const isAuthenticated = (req, res, next) => {
     if (req.session.user) {
         return next();
@@ -75,7 +73,6 @@ const isAuthenticated = (req, res, next) => {
     res.redirect('/login');
 };
 
-// Check if user is an Admin
 const isAdmin = (req, res, next) => {
     if (req.session.user && req.session.user.role === 'admin') {
         return next();
@@ -84,10 +81,34 @@ const isAdmin = (req, res, next) => {
     res.redirect('/');
 };
 
+// --- REUSABLE FUNCTIONS ---
+
+// Function to fetch all active services
+const fetchServices = async () => {
+    try {
+        const result = await db.query('SELECT * FROM services WHERE is_active = TRUE ORDER BY category, service_name');
+        
+        // Format cost for display consistency
+        return result.rows.map(s => ({
+            ...s,
+            cost: parseFloat(s.cost).toFixed(2)
+        }));
+    } catch (err) {
+        console.error('Error in fetchServices:', err);
+        return [];
+    }
+};
+
 // --- CORE ROUTES ---
 
 app.get('/', async (req, res) => {
     res.render('index');
+});
+
+// NEW PUBLIC ROUTE: Service Catalog (Accessible to everyone)
+app.get('/public-services', async (req, res) => {
+    const services = await fetchServices();
+    res.render('public_services', { services: services });
 });
 
 // Appointments
@@ -189,7 +210,6 @@ app.get('/monitoring', isAuthenticated, async (req, res) => {
             spo2: vital.spo2 ? parseFloat(vital.spo2) : null
         }));
 
-        // Data structure for Chart.js
         const chartData = {
             labels: rawVitals.map(v => new Date(v.reading_timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })),
             heartRate: rawVitals.map(v => v.heart_rate),
@@ -278,27 +298,13 @@ app.post('/settings', isAuthenticated, async (req, res) => {
 
 // --- ADMIN MANAGEMENT ROUTES ---
 
-// Display the Service Catalog
+// GET: Admin Service Catalog (Requires Admin Login)
 app.get('/services', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-        const result = await db.query('SELECT * FROM services ORDER BY category, service_name');
-        const services = result.rows;
-        
-        // Format cost for display consistency
-        const formattedServices = services.map(s => ({
-            ...s,
-            cost: parseFloat(s.cost).toFixed(2)
-        }));
-
-        res.render('service_catalog', { services: formattedServices });
-    } catch (err) {
-        console.error('Error fetching service catalog:', err);
-        req.flash('error_msg', 'Error retrieving service data.');
-        res.render('service_catalog', { services: [] });
-    }
+    const services = await fetchServices(); // Use the reusable function
+    res.render('service_catalog', { services: services });
 });
 
-// Add a New Service
+// POST: Add a New Service (Admin Only)
 app.post('/services', isAuthenticated, isAdmin, async (req, res) => {
     const { service_name, category, cost, description } = req.body;
     
@@ -327,7 +333,7 @@ app.post('/services', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
-// Delete a Service (using method-override)
+// DELETE: Delete a Service (Admin Only, using method-override)
 app.delete('/services/:id', isAuthenticated, isAdmin, async (req, res) => {
     const serviceId = req.params.id;
 
@@ -348,7 +354,7 @@ app.delete('/services/:id', isAuthenticated, isAdmin, async (req, res) => {
 });
 
 
-// New Record Form
+// Admin: New Record Form
 app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const patientResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
