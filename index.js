@@ -33,7 +33,6 @@ pool.connect()
 
 // Set global variable 'db' to the Pool instance for consistency
 const db = pool;
-// ---------------------------------------------------------
 
 // Middleware
 app.set('view engine', 'ejs');
