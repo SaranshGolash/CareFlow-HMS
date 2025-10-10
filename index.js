@@ -15,21 +15,23 @@ pg.types.setTypeParser(NUMERIC_OID, (value) => {
 
 const app = express();
 
-// Database connection
-const db = new pg.Client({
+// 1. UPDATE: Database Connection using pg.Pool
+// The Pool manages multiple client connections, which is required for transactions.
+const db = new pg.Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    // CRITICAL for Render deployment: Requires SSL connection
     ssl: {
         rejectUnauthorized: false 
-    }
+    },
+    max: 10, // Maximum number of clients in the pool
+    idleTimeoutMillis: 30000,
 });
 
 db.connect()
-    .then(() => console.log('Database connected successfully'))
+    .then(() => console.log('Database Pool connected successfully'))
     .catch(err => console.error('Database connection error:', err));
 
 // Middleware
@@ -86,6 +88,7 @@ const isAdmin = (req, res, next) => {
 // Function to fetch all active services
 const fetchServices = async () => {
     try {
+        // Pool is used here (db.query)
         const result = await db.query('SELECT * FROM services WHERE is_active = TRUE ORDER BY category, service_name');
         
         // Format cost for display consistency
@@ -246,7 +249,7 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
         const recordResult = await db.query('SELECT COUNT(*) FROM medical_records WHERE user_id = $1', [userId]);
         const recordCount = parseInt(recordResult.rows[0].count, 10);
 
-        // Fetch Vitals Count
+        // Fetch Vitals Count (example)
         const vitalResult = await db.query('SELECT COUNT(*) FROM health_vitals WHERE user_id = $1', [userId]);
         const vitalCount = parseInt(vitalResult.rows[0].count, 10);
 
@@ -256,7 +259,8 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
             [userId]
         );
         const latestVitalDate = latestVitalResult.rows[0] ? latestVitalResult.rows[0].reading_timestamp : null;
-
+        
+        // Calculate Outstanding Balance
         const balanceResult = await db.query(
             'SELECT SUM(total_amount - amount_paid) AS outstanding_balance FROM invoices WHERE user_id = $1 AND status != $2', 
             [userId, 'Paid']
@@ -270,7 +274,7 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
             recordCount: recordCount,
             vitalCount: vitalCount,
             latestVitalDate: latestVitalDate,
-            outstandingBalance: outstandingBalance // Pass the new variable
+            outstandingBalance: outstandingBalance
         });
     } catch (err) {
         console.error('Dashboard data fetch error:', err);
@@ -280,7 +284,7 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
             recordCount: 0,
             vitalCount: 0,
             latestVitalDate: null,
-            outstandingBalance: '0.00' // Ensure it passes a default
+            outstandingBalance: '0.00'
         });
     }
 });
@@ -342,7 +346,7 @@ app.post('/settings', isAuthenticated, async (req, res) => {
     }
 });
 
-// --- ADMIN MANAGEMENT ROUTES ---
+// --- ADMIN MANAGEMENT ROUTES (Add, Delete services must remain protected) ---
 
 // GET: Display Invoice Generation Form (Admin Only)
 app.get('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
@@ -362,7 +366,7 @@ app.get('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
-// POST: Generate and Save the Invoice (Admin Only)
+// 2. UPDATE: POST: Generate and Save the Invoice (Transaction Fix)
 app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
     const { patient_id, record_id, due_date, service_ids, quantities } = req.body;
 
@@ -371,9 +375,10 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
         return res.redirect('/new-invoice');
     }
 
+    // CRITICAL FIX: Acquire dedicated client from the Pool
     const client = await db.connect();
     try {
-        await client.query('BEGIN');
+        await client.query('BEGIN'); // Start transaction
         
         // 1. Fetch service details to calculate total
         const serviceDetailsResult = await client.query('SELECT service_id, service_name, cost FROM services WHERE service_id = ANY($1)', [service_ids]);
@@ -386,6 +391,7 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
             INSERT INTO invoices (user_id, record_id, due_date, total_amount) 
             VALUES ($1, $2, $3, $4) RETURNING invoice_id
         `;
+        // Use the dedicated client for all transaction queries
         const invoiceResult = await client.query(invoiceQuery, [patient_id, record_id || null, due_date, 0.00]);
         const invoiceId = invoiceResult.rows[0].invoice_id;
 
@@ -412,20 +418,22 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
         const updateInvoiceQuery = 'UPDATE invoices SET total_amount = $1 WHERE invoice_id = $2';
         await client.query(updateInvoiceQuery, [totalAmount.toFixed(2), invoiceId]);
 
-        await client.query('COMMIT');
+        await client.query('COMMIT'); // Commit transaction
 
         req.flash('success_msg', `Invoice #${invoiceId} generated successfully for Patient ID ${patient_id}. Total: $${totalAmount.toFixed(2)}`);
-        res.redirect('/dashboard'); // Redirect to admin dash or invoice list
+        res.redirect('/invoices');
 
     } catch (err) {
-        await client.query('ROLLBACK');
+        await client.query('ROLLBACK'); // Rollback transaction on error
         console.error('Error generating invoice (Transaction rolled back):', err);
         req.flash('error_msg', 'Error generating invoice. Please check the services and amounts.');
         res.redirect('/new-invoice');
     } finally {
+        // CRITICAL FIX: Release the client back to the pool
         client.release();
     }
 });
+
 
 // GET: View All Invoices (Admin or Patient-Specific)
 app.get('/invoices', isAuthenticated, async (req, res) => {
@@ -451,6 +459,7 @@ app.get('/invoices', isAuthenticated, async (req, res) => {
         res.redirect(isAdminUser ? '/dashboard' : '/');
     }
 });
+
 
 // GET: Admin Service Catalog (Requires Admin Login)
 app.get('/services', isAuthenticated, isAdmin, async (req, res) => {

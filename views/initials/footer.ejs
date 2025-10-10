@@ -1,33 +1,41 @@
 <footer class="footer bg-light py-4 mt-auto">
     <div class="container">
         <div class="row">
-            <!-- Hospital Info -->
+            
             <div class="col-md-4 mb-3">
                 <h5 class="text-primary">CareFlow HMS</h5>
                 <p class="text-muted">
                     Providing excellence in healthcare management and patient care services.
                 </p>
-                <p class="mb-1">
+                <p class="mb-1 text-muted">
                     <i class="fas fa-phone-alt me-2"></i> Emergency: +1-800-CAREFLOW
                 </p>
-                <p>
+                <p class="text-muted">
                     <i class="fas fa-envelope me-2"></i> contact@careflow.com
                 </p>
             </div>
 
-            <!-- Quick Links -->
             <div class="col-md-4 mb-3">
-                <h5 class="text-primary">Quick Links</h5>
-                <ul class="list-unstyled">
-                    <li><a href="/about" class="quick-links text-decoration-none text-muted">About Us</a></li>
-                    <li><a href="/public-services" class="quick-links text-decoration-none text-muted">Our Services</a></li>
-                    <li><a href="/doctors" class="quick-links text-decoration-none text-muted">Find a Doctor</a></li>
-                    <li><a href="/appointments" class="quick-links text-decoration-none text-muted">Book Appointment</a></li>
-                    <li><a href="/emergency" class="quick-links text-decoration-none text-muted">Emergency Care</a></li>
-                </ul>
+                <div class="row">
+                    <div class="col-6">
+                        <h5>Quick Links</h5>
+                        <ul class="list-unstyled">
+                            <li><a href="/" class="text-muted">Home</a></li>
+                            <li><a href="/about" class="text-muted">About Us</a></li>
+                            <li><a href="/appointments" class="text-muted">Book Appointment</a></li>
+                            <li><a href="/invoices" class="text-muted">Patient Billing</a></li>
+                        </ul>
+                    </div>
+                    <div class="col-6">
+                        <h5>Our Services</h5>
+                        <ul class="list-unstyled">
+                            <li><a href="/public-services" class="text-muted">Service Catalog</a></li>
+                            <li><a href="/monitoring" class="text-muted">Health Monitoring</a></li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
-            <!-- Connect With Us -->
             <div class="col-md-4 mb-3">
                 <h5 class="text-primary">Connect With Us</h5>
                 <div class="social-links">
@@ -46,10 +54,9 @@
             </div>
         </div>
 
-        <!-- Copyright -->
         <div class="row mt-3">
             <div class="col-12 text-center">
-                <hr>
+                <hr class="text-secondary">
                 <p class="text-muted mb-0">
                     &copy; <%= new Date().getFullYear() %> CareFlow Hospital Management System. All rights reserved.
                 </p>

@@ -71,7 +71,7 @@
         </div>
     </section>
 
-    <section class="stats bg-light py-5">
+    <section class="stats py-5">
         <div class="container">
             <div class="row text-center">
                 <div class="col-md-3">
@@ -93,6 +93,16 @@
             </div>
         </div>
     </section>
+    
+    <section class="billing-promo bg-primary text-white py-5">
+        <div class="container text-center">
+            <h2 class="mb-4">Need to Settle Your Account?</h2>
+            <p class="lead mb-4">Securely view your payment history and outstanding balances.</p>
+            <a href="/invoices" class="btn btn-light btn-lg">
+                <i class="fas fa-file-invoice-dollar me-2"></i> View My Invoices
+            </a>
+        </div>
+    </section>
 
     <section class="cta py-5">
         <div class="container">
@@ -100,7 +110,7 @@
                 <div class="col-md-8 text-center">
                     <h2 class="mb-4">Ready to Experience Better Healthcare Management?</h2>
                     <p class="lead mb-4">Join CareFlow HMS today and transform your healthcare facility's efficiency.</p>
-                    <a href="<%= user ? '/appointments' : '/signup' %>" class="btn btn-primary btn-lg">
+                    <a href="<%= user ? '/appointments' : '/signup' %>" class="btn btn-light btn-lg">
                         <%= user ? 'Manage Appointments' : 'Sign Up Now' %>
                     </a>
                 </div>
