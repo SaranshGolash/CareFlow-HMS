@@ -42,7 +42,8 @@
                                 <td class="text-end fw-bold <%= balance > 0 ? 'text-danger' : 'text-success' %>">$<%= balance %></td>
                                 <td><span class="badge bg-<%= invoice.status === 'Paid' ? 'success' : (invoice.status === 'Pending' ? 'warning' : 'primary') %>"><%= invoice.status %></span></td>
                                 <td>
-                                    <a href="/invoices/<%= invoice.invoice_id %>" class="btn btn-sm btn-outline-primary">View</a>
+                                    <!-- FIX: Link to the new detailed payment page -->
+                                    <a href="/invoices/<%= invoice.invoice_id %>" class="btn btn-sm btn-primary">Pay / View</a>
                                 </td>
                             </tr>
                         <% }); %>
