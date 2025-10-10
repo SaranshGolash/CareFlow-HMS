@@ -15,24 +15,25 @@ pg.types.setTypeParser(NUMERIC_OID, (value) => {
 
 const app = express();
 
-// 1. UPDATE: Database Connection using pg.Pool
-// The Pool manages multiple client connections, which is required for transactions.
-const db = new pg.Pool({
+// --- 1. Database Connection Pool Setup (CRITICAL FIX) ---
+const pool = new pg.Pool({
     user: process.env.DB_USER,
     host: process.env.DB_HOST,
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
     ssl: {
-        rejectUnauthorized: false 
-    },
-    max: 10, // Maximum number of clients in the pool
-    idleTimeoutMillis: 30000,
+        rejectUnauthorized: false
+    }
 });
 
-db.connect()
+pool.connect()
     .then(() => console.log('Database Pool connected successfully'))
     .catch(err => console.error('Database connection error:', err));
+
+// Set global variable 'db' to the Pool instance for consistency
+const db = pool;
+// ---------------------------------------------------------
 
 // Middleware
 app.set('view engine', 'ejs');
@@ -65,8 +66,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// --- AUTHORIZATION MIDDLEWARE ---
-
+// Middleware to check if user is logged in
 const isAuthenticated = (req, res, next) => {
     if (req.session.user) {
         return next();
@@ -75,6 +75,7 @@ const isAuthenticated = (req, res, next) => {
     res.redirect('/login');
 };
 
+// Middleware to check if user is an Admin
 const isAdmin = (req, res, next) => {
     if (req.session.user && req.session.user.role === 'admin') {
         return next();
@@ -83,35 +84,46 @@ const isAdmin = (req, res, next) => {
     res.redirect('/');
 };
 
-// --- REUSABLE FUNCTIONS ---
+// --- Reusable Functions ---
 
 // Function to fetch all active services
 const fetchServices = async () => {
+    const result = await db.query('SELECT service_id, service_name, cost FROM services WHERE is_active = TRUE ORDER BY category, service_name');
+    return result.rows;
+};
+
+// Function to fetch a specific invoice with items
+const fetchInvoiceDetails = async (invoiceId, userId = null) => {
+    const client = await db.connect();
     try {
-        // Pool is used here (db.query)
-        const result = await db.query('SELECT * FROM services WHERE is_active = TRUE ORDER BY category, service_name');
-        
-        // Format cost for display consistency
-        return result.rows.map(s => ({
-            ...s,
-            cost: parseFloat(s.cost).toFixed(2)
-        }));
-    } catch (err) {
-        console.error('Error in fetchServices:', err);
-        return [];
+        let invoiceQuery = 'SELECT * FROM invoices WHERE invoice_id = $1';
+        const params = [invoiceId];
+
+        // Security check: ensure non-admin users only see their invoices
+        if (userId) {
+            invoiceQuery += ' AND user_id = $2';
+            params.push(userId);
+        }
+
+        const invoiceResult = await client.query(invoiceQuery, params);
+        const invoice = invoiceResult.rows[0];
+
+        if (!invoice) return null;
+
+        const itemsResult = await client.query('SELECT * FROM invoice_items WHERE invoice_id = $1', [invoiceId]);
+        invoice.items = itemsResult.rows;
+
+        return invoice;
+    } finally {
+        client.release();
     }
 };
 
-// --- CORE ROUTES ---
+// --- ROUTES ---
 
+// Home Route
 app.get('/', async (req, res) => {
     res.render('index');
-});
-
-// NEW PUBLIC ROUTE: Service Catalog (Accessible to everyone)
-app.get('/public-services', async (req, res) => {
-    const services = await fetchServices();
-    res.render('public_services', { services: services });
 });
 
 // Appointments
@@ -122,7 +134,7 @@ app.get('/appointments', isAuthenticated, async (req, res) => {
         const appointments = result.rows;
         res.render('appointments', { appointments });
     } catch (err) {
-        console.error(err);
+        console.error('Error fetching appointments:', err);
         req.flash('error_msg', 'Error fetching appointments');
         res.render('appointments', { appointments: [] });
     }
@@ -147,17 +159,16 @@ app.post('/newappointments', isAuthenticated, async (req, res) => {
     }
 });
 
-// Medical Records
+// Records
 app.get('/records', isAuthenticated, async (req, res) => {
     try {
         const userId = req.session.user.id;
-        const result = await db.query('SELECT * FROM medical_records WHERE user_id = $1 ORDER BY record_date DESC, record_id DESC', [userId]);
+        const result = await db.query('SELECT * FROM medical_records WHERE user_id = $1 ORDER BY record_date DESC', [userId]);
         const records = result.rows;
         res.render('records', { 
             records: records,
             username: req.session.user.username 
         });
-
     } catch (err) {
         console.error('Error fetching medical records:', err);
         req.flash('error_msg', 'Error fetching your medical records.');
@@ -167,12 +178,14 @@ app.get('/records', isAuthenticated, async (req, res) => {
 
 app.get('/records/:id', isAuthenticated, async (req, res) => {
     const recordId = req.params.id;
-    const userId = req.session.user.id;
+    const userId = req.session.user.id; 
 
     try {
         const query = `
-            SELECT * FROM medical_records 
-            WHERE record_id = $1 AND user_id = $2
+            SELECT mr.*, u.username 
+            FROM medical_records mr
+            JOIN users u ON mr.user_id = u.id
+            WHERE mr.record_id = $1 AND mr.user_id = $2
         `;
         const result = await db.query(query, [recordId, userId]);
         const record = result.rows[0];
@@ -181,7 +194,6 @@ app.get('/records/:id', isAuthenticated, async (req, res) => {
             req.flash('error_msg', 'Medical record not found or access denied.');
             return res.redirect('/records');
         }
-
         res.render('view_record', { record: record });
 
     } catch (err) {
@@ -191,18 +203,17 @@ app.get('/records/:id', isAuthenticated, async (req, res) => {
     }
 });
 
-
 // Monitoring
 app.get('/monitoring', isAuthenticated, async (req, res) => {
     try {
-        const userId = req.session.user.id;
+        const userId = req.session.user.id; 
 
         const result = await db.query(
             `SELECT 
                 reading_timestamp, heart_rate, temperature, spo2, glucose_level, systolic_bp, diastolic_bp
              FROM health_vitals 
              WHERE user_id = $1 
-             ORDER BY reading_timestamp ASC`,
+             ORDER BY reading_timestamp ASC`, 
             [userId]
         );
         
@@ -237,23 +248,106 @@ app.get('/monitoring', isAuthenticated, async (req, res) => {
     }
 });
 
-// User Management Routes
+
+// --- AUTHENTICATION ROUTES ---
+
+app.get('/login', async (req, res) => {
+    res.render('login');
+});
+
+app.post('/login', async (req, res) => {
+    const { email, password } = req.body;
+    try {
+        const userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        const user = userResult.rows[0];
+
+        if (user) {
+            const isMatch = await bcrypt.compare(password, user.password_hash);
+            if (isMatch) {
+                req.session.user = { 
+                    id: user.id, 
+                    username: user.username,
+                    email: user.email,
+                    role: user.role
+                };
+                req.flash('success_msg', 'Login successful! Welcome back.');
+                res.redirect('/');
+            } else {
+                req.flash('error_msg', 'Invalid password. Please try again.'); 
+                res.redirect('/login');
+            }
+        } else {
+            req.flash('error_msg', 'User not found with that email address.'); 
+            res.redirect('/login');
+        }
+    } catch (err) {
+        console.error('Login processing error (DB/bcrypt hang):', err);
+        req.flash('error_msg', 'An internal error occurred during login processing.');
+        res.redirect('/login');
+    }
+});
+
+app.get('/signup', (req, res) => {
+    res.render('signup');
+});
+
+app.post('/signup', async (req, res) => {
+    const { username, email, password } = req.body;
+    const saltRounds = 10;
+
+    try {
+        const password_hash = await bcrypt.hash(password, saltRounds);
+        const query = 'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email, role';
+        const result = await db.query(query, [username, email, password_hash]);
+        const newUser = result.rows[0];
+
+        req.session.user = {
+            id: newUser.id,
+            username: newUser.username,
+            email: newUser.email,
+            role: newUser.role
+        };
+
+        req.flash('success_msg', 'Registration successful! Welcome to CareFlow HMS.');
+        res.redirect('/');
+    } catch (err) {
+        if (err.code === '23505') {
+            req.flash('error_msg', 'Username or email already exists.');
+        } else {
+            console.error('Signup error:', err);
+            req.flash('error_msg', 'An error occurred during registration.');
+        }
+        res.redirect('/signup');
+    }
+});
+
+app.post('/logout', async (req, res) => {
+    req.flash('success_msg', 'You have been successfully logged out.');
+    req.session.destroy(err => {
+        if (err) {
+            console.error('Error destroying session:', err);
+            return res.redirect('/'); 
+        }
+        res.clearCookie('connect.sid'); 
+        res.redirect('/');
+    });
+});
+
+
+// --- USER MANAGEMENT ROUTES ---
+
 app.get('/dashboard', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id;
     try {
-        // Fetch Appointment Count
         const apptResult = await db.query('SELECT COUNT(*) FROM appointments WHERE user_id = $1', [userId]);
         const apptCount = parseInt(apptResult.rows[0].count, 10);
 
-        // Fetch Record Count
         const recordResult = await db.query('SELECT COUNT(*) FROM medical_records WHERE user_id = $1', [userId]);
         const recordCount = parseInt(recordResult.rows[0].count, 10);
 
-        // Fetch Vitals Count (example)
         const vitalResult = await db.query('SELECT COUNT(*) FROM health_vitals WHERE user_id = $1', [userId]);
         const vitalCount = parseInt(vitalResult.rows[0].count, 10);
 
-        // Fetch Latest Vital Date
         const latestVitalResult = await db.query(
             'SELECT reading_timestamp FROM health_vitals WHERE user_id = $1 ORDER BY reading_timestamp DESC LIMIT 1',
             [userId]
@@ -293,231 +387,129 @@ app.get('/settings', isAuthenticated, (req, res) => {
     res.render('settings');
 });
 
-app.post('/settings', isAuthenticated, async (req, res) => {
-    const { username, email, password, new_password } = req.body;
-    const userId = req.session.user.id;
-    
+app.post('/settings/update', isAuthenticated, async (req, res) => {
+    const { username, email, user_id } = req.body;
+
+    // Simplistic check to ensure user is only updating their own data
+    if (parseInt(user_id) !== req.session.user.id) {
+        req.flash('error_msg', 'Authorization failed.');
+        return res.redirect('/settings');
+    }
+
     try {
-        const userResult = await db.query('SELECT password_hash FROM users WHERE id = $1', [userId]);
-        const user = userResult.rows[0];
+        const query = 'UPDATE users SET username = $1, email = $2 WHERE id = $3';
+        await db.query(query, [username, email, user_id]);
 
-        if (!user) {
-            req.session.destroy();
-            req.flash('error_msg', 'Session expired. Please log in again.');
-            return res.redirect('/login');
-        }
-
-        const isPasswordCorrect = await bcrypt.compare(password, user.password_hash);
-        if (!isPasswordCorrect) {
-            req.flash('error_msg', 'Current password is required and must be correct to update profile.');
-            return res.redirect('/settings');
-        }
-
-        let updateQuery = 'UPDATE users SET username = $1, email = $2';
-        const queryParams = [username, email];
-        let paramIndex = 3;
-
-        if (new_password) {
-            const newPasswordHash = await bcrypt.hash(new_password, 10);
-            updateQuery += `, password_hash = $${paramIndex}`;
-            queryParams.push(newPasswordHash);
-            paramIndex++;
-        }
-
-        updateQuery += ` WHERE id = $${paramIndex}`;
-        queryParams.push(userId);
-
-        await db.query(updateQuery, queryParams);
-
+        // Update session data
         req.session.user.username = username;
         req.session.user.email = email;
 
         req.flash('success_msg', 'Profile updated successfully.');
         res.redirect('/settings');
-
     } catch (err) {
-        if (err.code === '23505') {
-            req.flash('error_msg', 'That username or email is already taken.');
+        console.error('Profile update error:', err);
+        if (err.code === '23505') { // Unique constraint violation
+            req.flash('error_msg', 'Email or username already taken.');
         } else {
-            console.error('Settings update error:', err);
-            req.flash('error_msg', 'An error occurred during update.');
+            req.flash('error_msg', 'An error occurred during profile update.');
         }
         res.redirect('/settings');
     }
 });
 
-// --- ADMIN MANAGEMENT ROUTES (Add, Delete services must remain protected) ---
+app.post('/settings/password', isAuthenticated, async (req, res) => {
+    const { current_password, new_password, user_id } = req.body;
 
-// GET: Display Invoice Generation Form (Admin Only)
-app.get('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
+    if (parseInt(user_id) !== req.session.user.id) {
+        req.flash('error_msg', 'Authorization failed.');
+        return res.redirect('/settings');
+    }
+
     try {
-        // Fetch users (patients) and services for dropdowns
-        const patientsResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
-        const services = await fetchServices(); // Reusable service function
-        
-        res.render('new_invoice', { 
-            patients: patientsResult.rows,
-            services: services
-        });
+        // 1. Fetch current hashed password
+        const userResult = await db.query('SELECT password_hash FROM users WHERE id = $1', [user_id]);
+        const user = userResult.rows[0];
+
+        // 2. Compare current password
+        const isMatch = await bcrypt.compare(current_password, user.password_hash);
+
+        if (!isMatch) {
+            req.flash('error_msg', 'Current password is incorrect.');
+            return res.redirect('/settings');
+        }
+
+        // 3. Hash the new password
+        const saltRounds = 10;
+        const new_password_hash = await bcrypt.hash(new_password, saltRounds);
+
+        // 4. Update the database
+        const query = 'UPDATE users SET password_hash = $1 WHERE id = $2';
+        await db.query(query, [new_password_hash, user_id]);
+
+        req.flash('success_msg', 'Password updated successfully.');
+        res.redirect('/settings');
+
     } catch (err) {
-        console.error('Error loading invoice form data:', err);
-        req.flash('error_msg', 'Failed to load data for the invoice form.');
+        console.error('Password change error:', err);
+        req.flash('error_msg', 'An error occurred during password change.');
+        res.redirect('/settings');
+    }
+});
+
+
+// --- ADMIN MANAGEMENT ROUTES ---
+
+// GET: Service Catalog (Admin View)
+app.get('/services', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const services = await fetchServices();
+        res.render('service_catalog', { services });
+    } catch (err) {
+        console.error('Error fetching services for admin:', err);
+        req.flash('error_msg', 'Could not load service catalog.');
         res.redirect('/dashboard');
     }
 });
 
-// 2. UPDATE: POST: Generate and Save the Invoice (Transaction Fix)
-app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
-    const { patient_id, record_id, due_date, service_ids, quantities } = req.body;
-
-    if (!patient_id || !due_date || !service_ids || service_ids.length === 0) {
-        req.flash('error_msg', 'Patient, Due Date, and at least one Service are required.');
-        return res.redirect('/new-invoice');
-    }
-
-    // CRITICAL FIX: Acquire dedicated client from the Pool
-    const client = await db.connect();
-    try {
-        await client.query('BEGIN'); // Start transaction
-        
-        // 1. Fetch service details to calculate total
-        const serviceDetailsResult = await client.query('SELECT service_id, service_name, cost FROM services WHERE service_id = ANY($1)', [service_ids]);
-        const serviceDetails = serviceDetailsResult.rows;
-
-        let totalAmount = 0;
-        
-        // 2. Insert Invoice (placeholder total)
-        const invoiceQuery = `
-            INSERT INTO invoices (user_id, record_id, due_date, total_amount) 
-            VALUES ($1, $2, $3, $4) RETURNING invoice_id
-        `;
-        // Use the dedicated client for all transaction queries
-        const invoiceResult = await client.query(invoiceQuery, [patient_id, record_id || null, due_date, 0.00]);
-        const invoiceId = invoiceResult.rows[0].invoice_id;
-
-        // 3. Insert Invoice Items and calculate final total
-        for (let i = 0; i < service_ids.length; i++) {
-            const serviceId = parseInt(service_ids[i]);
-            const quantity = parseInt(quantities[i]) || 1;
-            const detail = serviceDetails.find(s => s.service_id === serviceId);
-
-            if (detail) {
-                const cost = parseFloat(detail.cost);
-                const itemTotal = cost * quantity;
-                totalAmount += itemTotal;
-
-                const itemQuery = `
-                    INSERT INTO invoice_items (invoice_id, service_name, cost_per_unit, quantity)
-                    VALUES ($1, $2, $3, $4)
-                `;
-                await client.query(itemQuery, [invoiceId, detail.service_name, cost, quantity]);
-            }
-        }
-
-        // 4. Update the Invoice with the final total amount
-        const updateInvoiceQuery = 'UPDATE invoices SET total_amount = $1 WHERE invoice_id = $2';
-        await client.query(updateInvoiceQuery, [totalAmount.toFixed(2), invoiceId]);
-
-        await client.query('COMMIT'); // Commit transaction
-
-        req.flash('success_msg', `Invoice #${invoiceId} generated successfully for Patient ID ${patient_id}. Total: $${totalAmount.toFixed(2)}`);
-        res.redirect('/invoices');
-
-    } catch (err) {
-        await client.query('ROLLBACK'); // Rollback transaction on error
-        console.error('Error generating invoice (Transaction rolled back):', err);
-        req.flash('error_msg', 'Error generating invoice. Please check the services and amounts.');
-        res.redirect('/new-invoice');
-    } finally {
-        // CRITICAL FIX: Release the client back to the pool
-        client.release();
-    }
-});
-
-
-// GET: View All Invoices (Admin or Patient-Specific)
-app.get('/invoices', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
-    const isAdminUser = req.session.user.role === 'admin';
-    
-    let query = 'SELECT * FROM invoices ';
-    const params = [];
-
-    if (!isAdminUser) {
-        query += 'WHERE user_id = $1 ';
-        params.push(userId);
-    }
-    
-    query += 'ORDER BY invoice_date DESC';
-
-    try {
-        const result = await db.query(query, params);
-        res.render('invoices', { invoices: result.rows, isAdmin: isAdminUser });
-    } catch (err) {
-        console.error('Error fetching invoices:', err);
-        req.flash('error_msg', 'Error fetching invoice data.');
-        res.redirect(isAdminUser ? '/dashboard' : '/');
-    }
-});
-
-
-// GET: Admin Service Catalog (Requires Admin Login)
-app.get('/services', isAuthenticated, isAdmin, async (req, res) => {
-    const services = await fetchServices(); // Use the reusable function
-    res.render('service_catalog', { services: services });
-});
-
-// POST: Add a New Service (Admin Only)
+// POST: Add New Service (Admin Only)
 app.post('/services', isAuthenticated, isAdmin, async (req, res) => {
     const { service_name, category, cost, description } = req.body;
-    
-    if (!service_name || !category || !cost || isNaN(cost)) {
-        req.flash('error_msg', 'Service Name, Category, and a valid Cost are required.');
-        return res.redirect('/services');
-    }
-
     try {
-        const query = `
-            INSERT INTO services (service_name, category, cost, description)
-            VALUES ($1, $2, $3, $4)
-        `;
+        const query = 'INSERT INTO services (service_name, category, cost, description) VALUES ($1, $2, $3, $4)';
         await db.query(query, [service_name, category, cost, description]);
-
         req.flash('success_msg', `Service "${service_name}" added successfully.`);
         res.redirect('/services');
     } catch (err) {
+        console.error('Error adding service:', err);
         if (err.code === '23505') {
-            req.flash('error_msg', 'A service with that name already exists.');
+            req.flash('error_msg', 'Service name already exists.');
         } else {
-            console.error('Error adding new service:', err);
-            req.flash('error_msg', 'An error occurred while adding the service.');
+            req.flash('error_msg', 'Error adding service.');
         }
         res.redirect('/services');
     }
 });
 
-// DELETE: Delete a Service (Admin Only, using method-override)
+// DELETE: Delete Service (Admin Only)
 app.delete('/services/:id', isAuthenticated, isAdmin, async (req, res) => {
     const serviceId = req.params.id;
-
     try {
-        const result = await db.query('DELETE FROM services WHERE service_id = $1', [serviceId]);
-
+        const result = await db.query('DELETE FROM services WHERE service_id = $1 RETURNING service_name', [serviceId]);
         if (result.rowCount > 0) {
-            req.flash('success_msg', 'Service deleted successfully.');
+            req.flash('success_msg', `Service "${result.rows[0].service_name}" deleted successfully.`);
         } else {
             req.flash('error_msg', 'Service not found.');
         }
         res.redirect('/services');
     } catch (err) {
         console.error('Error deleting service:', err);
-        req.flash('error_msg', 'An error occurred while deleting the service.');
+        req.flash('error_msg', 'Error deleting service. It may be linked to existing invoices.');
         res.redirect('/services');
     }
 });
 
 
-// Admin: New Record Form
+// GET: New Medical Record Form (Admin Only)
 app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const patientResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
@@ -535,6 +527,7 @@ app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
+// POST: Save New Medical Record (Admin Only)
 app.post('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
     const { patient_id, diagnosis, treatment_plan, doctor_notes, blood_pressure, allergies, record_date } = req.body;
     
@@ -559,11 +552,12 @@ app.post('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
         res.redirect('/records');
     } catch (err) {
         console.error('Error adding new medical record:', err);
-        req.flash('error_msg', 'Error adding record. Please check inputs and try again.');
+        req.flash('error_msg', 'Error adding record. Please try again.');
         res.redirect('/newrecord');
     }
 });
 
+// GET: Add Vitals Form (Admin Only)
 app.get('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
     try {
         const patientResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
@@ -581,6 +575,7 @@ app.get('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
+// POST: Save New Vitals (Admin Only)
 app.post('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
     const { patient_id, heart_rate, temperature, spo2, glucose_level, systolic_bp, diastolic_bp, reading_timestamp } = req.body;
     
@@ -604,7 +599,7 @@ app.post('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
             glucose_level || null, 
             systolic_bp || null, 
             diastolic_bp || null, 
-            reading_timestamp || new Date().toISOString()
+            reading_timestamp || new Date().toISOString() 
         ]);
 
         req.flash('success_msg', `Vitals successfully added for Patient ID ${patient_id}.`);
@@ -616,91 +611,219 @@ app.post('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
-
-// Authentication routes
-app.get('/login', async (req, res) => {
-    res.render('login');
+// GET: Display Invoice Generation Form (Admin Only)
+app.get('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const patientsResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
+        const services = await fetchServices(); 
+        
+        res.render('new_invoice', { 
+            patients: patientsResult.rows,
+            services: services
+        });
+    } catch (err) {
+        console.error('Error loading invoice form data:', err);
+        req.flash('error_msg', 'Failed to load data for the invoice form.');
+        res.redirect('/dashboard');
+    }
 });
 
-app.post('/login', async (req, res) => {
-    const { email, password } = req.body;
-    try {
-        const userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-        const user = userResult.rows[0];
+// POST: Generate and Save the Invoice (Admin Only)
+app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
+    const { patient_id, record_id, due_date, service_ids, quantities } = req.body;
 
-        if (user) {
-            const isMatch = await bcrypt.compare(password, user.password_hash);
-            if (isMatch) {
-                req.session.user = { 
-                    id: user.id, 
-                    username: user.username,
-                    email: user.email,
-                    role: user.role
-                };
-                req.flash('success_msg', 'Login successful! Welcome back.');
-                res.redirect('/');
-            } else {
-                req.flash('error_msg', 'Invalid password. Please try again.'); 
-                res.redirect('/login');
+    if (!patient_id || !due_date || !service_ids || service_ids.length === 0) {
+        req.flash('error_msg', 'Patient, Due Date, and at least one Service are required.');
+        return res.redirect('/new-invoice');
+    }
+    
+    // Use the Pool instance (db) to acquire a dedicated client for transaction
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+        
+        const serviceDetailsResult = await client.query('SELECT service_id, service_name, cost FROM services WHERE service_id = ANY($1)', [service_ids]);
+        const serviceDetails = serviceDetailsResult.rows;
+
+        let totalAmount = 0;
+        
+        const invoiceQuery = `
+            INSERT INTO invoices (user_id, record_id, due_date, total_amount) 
+            VALUES ($1, $2, $3, $4) RETURNING invoice_id
+        `;
+        // Insert with placeholder 0.00 total for now
+        const invoiceResult = await client.query(invoiceQuery, [patient_id, record_id || null, due_date, 0.00]); 
+        const invoiceId = invoiceResult.rows[0].invoice_id;
+
+        // Insert Invoice Items and calculate final total
+        for (let i = 0; i < service_ids.length; i++) {
+            const serviceId = parseInt(service_ids[i]);
+            const quantity = parseInt(quantities[i]) || 1;
+            const detail = serviceDetails.find(s => s.service_id === serviceId);
+
+            if (detail) {
+                const cost = parseFloat(detail.cost);
+                const itemTotal = cost * quantity;
+                totalAmount += itemTotal;
+
+                const itemQuery = `
+                    INSERT INTO invoice_items (invoice_id, service_name, cost_per_unit, quantity)
+                    VALUES ($1, $2, $3, $4)
+                `;
+                await client.query(itemQuery, [invoiceId, detail.service_name, cost, quantity]);
             }
-        } else {
-            req.flash('error_msg', 'User not found with that email address.'); 
-            res.redirect('/login');
         }
+
+        // Update the Invoice with the final total amount
+        const updateInvoiceQuery = 'UPDATE invoices SET total_amount = $1 WHERE invoice_id = $2';
+        await client.query(updateInvoiceQuery, [totalAmount.toFixed(2), invoiceId]);
+
+        await client.query('COMMIT');
+
+        req.flash('success_msg', `Invoice #${invoiceId} generated successfully for Patient ID ${patient_id}. Total: $${totalAmount.toFixed(2)}`);
+        res.redirect('/dashboard'); 
+
     } catch (err) {
-        console.error('CRITICAL LOGIN ERROR:', err.message, err.stack);
-        req.flash('error_msg', 'An internal server error prevented login.');
-        res.redirect('/login');
+        await client.query('ROLLBACK');
+        console.error('Error generating invoice (Transaction rolled back):', err);
+        req.flash('error_msg', 'Error generating invoice. Please check the services and amounts.');
+        res.redirect('/new-invoice');
+    } finally {
+        client.release(); // Release the client back to the pool
     }
 });
 
-app.get('/signup', async (req, res) => {
-    res.render('signup');
-});
 
-app.post('/signup', async (req, res) => {
-    const { username, email, password } = req.body;
-    const saltRounds = 10;
+// GET: View Invoices List (Admin or Patient-Specific)
+app.get('/invoices', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+    
+    let query = 'SELECT * FROM invoices ';
+    const params = [];
+
+    if (!isAdminUser) {
+        query += 'WHERE user_id = $1 ';
+        params.push(userId);
+    }
+    
+    query += 'ORDER BY invoice_date DESC';
 
     try {
-        const password_hash = await bcrypt.hash(password, saltRounds);
-        const query = 'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email';
-        const result = await db.query(query, [username, email, password_hash]);
-        const newUser = result.rows[0];
-
-        req.session.user = {
-            id: newUser.id,
-            username: newUser.username,
-            email: newUser.email,
-            role: 'user' // Default role
-        };
-
-        req.flash('success_msg', 'Registration successful! Welcome to CareFlow HMS.');
-        res.redirect('/');
+        const result = await db.query(query, params);
+        res.render('invoices', { invoices: result.rows, isAdmin: isAdminUser });
     } catch (err) {
-        if (err.code === '23505') {
-            req.flash('error_msg', 'Username or email already exists.');
-        } else {
-            console.error('Signup error:', err);
-            req.flash('error_msg', 'An error occurred during registration.');
-        }
-        res.redirect('/signup');
+        console.error('Error fetching invoices:', err);
+        req.flash('error_msg', 'Error fetching invoice data.');
+        res.redirect(isAdminUser ? '/dashboard' : '/');
     }
 });
 
-app.post('/logout', async (req, res) => {
-    req.flash('success_msg', 'You have been successfully logged out.');
-    req.session.destroy(err => {
-        if (err) {
-            return res.redirect('/');
-        }
+// GET: View Single Invoice Detail / Payment Portal
+app.get('/invoices/:id', isAuthenticated, async (req, res) => {
+    const invoiceId = parseInt(req.params.id);
+    const userId = req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+    
+    try {
+        // Fetch invoice details and items, enforcing user security unless admin
+        const invoice = await fetchInvoiceDetails(invoiceId, isAdminUser ? null : userId);
 
-        res.clearCookie('connect.sid'); 
-        res.redirect('/');
-    });
+        if (!invoice) {
+            req.flash('error_msg', 'Invoice not found or access denied.');
+            return res.redirect('/invoices');
+        }
+        
+        res.render('pay_invoice', { 
+            invoice: invoice, 
+            items: invoice.items 
+        });
+
+    } catch (err) {
+        console.error(`Error loading invoice ${invoiceId}:`, err);
+        req.flash('error_msg', 'Error loading invoice details.');
+        res.redirect('/invoices');
+    }
 });
 
-// Error handling
+
+// POST: Process Payment Transaction
+app.post('/pay-invoice', isAuthenticated, async (req, res) => {
+    const { invoice_id, payment_amount, outstanding_balance } = req.body;
+    const userId = req.session.user.id;
+    
+    const amount = parseFloat(payment_amount);
+    const outstanding = parseFloat(outstanding_balance);
+    const invoiceId = parseInt(invoice_id);
+
+    if (isNaN(amount) || amount <= 0 || amount > outstanding) {
+        req.flash('error_msg', 'Invalid payment amount submitted.');
+        return res.redirect(`/invoices/${invoiceId}`);
+    }
+
+    // Use the Pool instance (db) to acquire a dedicated client for transaction
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+        
+        // 1. Check invoice status and ownership (security check)
+        const checkQuery = 'SELECT total_amount, amount_paid, user_id FROM invoices WHERE invoice_id = $1 AND user_id = $2 FOR UPDATE';
+        const checkResult = await client.query(checkQuery, [invoiceId, userId]);
+        const invoice = checkResult.rows[0];
+
+        if (!invoice) {
+            await client.query('ROLLBACK');
+            req.flash('error_msg', 'Invoice not found or unauthorized access.');
+            return res.redirect('/invoices');
+        }
+
+        const newPaidAmount = parseFloat(invoice.amount_paid) + amount;
+        const newBalance = parseFloat(invoice.total_amount) - newPaidAmount;
+        let newStatus = 'Partial';
+
+        if (newBalance <= 0.005) { // Use a tiny buffer for floating point comparisons
+            newStatus = 'Paid';
+        }
+        
+        // 2. Update the Invoice record
+        const updateQuery = `
+            UPDATE invoices 
+            SET amount_paid = $1, status = $2 
+            WHERE invoice_id = $3
+        `;
+        await client.query(updateQuery, [newPaidAmount.toFixed(2), newStatus, invoiceId]);
+
+        await client.query('COMMIT');
+
+        req.flash('success_msg', `Payment of $${amount.toFixed(2)} processed successfully. Status: ${newStatus}.`);
+        res.redirect(`/invoices/${invoiceId}`);
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Payment processing error (Transaction rolled back):', err);
+        req.flash('error_msg', 'Payment failed due to a server error.');
+        res.redirect(`/invoices/${invoiceId}`);
+    } finally {
+        client.release(); // Release the client back to the pool
+    }
+});
+
+// GET: Public Services
+app.get('/public-services', async (req, res) => {
+    try {
+        const services = await fetchServices();
+        res.render('public_services', { services });
+    } catch (err) {
+        console.error('Error fetching public services:', err);
+        req.flash('error_msg', 'Could not load service catalog.');
+        res.render('public_services', { services: [] });
+    }
+});
+
+
+// --- ERROR HANDLING ---
+
+// 404 handler
 app.use((req, res, next) => {
     res.status(404).render('error', { 
         message: 'Page Not Found',
@@ -708,6 +831,7 @@ app.use((req, res, next) => {
     });
 });
 
+// General Error handler
 app.use((err, req, res, next) => {
     res.status(err.status || 500).render('error', {
         message: err.message,
