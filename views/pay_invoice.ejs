@@ -1,0 +1,112 @@
+<%- include('initials/header.ejs', { title: 'Process Payment' }) %>
+<link rel="stylesheet" href="/styles/pay_invoice.css">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="card shadow-md invoice-detail-card">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h4 class="mb-0"><i class="fas fa-file-invoice-dollar me-2"></i> Invoice #<%= invoice.invoice_id %></h4>
+                        <span class="badge bg-<%= invoice.status === 'Paid' ? 'success' : (invoice.status === 'Pending' ? 'warning' : 'danger') %> fs-6">
+                            <%= invoice.status.toUpperCase() %>
+                        </span>
+                    </div>
+
+                    <div class="card-body">
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <p class="mb-1 text-muted"><strong>Billed To:</strong> <%= user.username %></p>
+                                <p class="mb-1 text-muted"><strong>Email:</strong> <%= user.email %></p>
+                            </div>
+                            <div class="col-md-6 text-md-end">
+                                <p class="mb-1"><strong>Date Issued:</strong> <%= new Date(invoice.invoice_date).toLocaleDateString() %></p>
+                                <p class="mb-1"><strong>Due Date:</strong> <span class="text-danger"><%= new Date(invoice.due_date).toLocaleDateString() %></span></p>
+                            </div>
+                        </div>
+
+                        <!-- Itemized Services Table -->
+                        <h5 class="mb-3">Itemized Services</h5>
+                        <table class="table table-bordered table-striped item-table">
+                            <thead>
+                                <tr>
+                                    <th>Service</th>
+                                    <th class="text-center">Qty</th>
+                                    <th class="text-end">Cost</th>
+                                    <th class="text-end">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% items.forEach(item => { %>
+                                <tr>
+                                    <td><%= item.service_name %></td>
+                                    <td class="text-center"><%= item.quantity %></td>
+                                    <td class="text-end">$<%= item.cost_per_unit %></td>
+                                    <td class="text-end fw-bold">$<%= (item.cost_per_unit * item.quantity).toFixed(2) %></td>
+                                </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                        
+                        <% const outstanding = (invoice.total_amount - invoice.amount_paid).toFixed(2); %>
+
+                        <!-- Summary Totals -->
+                        <div class="row justify-content-end mt-4">
+                            <div class="col-md-6">
+                                <ul class="list-group list-group-flush summary-list">
+                                    <li class="list-group-item d-flex justify-content-between">
+                                        <span>Total Billed:</span> <span class="fw-bold">$<%= invoice.total_amount.toFixed(2) %></span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between text-success">
+                                        <span>Amount Paid:</span> <span class="fw-bold">-$<%= invoice.amount_paid.toFixed(2) %></span>
+                                    </li>
+                                    <li class="list-group-item d-flex justify-content-between bg-warning text-dark fs-5">
+                                        <span>Outstanding Balance:</span> <span class="fw-bold">$<%= outstanding %></span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Form -->
+                    <div class="card-footer bg-light p-4">
+                        <% if (outstanding > 0) { %>
+                            <h5 class="mb-3 text-primary">Process Payment</h5>
+                            <form action="/pay-invoice" method="POST" class="row g-3">
+                                <input type="hidden" name="invoice_id" value="<%= invoice.invoice_id %>">
+                                <input type="hidden" name="outstanding_balance" value="<%= outstanding %>">
+
+                                <div class="col-md-6">
+                                    <label for="payment_amount" class="form-label">Payment Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" id="payment_amount" name="payment_amount" class="form-control" 
+                                               value="<%= outstanding %>" min="0.01" max="<%= outstanding %>" step="0.01" required>
+                                    </div>
+                                    <div class="form-text">Max due: $<%= outstanding %></div>
+                                </div>
+
+                                <div class="col-md-6 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-success btn-lg w-100">
+                                        <i class="fas fa-credit-card me-2"></i> Submit Payment
+                                    </button>
+                                </div>
+                            </form>
+                        <% } else { %>
+                            <div class="alert alert-success text-center mb-0">
+                                <i class="fas fa-check-circle me-2"></i> This invoice is fully paid. Thank you!
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+                
+                <div class="mt-4 text-center">
+                    <a href="/invoices" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left me-2"></i> Back to Invoice List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
