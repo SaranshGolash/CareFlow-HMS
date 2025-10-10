@@ -88,3 +88,6 @@ CREATE TABLE invoice_items (
 -- 8. Update the MEDICAL_RECORDS table to link back to the invoice (Optional link, but useful)
 ALTER TABLE medical_records
 ADD COLUMN invoice_id INTEGER REFERENCES invoices(invoice_id) ON DELETE SET NULL;
+
+ALTER TABLE invoices
+ADD COLUMN stripe_payment_intent_id VARCHAR(100);
