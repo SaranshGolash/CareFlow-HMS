@@ -4,11 +4,11 @@
     --secondary-accent: #4287f5;
     --text-color: #1f2937;
     --border-radius: 12px;
-    --shadow-md: 0 8px 24px rgba(13,110,253,0.1); /* Slightly heavier shadow */
+    --shadow-md: 0 8px 24px rgba(13,110,253,0.1);
     --transition: all 0.3s ease;
 }
 
-/* --- Card Structure --- */
+/* --- Card Structure (from previous code) --- */
 .invoice-detail-card {
     border: none;
     border-radius: var(--border-radius);
@@ -29,38 +29,65 @@
     font-weight: 600;
 }
 
-.item-table tbody tr {
-    font-size: 0.95rem;
-}
-
 /* --- Summary List --- */
 .summary-list .list-group-item {
     padding: 10px 15px;
     border-color: #e9ecef;
 }
 
-.summary-list .bg-warning {
-    background-color: #ffc107 !important;
+/* --- Payment Tabs Styling --- */
+.payment-tabs .nav-link {
+    color: var(--text-color);
+    border: 1px solid #ddd;
+    margin-bottom: 8px;
+    border-radius: 8px !important;
+    text-align: left;
+    transition: all 0.2s ease;
 }
 
-/* --- Payment Footer --- */
-.card-footer {
-    background-color: #f0f0f0 !important;
-    border-top: 1px solid #e9ecef !important;
+.payment-tabs .nav-link.active {
+    background-color: var(--primary);
+    background-image: linear-gradient(45deg, var(--primary), var(--secondary-accent));
+    color: white;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.2);
+    border-color: var(--primary) !important;
+    font-weight: 600;
+}
+
+.payment-tabs .nav-link:hover:not(.active) {
+    background-color: var(--primary-light);
+    border-color: var(--primary);
+}
+
+/* --- Tab Content --- */
+.tab-content {
+    background: #f8f9fa;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    height: 100%;
+}
+
+.tab-pane.fade {
+    border: none;
+}
+
+/* QR Code Mock */
+.tab-pane img {
+    border: 1px solid #eee;
+    padding: 10px;
+    background: white;
+}
+
+/* Payment Buttons */
+.btn-primary {
+    background: linear-gradient(90deg, var(--primary), var(--secondary-accent));
+    border: none;
+    font-weight: 600;
+    transition: var(--transition);
 }
 
 .btn-success {
     background-color: #28a745 !important;
     border-color: #28a745 !important;
     font-weight: 700;
-    transition: var(--transition);
-}
-
-.btn-success:hover {
-    background-color: #1e7e34 !important;
-    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
-}
-
-.btn-outline-secondary {
-    font-weight: 600;
 }
