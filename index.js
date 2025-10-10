@@ -334,6 +334,114 @@ app.post('/settings', isAuthenticated, async (req, res) => {
 
 // --- ADMIN MANAGEMENT ROUTES ---
 
+// GET: Display Invoice Generation Form (Admin Only)
+app.get('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        // Fetch users (patients) and services for dropdowns
+        const patientsResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
+        const services = await fetchServices(); // Reusable service function
+        
+        res.render('new_invoice', { 
+            patients: patientsResult.rows,
+            services: services
+        });
+    } catch (err) {
+        console.error('Error loading invoice form data:', err);
+        req.flash('error_msg', 'Failed to load data for the invoice form.');
+        res.redirect('/dashboard');
+    }
+});
+
+// POST: Generate and Save the Invoice (Admin Only)
+app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
+    const { patient_id, record_id, due_date, service_ids, quantities } = req.body;
+
+    if (!patient_id || !due_date || !service_ids || service_ids.length === 0) {
+        req.flash('error_msg', 'Patient, Due Date, and at least one Service are required.');
+        return res.redirect('/new-invoice');
+    }
+
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+        
+        // 1. Fetch service details to calculate total
+        const serviceDetailsResult = await client.query('SELECT service_id, service_name, cost FROM services WHERE service_id = ANY($1)', [service_ids]);
+        const serviceDetails = serviceDetailsResult.rows;
+
+        let totalAmount = 0;
+        
+        // 2. Insert Invoice (placeholder total)
+        const invoiceQuery = `
+            INSERT INTO invoices (user_id, record_id, due_date, total_amount) 
+            VALUES ($1, $2, $3, $4) RETURNING invoice_id
+        `;
+        const invoiceResult = await client.query(invoiceQuery, [patient_id, record_id || null, due_date, 0.00]);
+        const invoiceId = invoiceResult.rows[0].invoice_id;
+
+        // 3. Insert Invoice Items and calculate final total
+        for (let i = 0; i < service_ids.length; i++) {
+            const serviceId = parseInt(service_ids[i]);
+            const quantity = parseInt(quantities[i]) || 1;
+            const detail = serviceDetails.find(s => s.service_id === serviceId);
+
+            if (detail) {
+                const cost = parseFloat(detail.cost);
+                const itemTotal = cost * quantity;
+                totalAmount += itemTotal;
+
+                const itemQuery = `
+                    INSERT INTO invoice_items (invoice_id, service_name, cost_per_unit, quantity)
+                    VALUES ($1, $2, $3, $4)
+                `;
+                await client.query(itemQuery, [invoiceId, detail.service_name, cost, quantity]);
+            }
+        }
+
+        // 4. Update the Invoice with the final total amount
+        const updateInvoiceQuery = 'UPDATE invoices SET total_amount = $1 WHERE invoice_id = $2';
+        await client.query(updateInvoiceQuery, [totalAmount.toFixed(2), invoiceId]);
+
+        await client.query('COMMIT');
+
+        req.flash('success_msg', `Invoice #${invoiceId} generated successfully for Patient ID ${patient_id}. Total: $${totalAmount.toFixed(2)}`);
+        res.redirect('/dashboard'); // Redirect to admin dash or invoice list
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Error generating invoice (Transaction rolled back):', err);
+        req.flash('error_msg', 'Error generating invoice. Please check the services and amounts.');
+        res.redirect('/new-invoice');
+    } finally {
+        client.release();
+    }
+});
+
+// GET: View All Invoices (Admin or Patient-Specific)
+app.get('/invoices', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+    
+    let query = 'SELECT * FROM invoices ';
+    const params = [];
+
+    if (!isAdminUser) {
+        query += 'WHERE user_id = $1 ';
+        params.push(userId);
+    }
+    
+    query += 'ORDER BY invoice_date DESC';
+
+    try {
+        const result = await db.query(query, params);
+        res.render('invoices', { invoices: result.rows, isAdmin: isAdminUser });
+    } catch (err) {
+        console.error('Error fetching invoices:', err);
+        req.flash('error_msg', 'Error fetching invoice data.');
+        res.redirect(isAdminUser ? '/dashboard' : '/');
+    }
+});
+
 // GET: Admin Service Catalog (Requires Admin Login)
 app.get('/services', isAuthenticated, isAdmin, async (req, res) => {
     const services = await fetchServices(); // Use the reusable function
