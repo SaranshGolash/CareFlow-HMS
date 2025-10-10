@@ -1,4 +1,4 @@
--- Here are all table creation queries for the database schema that have been used in the project --
+-- Here are all table creation and update queries for the database schema that have been used in the project --
 
 -- 1. Create the USERS table (Essential for login, includes role column)
 
@@ -63,3 +63,28 @@ CREATE TABLE services (
     description TEXT,
     is_active BOOLEAN DEFAULT TRUE
 );
+
+-- 6. Create the INVOICES table
+CREATE TABLE invoices (
+    invoice_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE RESTRICT NOT NULL, -- The patient being billed
+    record_id INTEGER REFERENCES medical_records(record_id) ON DELETE SET NULL, -- Link to the consultation/record
+    invoice_date DATE DEFAULT CURRENT_DATE,
+    due_date DATE NOT NULL,
+    total_amount NUMERIC(8, 2) NOT NULL DEFAULT 0.00,
+    amount_paid NUMERIC(8, 2) NOT NULL DEFAULT 0.00,
+    status VARCHAR(20) NOT NULL DEFAULT 'Pending' -- Pending, Paid, Partial, Canceled
+);
+
+-- 7. Create the INVOICE_ITEMS table (for itemized details)
+CREATE TABLE invoice_items (
+    item_id SERIAL PRIMARY KEY,
+    invoice_id INTEGER REFERENCES invoices(invoice_id) ON DELETE CASCADE NOT NULL,
+    service_name VARCHAR(100) NOT NULL, -- Store name for historical lookup
+    cost_per_unit NUMERIC(8, 2) NOT NULL,
+    quantity INTEGER NOT NULL DEFAULT 1
+);
+
+-- 8. Update the MEDICAL_RECORDS table to link back to the invoice (Optional link, but useful)
+ALTER TABLE medical_records
+ADD COLUMN invoice_id INTEGER REFERENCES invoices(invoice_id) ON DELETE SET NULL;
