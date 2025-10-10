@@ -1,4 +1,4 @@
-<%- include('initials/header.ejs', { title: 'CareFlow - Dashboard' }) %>
+<%- include('initials/header.ejs', { title: 'Dashboard' }) %>
 <link rel="stylesheet" href="/styles/dashboard.css">
     <div class="container py-5">
         <h2 class="mb-5 text-primary">
@@ -8,7 +8,7 @@
         <% if (user.role === 'admin') { %>
             <div class="alert alert-warning" role="alert">
                 <i class="fas fa-exclamation-triangle me-2"></i>
-                You are logged in as an **Administrator**. Use the navigation bar to access admin tools.
+                You are logged in as an **Administrator**.
             </div>
         <% } %>
 
@@ -16,8 +16,7 @@
 
         <div class="row g-4">
             
-            <!-- Appointments Card -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-3">
                 <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/appointments'">
                     <div class="card-body">
                         <i class="fas fa-calendar-check fa-3x icon-blue mb-3"></i>
@@ -27,8 +26,7 @@
                 </div>
             </div>
 
-            <!-- Medical Records Card -->
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-3">
                 <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/records'">
                     <div class="card-body">
                         <i class="fas fa-notes-medical fa-3x icon-purple mb-3"></i>
@@ -37,9 +35,19 @@
                     </div>
                 </div>
             </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/invoices'">
+                    <div class="card-body">
+                        <i class="fas fa-dollar-sign fa-3x <%= (outstandingBalance > 0) ? 'text-danger' : 'text-success' %> mb-3"></i>
+                        <p class="text-uppercase text-muted mb-0 small">Outstanding Balance</p>
+                        <h2 class="fw-bold">$<%= outstandingBalance %></h2>
+                    </div>
+                </div>
+            </div>
 
-            <!-- Latest Vitals Card -->
-            <div class="col-md-6 col-lg-4">
+
+            <div class="col-md-6 col-lg-3">
                 <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/monitoring'">
                     <div class="card-body">
                         <i class="fas fa-heartbeat fa-3x icon-green mb-3"></i>
