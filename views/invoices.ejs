@@ -1,0 +1,62 @@
+<%- include('initials/header.ejs', { title: 'Invoices' }) %>
+<link rel="stylesheet" href="/styles/invoices.css">
+    <div class="container py-5">
+        <h2 class="mb-4 text-primary">
+            <i class="fas fa-file-invoice me-3"></i> 
+            <%= isAdmin ? 'All Outstanding Invoices' : 'Your Invoices' %>
+        </h2>
+        
+        <% if (isAdmin) { %>
+            <a href="/new-invoice" class="btn btn-primary mb-4">
+                <i class="fas fa-plus-circle me-2"></i> Generate New Invoice
+            </a>
+        <% } %>
+
+        <% if (invoices.length > 0) { %>
+            <div class="table-responsive invoice-table-container shadow-md">
+                <table class="table table-hover table-striped mb-0">
+                    <thead>
+                        <tr>
+                            <th>Invoice #</th>
+                            <% if (isAdmin) { %><th>Patient ID</th><% } %>
+                            <th>Date / Due Date</th>
+                            <th class="text-end">Total</th>
+                            <th class="text-end">Paid</th>
+                            <th class="text-end">Balance</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% invoices.forEach(invoice => { %>
+                            <% const balance = (invoice.total_amount - invoice.amount_paid).toFixed(2); %>
+                            <tr>
+                                <td><%= invoice.invoice_id %></td>
+                                <% if (isAdmin) { %><td><%= invoice.user_id %></td><% } %>
+                                <td>
+                                    <%= new Date(invoice.invoice_date).toLocaleDateString() %> / 
+                                    <span class="text-danger"><%= new Date(invoice.due_date).toLocaleDateString() %></span>
+                                </td>
+                                <td class="text-end fw-bold">$<%= invoice.total_amount.toFixed(2) %></td>
+                                <td class="text-end text-success">$<%= invoice.amount_paid.toFixed(2) %></td>
+                                <td class="text-end fw-bold <%= balance > 0 ? 'text-danger' : 'text-success' %>">$<%= balance %></td>
+                                <td><span class="badge bg-<%= invoice.status === 'Paid' ? 'success' : (invoice.status === 'Pending' ? 'warning' : 'primary') %>"><%= invoice.status %></span></td>
+                                <td>
+                                    <a href="/invoices/<%= invoice.invoice_id %>" class="btn btn-sm btn-outline-primary">View</a>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <div class="alert alert-info mt-4" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                No invoices found for this account.
+            </div>
+        <% } %>
+    </div>
+<%- include('initials/footer.ejs') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
