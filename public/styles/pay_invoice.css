@@ -1,0 +1,66 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --secondary-accent: #4287f5;
+    --text-color: #1f2937;
+    --border-radius: 12px;
+    --shadow-md: 0 8px 24px rgba(13,110,253,0.1); /* Slightly heavier shadow */
+    --transition: all 0.3s ease;
+}
+
+/* --- Card Structure --- */
+.invoice-detail-card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+
+.invoice-detail-card .card-header {
+    background: linear-gradient(90deg, var(--primary), var(--secondary-accent)) !important;
+    border-bottom: none !important;
+    padding: 15px 25px;
+}
+
+/* --- Item Table --- */
+.item-table thead th {
+    background-color: #f8f9fa;
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.item-table tbody tr {
+    font-size: 0.95rem;
+}
+
+/* --- Summary List --- */
+.summary-list .list-group-item {
+    padding: 10px 15px;
+    border-color: #e9ecef;
+}
+
+.summary-list .bg-warning {
+    background-color: #ffc107 !important;
+}
+
+/* --- Payment Footer --- */
+.card-footer {
+    background-color: #f0f0f0 !important;
+    border-top: 1px solid #e9ecef !important;
+}
+
+.btn-success {
+    background-color: #28a745 !important;
+    border-color: #28a745 !important;
+    font-weight: 700;
+    transition: var(--transition);
+}
+
+.btn-success:hover {
+    background-color: #1e7e34 !important;
+    box-shadow: 0 4px 10px rgba(40, 167, 69, 0.3);
+}
+
+.btn-outline-secondary {
+    font-weight: 600;
+}
