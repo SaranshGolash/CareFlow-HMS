@@ -1,0 +1,63 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --secondary-accent: #4287f5;
+    --text-color: #1f2937;
+    --muted-color: #6c757d;
+    --border-radius: 12px;
+    --shadow-md: 0 4px 16px rgba(13,110,253,0.08);
+    --transition: all 0.3s ease;
+}
+
+/* --- Form Card --- */
+.card.shadow-md {
+    border: none;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.card-title {
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* --- Form Fields --- */
+.form-control, .form-select {
+    height: 48px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    font-size: 1rem;
+}
+
+.form-label {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.section-title {
+    font-weight: 700;
+    color: var(--text-color);
+    border-bottom: 2px solid var(--primary-light);
+    padding-bottom: 5px;
+}
+
+/* Item Row Specific Styling */
+.item-row-container {
+    border: 1px solid #e9ecef;
+    border-radius: var(--border-radius);
+    padding: 15px;
+    background-color: #fcfcfc;
+}
+
+/* --- Buttons --- */
+.btn-primary {
+    background: linear-gradient(90deg, var(--primary), var(--secondary-accent));
+    border: none;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 4px 10px rgba(13, 110, 253, 0.3);
+    transform: translateY(-1px);
+}
