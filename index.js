@@ -257,11 +257,20 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
         );
         const latestVitalDate = latestVitalResult.rows[0] ? latestVitalResult.rows[0].reading_timestamp : null;
 
+        const balanceResult = await db.query(
+            'SELECT SUM(total_amount - amount_paid) AS outstanding_balance FROM invoices WHERE user_id = $1 AND status != $2', 
+            [userId, 'Paid']
+        );
+        const outstandingBalance = balanceResult.rows[0].outstanding_balance ? 
+                                   parseFloat(balanceResult.rows[0].outstanding_balance).toFixed(2) : 
+                                   '0.00';
+
         res.render('dashboard', {
             apptCount: apptCount,
             recordCount: recordCount,
             vitalCount: vitalCount,
-            latestVitalDate: latestVitalDate // Pass the new variable
+            latestVitalDate: latestVitalDate,
+            outstandingBalance: outstandingBalance // Pass the new variable
         });
     } catch (err) {
         console.error('Dashboard data fetch error:', err);
@@ -270,7 +279,8 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
             apptCount: 0,
             recordCount: 0,
             vitalCount: 0,
-            latestVitalDate: null // Ensure it's passed as null on error
+            latestVitalDate: null,
+            outstandingBalance: '0.00' // Ensure it passes a default
         });
     }
 });
