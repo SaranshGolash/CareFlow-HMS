@@ -1,0 +1,158 @@
+<%- include('initials/header.ejs', { title: 'Generate Invoice' }) %>
+<link rel="stylesheet" href="/styles/new_invoice.css">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-md">
+                    <div class="card-body">
+                        <h3 class="card-title mb-4 text-primary"><i class="fas fa-file-invoice-dollar me-2"></i> Generate New Invoice</h3>
+                        
+                        <form action="/new-invoice" method="POST" id="invoiceForm" class="row g-4">
+                            
+                            <div class="col-md-6">
+                                <label for="patient_id" class="form-label">Patient*</label>
+                                <select id="patient_id" name="patient_id" class="form-select form-control" required>
+                                    <option value="" disabled selected>Select Patient to Bill</option>
+                                    <% patients.forEach(patient => { %>
+                                        <option value="<%= patient.id %>"><%= patient.username %> (<%= patient.email %>)</option>
+                                    <% }); %>
+                                </select>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="due_date" class="form-label">Due Date*</label>
+                                <input id="due_date" name="due_date" type="date" class="form-control" required value="<%= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] %>">
+                            </div>
+
+                            <div class="col-md-3">
+                                <label for="record_id" class="form-label">Medical Record ID (Optional)</label>
+                                <input id="record_id" name="record_id" type="number" class="form-control" placeholder="e.g., 101">
+                            </div>
+
+                            <div class="col-12 mt-5">
+                                <h4 class="section-title text-dark"><i class="fas fa-list-ul me-2 text-primary"></i> Itemized Services</h4>
+                                <div id="service-items" class="row g-3 item-row-container">
+                                    <div class="row g-3 item-row mb-3">
+                                        <div class="col-md-6">
+                                            <label class="form-label">Service*</label>
+                                            <select name="service_ids[]" class="form-select service-select form-control" required>
+                                                <option value="" disabled selected>Select Service</option>
+                                                <% services.forEach(service => { %>
+                                                    <option value="<%= service.service_id %>" data-cost="<%= service.cost %>">
+                                                        <%= service.service_name %> ($<%= service.cost %>)
+                                                    </option>
+                                                <% }); %>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">Quantity*</label>
+                                            <input name="quantities[]" type="number" class="form-control quantity-input" value="1" min="1" required>
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <button type="button" class="btn btn-danger btn-block remove-item-btn w-100"><i class="fas fa-trash"></i></button>
+                                        </div>
+                                    </div>
+                                    </div>
+                                <button type="button" id="add-item-btn" class="btn btn-outline-primary btn-sm mt-3"><i class="fas fa-plus"></i> Add Another Service</button>
+                            </div>
+                            
+                            <div class="col-12 text-end pt-5">
+                                <h4 class="mb-3 text-dark">Estimated Total: <span id="estimated-total" class="text-success fw-bold">$0.00</span></h4>
+                                <button type="submit" class="btn btn-primary btn-lg me-2">
+                                    <i class="fas fa-save me-2"></i> Generate Invoice
+                                </button>
+                                <a href="/dashboard" class="btn btn-light btn-lg">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const serviceItemsContainer = document.getElementById('service-items');
+            const addItemBtn = document.getElementById('add-item-btn');
+            const totalDisplay = document.getElementById('estimated-total');
+
+            // --- Template for a new row ---
+            const newItemTemplate = `
+                <div class="row g-3 item-row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Service*</label>
+                        <select name="service_ids[]" class="form-select service-select form-control" required>
+                            <option value="" disabled selected>Select Service</option>
+                            <% services.forEach(service => { %>
+                                <option value="<%= service.service_id %>" data-cost="<%= service.cost %>">
+                                    <%= service.service_name %> ($<%= service.cost %>)
+                                </option>
+                            <% }); %>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Quantity*</label>
+                        <input name="quantities[]" type="number" class="form-control quantity-input" value="1" min="1" required>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="button" class="btn btn-danger btn-block remove-item-btn w-100"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+            // -----------------------------
+
+            function updateEventListeners() {
+                // Attach event listener for removing an item
+                document.querySelectorAll('.remove-item-btn').forEach(btn => {
+                    btn.onclick = function() {
+                        if (serviceItemsContainer.children.length > 1) {
+                            this.closest('.item-row').remove();
+                            calculateTotal();
+                        } else {
+                            alert("You must include at least one service item.");
+                        }
+                    };
+                });
+                
+                // Attach change/input listener for calculating total
+                document.querySelectorAll('.service-select, .quantity-input').forEach(input => {
+                    input.onchange = calculateTotal;
+                    input.oninput = calculateTotal; // For live quantity updates
+                });
+            }
+
+            function calculateTotal() {
+                let total = 0;
+                serviceItemsContainer.querySelectorAll('.item-row').forEach(row => {
+                    const select = row.querySelector('.service-select');
+                    const quantityInput = row.querySelector('.quantity-input');
+                    
+                    if (select && quantityInput) {
+                        const selectedOption = select.options[select.selectedIndex];
+                        const cost = parseFloat(selectedOption.getAttribute('data-cost')) || 0;
+                        const quantity = parseInt(quantityInput.value) || 0;
+                        
+                        total += cost * quantity;
+                    }
+                });
+                totalDisplay.textContent = `$${total.toFixed(2)}`;
+            }
+
+            // --- Initial Setup ---
+            updateEventListeners();
+            calculateTotal(); // Calculate initial cost
+            
+            // --- Add Item Button Handler ---
+            addItemBtn.onclick = function() {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newItemTemplate.trim();
+                serviceItemsContainer.appendChild(tempDiv.firstChild);
+                updateEventListeners();
+                calculateTotal();
+            };
+        });
+    </script>
+<%- include('initials/footer.ejs') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
