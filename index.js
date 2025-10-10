@@ -34,6 +34,8 @@ pool.connect()
 // Set global variable 'db' to the Pool instance for consistency
 const db = pool;
 
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 // Middleware
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -455,6 +457,117 @@ app.post('/settings/password', isAuthenticated, async (req, res) => {
     }
 });
 
+// --- NEW STRIPE INTEGRATION ROUTES ---
+
+// 1. POST: Create a Stripe Checkout Session/Payment Intent
+app.post('/create-checkout-session/:invoiceId', isAuthenticated, async (req, res) => {
+    const invoiceId = parseInt(req.params.invoiceId);
+    const userId = req.session.user.id;
+    const { amount_to_pay } = req.body; // Amount from the form
+
+    if (!amount_to_pay || parseFloat(amount_to_pay) <= 0) {
+        return res.status(400).json({ error: 'Invalid payment amount.' });
+    }
+
+    try {
+        // --- 1. Security Check & Data Retrieval ---
+        const invoice = await fetchInvoiceDetails(invoiceId, userId);
+        if (!invoice || parseFloat(invoice.total_amount - invoice.amount_paid) < amount_to_pay) {
+            return res.status(400).json({ error: 'Invoice invalid, fully paid, or amount exceeds balance.' });
+        }
+        
+        const paymentAmountCents = Math.round(parseFloat(amount_to_pay) * 100);
+
+        // --- 2. Create Stripe Checkout Session ---
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'usd', // Or your local currency
+                        product_data: {
+                            name: `Invoice #${invoiceId} Payment`,
+                            description: `Payment for outstanding balance on CareFlow HMS.`,
+                        },
+                        unit_amount: paymentAmountCents, 
+                    },
+                    quantity: 1,
+                },
+            ],
+            mode: 'payment',
+            // Success/Cancel URLs must be fully qualified (Render public URL)
+            success_url: `${req.protocol}://${req.get('host')}/payment-success?session_id={CHECKOUT_SESSION_ID}&invoice_id=${invoiceId}`,
+            cancel_url: `${req.protocol}://${req.get('host')}/invoices/${invoiceId}`,
+            client_reference_id: String(invoiceId), // Link to your database ID
+            metadata: {
+                user_id: userId,
+                invoice_id: invoiceId,
+            }
+        });
+
+        // 3. Redirect the user to the Stripe Checkout Page
+        res.json({ id: session.id });
+
+    } catch (error) {
+        console.error("Stripe Checkout Error:", error);
+        res.status(500).json({ error: 'Could not initiate payment session.' });
+    }
+});
+
+// 2. GET: Payment Success Handler (Stripe Redirect)
+app.get('/payment-success', isAuthenticated, async (req, res) => {
+    const sessionId = req.query.session_id;
+    const invoiceId = parseInt(req.query.invoice_id);
+    
+    // Check if the invoice ID is valid
+    if (!invoiceId) {
+        req.flash('error_msg', 'Payment verification failed: Missing invoice ID.');
+        return res.redirect('/invoices');
+    }
+
+    const client = await db.connect();
+    try {
+        // 1. Retrieve session details from Stripe
+        const session = await stripe.checkout.sessions.retrieve(sessionId);
+        
+        // --- IMPORTANT: Verify Payment Status and Intent ---
+        if (session.payment_status === 'paid' && session.metadata.invoice_id == invoiceId) {
+            
+            await client.query('BEGIN');
+            
+            // Calculate actual paid amount (Stripe uses cents)
+            const amountPaid = session.amount_total / 100;
+
+            // 2. Update the Invoice in YOUR database
+            const updateQuery = `
+                UPDATE invoices 
+                SET amount_paid = amount_paid + $1, 
+                    status = (CASE WHEN total_amount <= amount_paid + $1 THEN 'Paid' ELSE 'Partial' END),
+                    stripe_payment_intent_id = $2
+                WHERE invoice_id = $3 AND user_id = $4
+            `;
+            await client.query(updateQuery, [amountPaid, session.payment_intent, invoiceId, req.session.user.id]);
+
+            await client.query('COMMIT');
+            
+            req.flash('success_msg', `Payment successful! $${amountPaid.toFixed(2)} applied to Invoice #${invoiceId}.`);
+            res.redirect(`/invoices/${invoiceId}`); 
+
+        } else {
+            // Handle incomplete or failed payment status
+            req.flash('error_msg', 'Payment was processed by Stripe but verification failed.');
+            res.redirect(`/invoices/${invoiceId}`);
+        }
+
+    } catch (error) {
+        if (client) await client.query('ROLLBACK');
+        console.error('Payment verification error:', error);
+        req.flash('error_msg', 'Payment verification error. Please check your invoice status.');
+        res.redirect(`/invoices/${invoiceId}`);
+    } finally {
+        if (client) client.release();
+    }
+});
 
 // --- ADMIN MANAGEMENT ROUTES ---
 
