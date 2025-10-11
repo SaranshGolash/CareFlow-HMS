@@ -1,5 +1,7 @@
 <%- include('initials/header.ejs', { title: 'Secure Inbox' }) %>
 <link rel="stylesheet" href="/styles/inbox.css">
+</head>
+<body>
     <div class="container py-5">
         <h2 class="mb-4 text-primary"><i class="fas fa-envelope-open-text me-3"></i> <%= isAdmin ? 'Admin Message Center' : 'My Secure Inbox' %></h2>
         
@@ -15,16 +17,25 @@
                 <% messages.forEach(message => { %>
                     <a href="#" class="list-group-item list-group-item-action <%= message.is_read ? '' : 'list-group-item-unread' %>">
                         <div class="d-flex w-100 justify-content-between">
+                            <!-- Display sender name and subject -->
                             <h5 class="mb-1 text-truncate" style="max-width: 70%;">
                                 <%= message.is_read ? '' : '🔥' %> 
                                 <strong>
-                                    <% if (message.sender_role === 'admin') { %>
-                                        Dr. Staff (Reply)
-                                    <% } else if (isAdmin) { %>
-                                        Patient ID <%= message.user_id %>
-                                    <% } else { %>
-                                        Support Team
-                                    <% } %>
+                                <% 
+                                    let displayName = 'Support Team';
+        
+                                    if (message.sender_role === 'admin') {
+                                        // Message is a reply from the Admin
+                                        displayName = 'Support Team (Reply)';
+                                    } else if (message.user_id === currentUserId) {
+                                        // Message is from the current patient
+                                        displayName = 'You';
+                                    } else {
+                                        // Admin View: Use the stored username (now available directly on the message object)
+                                        displayName = message.sender_username || `Patient ID ${message.user_id}`;
+                                    }
+                                %>
+                                <%= displayName %>
                                 </strong>
                                 : <%= message.subject %>
                             </h5>

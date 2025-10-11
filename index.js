@@ -462,12 +462,21 @@ app.get('/inbox', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id;
     const isAdminUser = req.session.user.role === 'admin';
     
-    let query = 'SELECT * FROM secure_messages ';
+    let query = `
+        SELECT 
+            sm.*, 
+            u.username, 
+            u.email 
+        FROM 
+            secure_messages sm
+        JOIN 
+            users u ON sm.user_id = u.id 
+    `;
     const params = [];
 
     if (!isAdminUser) {
         // Patients only see messages linked to their ID
-        query += 'WHERE user_id = $1 ';
+        query += 'WHERE sm.user_id = $1 ';
         params.push(userId);
     }
     
@@ -495,7 +504,10 @@ app.get('/new-message', isAuthenticated, (req, res) => {
 // POST: Handle Sending New Message
 app.post('/new-message', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id;
-    const senderRole = req.session.user.role; // Sender is always the logged-in user's role
+    const senderRole = req.session.user.role;
+    // Get the username from the session (must be available upon login)
+    const senderUsername = req.session.user.username; 
+    
     const { subject, message_body } = req.body;
 
     if (!subject || !message_body) {
@@ -505,10 +517,11 @@ app.post('/new-message', isAuthenticated, async (req, res) => {
 
     try {
         const query = `
-            INSERT INTO secure_messages (user_id, sender_role, subject, message_body)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO secure_messages (user_id, sender_role, subject, message_body, sender_username)
+            VALUES ($1, $2, $3, $4, $5)
         `;
-        await db.query(query, [userId, senderRole, subject, message_body]);
+        // NOTE: We are now passing the username as $5
+        await db.query(query, [userId, senderRole, subject, message_body, senderUsername]);
 
         req.flash('success_msg', 'Your message has been sent securely.');
         res.redirect('/inbox');
@@ -518,6 +531,7 @@ app.post('/new-message', isAuthenticated, async (req, res) => {
         res.redirect('/new-message');
     }
 });
+
 
 // --- NEW ROUTE: Consultation and End/Feedback Page ---
 app.get('/consultation-end', isAuthenticated, (req, res) => {

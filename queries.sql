@@ -112,3 +112,13 @@ CREATE TABLE consultation_feedback (
     star_rating INTEGER DEFAULT 4,             -- Mocked star rating (e.g., 1 to 5)
     comments TEXT
 );
+
+-- Add the sender_username column to the secure_messages table
+ALTER TABLE secure_messages
+ADD COLUMN sender_username VARCHAR(50);
+
+-- Run this if you want to backfill existing messages (assuming user IDs are correct)
+UPDATE secure_messages sm
+SET sender_username = u.username
+FROM users u
+WHERE sm.user_id = u.id AND sm.sender_username IS NULL;
