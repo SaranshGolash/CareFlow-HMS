@@ -15,12 +15,17 @@
                 </thead>
                 <tbody>
                     <% appointments.forEach(appointment => { %>
-                        <tr>
-                            <td><%= appointment.patient_name %></td>
-                            <td><%= appointment.gender %></td>
-                            <td><%= appointment.phone %></td>
-                            <td><%= appointment.doctor_name %></td>
-                        </tr>
+                    <tr>
+                        <td><%= appointment.patient_name %></td>
+                        <td><%= appointment.gender %></td>
+                        <td><%= appointment.phone %></td>
+                        <td><%= appointment.doctor_name %></td>
+                        <td>
+                            <a href="/teleconsultation/<%= appointment.id %>" class="btn btn-success btn-sm">
+                            <i class="fas fa-video me-1"></i> Start Call
+                        </a>
+                        </td>
+                    </tr>
                     <% }); %>
                 </tbody>
             </table>
