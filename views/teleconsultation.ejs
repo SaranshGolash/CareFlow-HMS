@@ -1,0 +1,19 @@
+<%- include('initials/header.ejs', { title: 'Live Consultation' }) %>
+<link rel="stylesheet" href="/styles/teleconsultation.css">
+    <div class="container py-5 text-center">
+        <h2 class="text-primary mb-4">Virtual Consultation in Progress</h2>
+        <div class="consultation-window p-5 bg-dark text-white rounded-lg shadow-lg">
+            <i class="fas fa-video fa-5x mb-3 text-success"></i>
+            <h3 class="mb-2">Connecting with Doctor <%= user.role === 'admin' ? 'Staff' : 'Name' %>...</h3>
+            <p class="lead">Simulating secure HIPAA-compliant video link.</p>
+            <p class="small text-muted mt-4">This is a mock interface. No live video is being streamed.</p>
+            
+            <a href="/appointments" class="btn btn-danger btn-lg mt-4">
+                <i class="fas fa-phone-slash me-2"></i> End Call
+            </a>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
