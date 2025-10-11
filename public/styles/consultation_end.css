@@ -1,0 +1,44 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --secondary-accent: #4287f5;
+    --border-radius: 12px;
+    --shadow-md: 0 4px 16px rgba(13,110,253,0.1);
+    --text-color: #1f2937;
+}
+
+.feedback-card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+}
+
+.feedback-card h3 {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.form-check-label {
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.rating-stars {
+    color: #ffc107; /* Yellow/Warning color for stars */
+    font-size: 1.5rem;
+    margin-bottom: 15px;
+}
+
+.rating-stars .fas {
+    margin-right: 5px;
+}
+
+.form-control, .btn-primary {
+    border-radius: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, var(--primary), var(--secondary-accent));
+    border: none;
+    font-weight: 600;
+}
