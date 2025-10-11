@@ -519,6 +519,38 @@ app.post('/new-message', isAuthenticated, async (req, res) => {
     }
 });
 
+// --- NEW ROUTE: Consultation End/Feedback Page ---
+app.get('/consultation-end', isAuthenticated, (req, res) => {
+    // This route serves as a quick landing page for thank you/feedback.
+    res.render('consultation_end');
+});
+
+// GET: Teleconsultation Mock (Updated to pass necessary data)
+app.get('/teleconsultation/:id', isAuthenticated, async (req, res) => {
+    const appointmentId = req.params.id;
+    const userId = req.session.user.id;
+    
+    try {
+        const result = await db.query('SELECT * FROM appointments WHERE id = $1 AND user_id = $2', [appointmentId, userId]);
+        
+        // Admin check is included for staff accessing the call link
+        if (result.rowCount === 0 && req.session.user.role !== 'admin') {
+            req.flash('error_msg', 'Access denied to this appointment call.');
+            return res.redirect('/appointments');
+        }
+        
+        // Pass the appointment ID so the "End Call" button knows where it came from
+        res.render('teleconsultation', { 
+            appointmentId: appointmentId, 
+            doctorName: result.rows[0]?.doctor_name || 'Staff' 
+        });
+    } catch (err) {
+        console.error('Error fetching appointment for call:', err);
+        res.render('error', { message: 'Could not start consultation.', error: { status: 500 } });
+    }
+});
+
+
 // --- ADMIN MANAGEMENT ROUTES ---
 
 // GET: Service Catalog (Admin View)
