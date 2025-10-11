@@ -519,13 +519,13 @@ app.post('/new-message', isAuthenticated, async (req, res) => {
     }
 });
 
-// --- NEW ROUTE: Consultation End/Feedback Page ---
+// --- NEW ROUTE: Consultation and End/Feedback Page ---
 app.get('/consultation-end', isAuthenticated, (req, res) => {
     // This route serves as a quick landing page for thank you/feedback.
     res.render('consultation_end');
 });
 
-// GET: Teleconsultation Mock (Updated to pass necessary data)
+// GET: Teleconsultation Mock (Updated to pass user_id for feedback form)
 app.get('/teleconsultation/:id', isAuthenticated, async (req, res) => {
     const appointmentId = req.params.id;
     const userId = req.session.user.id;
@@ -533,13 +533,11 @@ app.get('/teleconsultation/:id', isAuthenticated, async (req, res) => {
     try {
         const result = await db.query('SELECT * FROM appointments WHERE id = $1 AND user_id = $2', [appointmentId, userId]);
         
-        // Admin check is included for staff accessing the call link
         if (result.rowCount === 0 && req.session.user.role !== 'admin') {
             req.flash('error_msg', 'Access denied to this appointment call.');
             return res.redirect('/appointments');
         }
         
-        // Pass the appointment ID so the "End Call" button knows where it came from
         res.render('teleconsultation', { 
             appointmentId: appointmentId, 
             doctorName: result.rows[0]?.doctor_name || 'Staff' 
@@ -550,58 +548,39 @@ app.get('/teleconsultation/:id', isAuthenticated, async (req, res) => {
     }
 });
 
-
-// --- ADMIN MANAGEMENT ROUTES ---
-
-// GET: Service Catalog (Admin View)
-app.get('/services', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-        const services = await fetchServices();
-        res.render('service_catalog', { services });
-    } catch (err) {
-        console.error('Error fetching services for admin:', err);
-        req.flash('error_msg', 'Could not load service catalog.');
-        res.redirect('/dashboard');
-    }
+// GET: Consultation End/Feedback Page (Renders the form)
+app.get('/consultation-end', isAuthenticated, (req, res) => {
+    // Pass the user ID to securely link feedback
+    res.render('consultation_end', { userId: req.session.user.id });
 });
 
-// POST: Add New Service (Admin Only)
-app.post('/services', isAuthenticated, isAdmin, async (req, res) => {
-    const { service_name, category, cost, description } = req.body;
+// POST: Submit Feedback and store in DB
+app.post('/submit-feedback', isAuthenticated, async (req, res) => {
+    const { user_id, rating, feedback_effectiveness, comments } = req.body;
+    const currentUserId = req.session.user.id;
+
+    // Security Check: Ensure the user is submitting feedback for themselves
+    if (parseInt(user_id) !== currentUserId) {
+        req.flash('error_msg', 'Authorization failed. Cannot submit feedback for another user.');
+        return res.redirect('/appointments');
+    }
+
     try {
-        const query = 'INSERT INTO services (service_name, category, cost, description) VALUES ($1, $2, $3, $4)';
-        await db.query(query, [service_name, category, cost, description]);
-        req.flash('success_msg', `Service "${service_name}" added successfully.`);
-        res.redirect('/services');
+        const query = `
+            INSERT INTO consultation_feedback (user_id, effectiveness_rating, star_rating, comments)
+            VALUES ($1, $2, $3, $4)
+        `;
+        // Note: The star rating is hardcoded to 4 in the frontend form for simplicity, but we'll use a placeholder variable here.
+        await db.query(query, [currentUserId, feedback_effectiveness, 4, comments || null]); 
+
+        req.flash('success_msg', 'Thank you for your valuable feedback!');
+        res.redirect('/appointments'); // Redirect back to appointments list
     } catch (err) {
-        console.error('Error adding service:', err);
-        if (err.code === '23505') {
-            req.flash('error_msg', 'Service name already exists.');
-        } else {
-            req.flash('error_msg', 'Error adding service.');
-        }
-        res.redirect('/services');
+        console.error('Error saving feedback:', err);
+        req.flash('error_msg', 'Failed to submit feedback due to a server error.');
+        res.redirect('/appointments');
     }
 });
-
-// DELETE: Delete Service (Admin Only)
-app.delete('/services/:id', isAuthenticated, isAdmin, async (req, res) => {
-    const serviceId = req.params.id;
-    try {
-        const result = await db.query('DELETE FROM services WHERE service_id = $1 RETURNING service_name', [serviceId]);
-        if (result.rowCount > 0) {
-            req.flash('success_msg', `Service "${result.rows[0].service_name}" deleted successfully.`);
-        } else {
-            req.flash('error_msg', 'Service not found.');
-        }
-        res.redirect('/services');
-    } catch (err) {
-        console.error('Error deleting service:', err);
-        req.flash('error_msg', 'Error deleting service. It may be linked to existing invoices.');
-        res.redirect('/services');
-    }
-});
-
 
 // GET: New Medical Record Form (Admin Only)
 app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
