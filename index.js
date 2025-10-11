@@ -22,9 +22,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    /*ssl: {
+    ssl: {
         rejectUnauthorized: false
-    }*/
+    }
 });
 
 pool.connect()
@@ -162,8 +162,25 @@ app.post('/newappointments', isAuthenticated, async (req, res) => {
 app.get('/records', isAuthenticated, async (req, res) => {
     try {
         const userId = req.session.user.id;
-        const result = await db.query('SELECT * FROM medical_records WHERE user_id = $1 ORDER BY record_date DESC', [userId]);
+        
+        // UPDATED QUERY: LEFT JOIN appointments (a) to fetch doctor_name
+        const query = `
+            SELECT 
+                mr.*, 
+                a.doctor_name -- Select the doctor's name from the appointments table
+            FROM 
+                medical_records mr
+            LEFT JOIN 
+                appointments a ON mr.appointment_id = a.id
+            WHERE 
+                mr.user_id = $1 
+            ORDER BY 
+                record_date DESC
+        `;
+        
+        const result = await db.query(query, [userId]);
         const records = result.rows;
+
         res.render('records', { 
             records: records,
             username: req.session.user.username 

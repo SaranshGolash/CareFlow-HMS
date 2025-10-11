@@ -126,3 +126,16 @@ WHERE sm.user_id = u.id AND sm.sender_username IS NULL;
 -- Add a foreign key column to link a medical record back to the specific appointment
 ALTER TABLE medical_records
 ADD COLUMN appointment_id INTEGER REFERENCES appointments(id) ON DELETE SET NULL;
+
+UPDATE medical_records mr
+SET appointment_id = sub.latest_appointment_id
+FROM (
+    -- Find the latest appointment ID for each user
+    SELECT DISTINCT ON (a.user_id) 
+           a.id AS latest_appointment_id, 
+           a.user_id
+    FROM appointments a
+    ORDER BY a.user_id, a.id DESC -- Assuming higher 'id' means newer appointment
+) sub
+WHERE mr.user_id = sub.user_id
+  AND mr.appointment_id IS NULL; -- Only update rows that are currently NULL
