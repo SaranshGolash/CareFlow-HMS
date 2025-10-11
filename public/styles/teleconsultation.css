@@ -1,0 +1,14 @@
+:root {
+    --primary: #0d6efd;
+}
+
+.consultation-window {
+    background-color: #343a40 !important;
+    min-height: 400px;
+}
+
+.btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    font-weight: 600;
+}
