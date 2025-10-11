@@ -102,3 +102,13 @@ CREATE TABLE secure_messages (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     is_read BOOLEAN DEFAULT FALSE
 );
+
+-- Create a table for storing patient feedback after a consultation
+CREATE TABLE consultation_feedback (
+    feedback_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    submitted_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    effectiveness_rating VARCHAR(10) NOT NULL, -- 'yes' or 'no'
+    star_rating INTEGER DEFAULT 4,             -- Mocked star rating (e.g., 1 to 5)
+    comments TEXT
+);
