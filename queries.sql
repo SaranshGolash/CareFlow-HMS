@@ -122,3 +122,7 @@ UPDATE secure_messages sm
 SET sender_username = u.username
 FROM users u
 WHERE sm.user_id = u.id AND sm.sender_username IS NULL;
+
+-- Add a foreign key column to link a medical record back to the specific appointment
+ALTER TABLE medical_records
+ADD COLUMN appointment_id INTEGER REFERENCES appointments(id) ON DELETE SET NULL;

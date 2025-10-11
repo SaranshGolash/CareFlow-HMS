@@ -180,12 +180,23 @@ app.get('/records/:id', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id; 
 
     try {
+        // --- UPDATED QUERY: JOIN with 'users (u)' AND 'appointments (a)' ---
         const query = `
-            SELECT mr.*, u.username 
-            FROM medical_records mr
-            JOIN users u ON mr.user_id = u.id
-            WHERE mr.record_id = $1 AND mr.user_id = $2
+            SELECT 
+                mr.*, 
+                u.username,
+                a.doctor_name,
+                a.patient_name AS appointment_patient_name
+            FROM 
+                medical_records mr
+            JOIN 
+                users u ON mr.user_id = u.id
+            LEFT JOIN
+                appointments a ON mr.appointment_id = a.id
+            WHERE 
+                mr.record_id = $1 AND mr.user_id = $2
         `;
+        // -------------------------------------------------------------------
         const result = await db.query(query, [recordId, userId]);
         const record = result.rows[0];
 
@@ -598,31 +609,40 @@ app.post('/submit-feedback', isAuthenticated, async (req, res) => {
 
 // GET: New Medical Record Form (Admin Only)
 app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
+    let patients = [];
+    let appointments = []; // 1. Initialized to empty array
+
     try {
         const patientResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
-        const patients = patientResult.rows;
+        patients = patientResult.rows;
 
-        res.render('newrecord', { 
-            patients: patients,
-            doctor_name: req.session.user.username 
-        });
+        // 2. Fetch appointments (if this query fails, 'appointments' remains [])
+        const appointmentResult = await db.query('SELECT id, patient_name, doctor_name FROM appointments ORDER BY id DESC LIMIT 50');
+        appointments = appointmentResult.rows;
 
     } catch (err) {
-        console.error('Error fetching patient list:', err);
-        req.flash('error_msg', 'Error preparing record form.');
-        res.redirect('/records');
+        console.error('Error fetching data for new record form (DB check):', err);
+        req.flash('error_msg', 'Database connection error prevented loading necessary patient/appointment lists.');
+        // Do NOT return or redirect here. Let the code proceed to render with []
     }
+
+    // 3. CRITICAL: Render happens once and always passes the variable.
+    res.render('newrecord', { 
+        patients: patients, 
+        appointments: appointments, // GUARANTEED to be an array (fetched or empty)
+        doctor_name: req.session.user.username 
+    });
 });
 
 // POST: Save New Medical Record (Admin Only)
 app.post('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
-    const { patient_id, diagnosis, treatment_plan, doctor_notes, blood_pressure, allergies, record_date } = req.body;
+    const { patient_id, diagnosis, treatment_plan, doctor_notes, blood_pressure, allergies, record_date, appointment_id } = req.body;
     
     try {
         const query = `
             INSERT INTO medical_records 
-            (user_id, diagnosis, treatment_plan, doctor_notes, blood_pressure, allergies, record_date) 
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            (user_id, diagnosis, treatment_plan, doctor_notes, blood_pressure, allergies, record_date, appointment_id) 
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         `;
         
         await db.query(query, [
@@ -632,14 +652,15 @@ app.post('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
             doctor_notes, 
             blood_pressure, 
             allergies, 
-            record_date || new Date().toISOString().split('T')[0]
+            record_date || new Date().toISOString().split('T')[0],
+            appointment_id || null
         ]);
 
         req.flash('success_msg', `Medical record successfully added for Patient ID ${patient_id}.`);
         res.redirect('/records');
     } catch (err) {
         console.error('Error adding new medical record:', err);
-        req.flash('error_msg', 'Error adding record. Please try again.');
+        req.flash('error_msg', 'Error adding record. Please check inputs and try again.');
         res.redirect('/newrecord');
     }
 });

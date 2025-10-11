@@ -1,4 +1,4 @@
-<%- include('initials/header.ejs', { title: 'CareFlow - Add New Record' }) %>
+<%- include('initials/header.ejs', { title: 'Add New Record' }) %>
 <link rel="stylesheet" href="/styles/newrecord.css">
     <div class="container py-5">
         <div class="row justify-content-center">
@@ -11,7 +11,7 @@
                         <form action="/newrecord" method="POST" class="row g-4">
                             
                             <div class="col-md-6">
-                                <label for="patient_id" class="form-label">Patient Name<span class="required-asterisk">*</span>:</label>
+                                <label for="patient_id" class="form-label">Patient Name*</label>
                                 <select id="patient_id" name="patient_id" class="form-select form-control" required>
                                     <option value="" disabled selected>Select Patient</option>
                                     <% patients.forEach(patient => { %>
@@ -19,14 +19,29 @@
                                     <% }); %>
                                 </select>
                             </div>
-
+                            
                             <div class="col-md-6">
-                                <label for="record_date" class="form-label">Record Date<span class="required-asterisk">*</span>:</label>
-                                <input id="record_date" name="record_date" type="date" class="form-control" required value="<%= new Date().toISOString().split('T')[0] %>">
+                                <label for="appointment_id" class="form-label">Link to Appointment (Optional)</label>
+                                <select id="appointment_id" name="appointment_id" class="form-select form-control">
+                                <option value="" selected>--- Select Associated Appointment ---</option>
+                                <% if (appointments && appointments.length > 0) { %>
+                                <% appointments.forEach(appt => { %>
+                                    <option value="<%= appt.id %>">
+                                        [<%= appt.id %>.] <%= appt.patient_name %> with Dr. <%= appt.doctor_name %>
+                                    </option>
+                                <% }); %>
+                                <% } %>
+                                </select>
+                                <div class="form-text">Links this record to the source appointment for continuity.</div>
                             </div>
 
+                            <div class="col-md-6">
+                                <label for="record_date" class="form-label">Record Date*</label>
+                                <input id="record_date" name="record_date" type="date" class="form-control" required value="<%= new Date().toISOString().split('T')[0] %>">
+                            </div>
+                            
                             <div class="col-12">
-                                <label for="diagnosis" class="form-label">Diagnosis<span class="required-asterisk">*</span>:</label>
+                                <label for="diagnosis" class="form-label">Diagnosis*</label>
                                 <textarea id="diagnosis" name="diagnosis" class="form-control" rows="2" required placeholder="Enter primary diagnosis"></textarea>
                             </div>
 
