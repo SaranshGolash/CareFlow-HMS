@@ -1,0 +1,48 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --secondary-accent: #4287f5;
+    --text-color: #1f2937;
+    --border-radius: 10px;
+    --shadow-sm: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.container.py-5 h2 {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.feedback-card-item {
+    border-radius: var(--border-radius);
+    border: 1px solid #eee;
+    transition: all 0.2s ease;
+}
+
+.feedback-card-item:hover {
+    box-shadow: var(--shadow-sm);
+    transform: translateY(-1px);
+}
+
+.card-header {
+    background-color: #f8f9fa !important;
+    border-bottom: 1px solid #eee !important;
+    font-size: 0.95rem;
+}
+
+.card-body h6 {
+    font-size: 0.9rem;
+}
+
+.rating-stars {
+    color: #ffc107; /* Warning yellow for rating */
+    font-weight: 700;
+    margin-left: 5px;
+}
+
+.badge.bg-success { background-color: #28a745 !important; }
+.badge.bg-danger { background-color: #dc3545 !important; }
+
+.card-text.border {
+    border-color: var(--primary-light) !important;
+    background-color: #fcfdff;
+}
