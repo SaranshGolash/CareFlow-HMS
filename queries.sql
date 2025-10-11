@@ -91,3 +91,14 @@ ADD COLUMN invoice_id INTEGER REFERENCES invoices(invoice_id) ON DELETE SET NULL
 
 ALTER TABLE invoices
 ADD COLUMN stripe_payment_intent_id VARCHAR(100);
+
+-- Create a table for secure messages/support tickets
+CREATE TABLE secure_messages (
+    message_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL, -- The patient who sent the message
+    sender_role VARCHAR(10) NOT NULL, -- 'user' or 'admin' (for replies)
+    subject VARCHAR(255) NOT NULL,
+    message_body TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    is_read BOOLEAN DEFAULT FALSE
+);

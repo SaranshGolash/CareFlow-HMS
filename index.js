@@ -455,6 +455,69 @@ app.post('/settings/password', isAuthenticated, async (req, res) => {
     }
 });
 
+// --- NEW MESSAGING ROUTES ---
+
+// GET: Display User's Inbox (Patient and Admin View)
+app.get('/inbox', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+    
+    let query = 'SELECT * FROM secure_messages ';
+    const params = [];
+
+    if (!isAdminUser) {
+        // Patients only see messages linked to their ID
+        query += 'WHERE user_id = $1 ';
+        params.push(userId);
+    }
+    
+    query += 'ORDER BY created_at DESC';
+
+    try {
+        const result = await db.query(query, params);
+        res.render('inbox', { 
+            messages: result.rows, 
+            isAdmin: isAdminUser,
+            currentUserId: userId
+        });
+    } catch (err) {
+        console.error('Error fetching inbox messages:', err);
+        req.flash('error_msg', 'Failed to load messages.');
+        res.render('inbox', { messages: [], isAdmin: isAdminUser, currentUserId: userId });
+    }
+});
+
+// GET: Display Form to Send a New Message
+app.get('/new-message', isAuthenticated, (req, res) => {
+    res.render('new_message');
+});
+
+// POST: Handle Sending New Message
+app.post('/new-message', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const senderRole = req.session.user.role; // Sender is always the logged-in user's role
+    const { subject, message_body } = req.body;
+
+    if (!subject || !message_body) {
+        req.flash('error_msg', 'Subject and message body are required.');
+        return res.redirect('/new-message');
+    }
+
+    try {
+        const query = `
+            INSERT INTO secure_messages (user_id, sender_role, subject, message_body)
+            VALUES ($1, $2, $3, $4)
+        `;
+        await db.query(query, [userId, senderRole, subject, message_body]);
+
+        req.flash('success_msg', 'Your message has been sent securely.');
+        res.redirect('/inbox');
+    } catch (err) {
+        console.error('Error saving new message:', err);
+        req.flash('error_msg', 'Failed to send message due to a server error.');
+        res.redirect('/new-message');
+    }
+});
 
 // --- ADMIN MANAGEMENT ROUTES ---
 
