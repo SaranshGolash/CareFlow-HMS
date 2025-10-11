@@ -20,7 +20,10 @@
                         <i class="far fa-star"></i>
                     </div>
 
-                    <form action="/appointments" method="GET" class="text-start">
+                    <form action="/submit-feedback" method="POST" class="text-start">
+                        
+                        <input type="hidden" name="user_id" value="<%= userId %>">
+                        <input type="hidden" name="rating" value="4"> 
                         
                         <div class="mb-3">
                             <label class="form-label text-muted">Was the consultation effective?</label>
@@ -38,12 +41,12 @@
 
                         <div class="mb-4">
                             <label for="comments" class="form-label text-muted">Any additional comments? (Optional)</label>
-                            <textarea class="form-control" id="comments" rows="3" placeholder="Provide feedback to help us improve..."></textarea>
+                            <textarea class="form-control" id="comments" name="comments" rows="3" placeholder="Provide feedback to help us improve..."></textarea>
                         </div>
                         
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="fas fa-check-circle me-2"></i> Submit Feedback & Finish
+                                <i class="fas fa-check-circle me-2"></i> Submit Feedback
                             </button>
                             <a href="/appointments" class="btn btn-outline-secondary">Skip Feedback</a>
                         </div>
