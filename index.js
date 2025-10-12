@@ -390,12 +390,21 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
                                    parseFloat(balanceResult.rows[0].outstanding_balance).toFixed(2) : 
                                    '0.00';
 
+        let lowStockCount = 0;
+        if (req.session.user.role === 'admin') {
+            const lowStockResult = await db.query(
+                'SELECT COUNT(*) AS count FROM inventory WHERE current_stock <= low_stock_threshold'
+            );
+            lowStockCount = parseInt(lowStockResult.rows[0].count, 10);
+        }
+
         res.render('dashboard', {
             apptCount: apptCount,
             recordCount: recordCount,
             vitalCount: vitalCount,
             latestVitalDate: latestVitalDate,
-            outstandingBalance: outstandingBalance
+            outstandingBalance: outstandingBalance,
+            lowStockCount: lowStockCount
         });
     } catch (err) {
         console.error('Dashboard data fetch error:', err);
@@ -405,7 +414,8 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
             recordCount: 0,
             vitalCount: 0,
             latestVitalDate: null,
-            outstandingBalance: '0.00'
+            outstandingBalance: '0.00',
+            lowStockCount: 0
         });
     }
 });
