@@ -87,10 +87,19 @@ const isAdmin = (req, res, next) => {
 
 // Function to fetch all active services
 const fetchServices = async () => {
-    const result = await db.query('SELECT service_id, service_name, cost FROM services WHERE is_active = TRUE ORDER BY category, service_name');
-    return result.rows;
+    try {
+        const result = await db.query('SELECT service_id, service_name, cost, description, category FROM services WHERE is_active = TRUE ORDER BY category, service_name');
+        
+        // Ensure cost is formatted for display consistency
+        return result.rows.map(s => ({
+            ...s,
+            cost: parseFloat(s.cost).toFixed(2)
+        }));
+    } catch (err) {
+        console.error('Error in fetchServices:', err);
+        return [];
+    }
 };
-
 // Function to fetch a specific invoice with items
 const fetchInvoiceDetails = async (invoiceId, userId = null) => {
     const client = await db.connect();
@@ -493,8 +502,6 @@ app.post('/settings/password', isAuthenticated, async (req, res) => {
     }
 });
 
-// --- NEW MESSAGING ROUTES ---
-
 // GET: Display User's Inbox (Patient and Admin View)
 app.get('/inbox', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id;
@@ -743,6 +750,90 @@ app.post('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
         console.error('Error adding new vital data:', err);
         req.flash('error_msg', 'Error adding vitals. Database insertion failed.');
         res.redirect('/add-vitals');
+    }
+});
+
+// 1. GET: Route to display the Service Catalog page
+app.get('/services', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        // fetchServices is assumed to fetch all services from the DB pool
+        const services = await fetchServices();
+        
+        // Renders the provided EJS file
+        res.render('service_catalog', { services: services });
+    } catch (err) {
+        console.error('Error fetching services for admin:', err);
+        req.flash('error_msg', 'Could not load service catalog.');
+        res.redirect('/dashboard');
+    }
+});
+
+// 2. POST: Route to handle adding a new service from the form
+app.post('/services', isAuthenticated, isAdmin, async (req, res) => {
+    const { service_name, category, cost, description } = req.body;
+    
+    // Basic validation...
+    if (!service_name || !category || !cost || isNaN(cost)) {
+        req.flash('error_msg', 'Service Name, Category, and a valid Cost are required.');
+        return res.redirect('/services');
+    }
+
+    try {
+        const query = `
+            INSERT INTO services (service_name, category, cost, description)
+            VALUES ($1, $2, $3, $4)
+        `;
+        await db.query(query, [service_name, category, cost, description]);
+
+        req.flash('success_msg', `Service "${service_name}" added successfully.`);
+        res.redirect('/services');
+    } catch (err) {
+        if (err.code === '23505') {
+            req.flash('error_msg', 'A service with that name already exists.');
+        } else {
+            console.error('Error adding new service:', err);
+            req.flash('error_msg', 'An error occurred while adding the service.');
+        }
+        res.redirect('/services');
+    }
+});
+
+// 3. DELETE: Route to handle deleting a service from the table
+app.delete('/services/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const serviceId = req.params.id;
+
+    try {
+        const result = await db.query('DELETE FROM services WHERE service_id = $1 RETURNING service_name', [serviceId]);
+
+        if (result.rowCount > 0) {
+            req.flash('success_msg', `Service "${result.rows[0].service_name}" deleted successfully.`);
+        } else {
+            req.flash('error_msg', 'Service not found.');
+        }
+        res.redirect('/services');
+    } catch (err) {
+        console.error('Error deleting service:', err);
+        req.flash('error_msg', 'Error deleting service. It may be linked to existing invoices.');
+        res.redirect('/services');
+    }
+});
+
+// NEW PUBLIC ROUTE: Service Catalog (Accessible to everyone)
+app.get('/public-services', async (req, res) => {
+    let services = []; // Initialize services as an empty array
+
+    try {
+        // Fetch services data using the reusable function
+        services = await fetchServices(); 
+        
+        // Render the public view, passing the fetched service data
+        res.render('public_services', { services: services });
+    } catch (err) {
+        console.error('Error fetching public services:', err);
+        req.flash('error_msg', 'Could not load service catalog.');
+        
+        // Render with an empty array on error to prevent EJS crash
+        res.render('public_services', { services: [] }); 
     }
 });
 
