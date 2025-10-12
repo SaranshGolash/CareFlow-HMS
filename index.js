@@ -933,6 +933,69 @@ app.post('/pay-invoice', isAuthenticated, async (req, res) => {
     }
 });
 
+// GET: Display Inventory List and Management Form (Admin Only)
+app.get('/inventory', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const result = await db.query('SELECT * FROM inventory ORDER BY current_stock ASC');
+        const items = result.rows;
+
+        res.render('inventory_catalog', { items: items });
+    } catch (err) {
+        console.error('Error fetching inventory:', err);
+        req.flash('error_msg', 'Error retrieving inventory data.');
+        res.render('inventory_catalog', { items: [] });
+    }
+});
+
+// POST: Add a New Inventory Item (Admin Only)
+app.post('/inventory', isAuthenticated, isAdmin, async (req, res) => {
+    const { item_name, current_stock, unit, low_stock_threshold } = req.body;
+    
+    if (!item_name || !current_stock || !unit) {
+        req.flash('error_msg', 'Item Name, Stock, and Unit are required.');
+        return res.redirect('/inventory');
+    }
+
+    try {
+        const query = `
+            INSERT INTO inventory (item_name, current_stock, unit, low_stock_threshold)
+            VALUES ($1, $2, $3, $4)
+        `;
+        await db.query(query, [item_name, current_stock, unit, low_stock_threshold || 10]);
+
+        req.flash('success_msg', `Inventory item "${item_name}" added successfully.`);
+        res.redirect('/inventory');
+    } catch (err) {
+        if (err.code === '23505') {
+            req.flash('error_msg', 'An item with that name already exists.');
+        } else {
+            console.error('Error adding new inventory item:', err);
+            req.flash('error_msg', 'An error occurred while adding the item.');
+        }
+        res.redirect('/inventory');
+    }
+});
+
+// DELETE: Delete an Inventory Item (Admin Only)
+app.delete('/inventory/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const itemId = req.params.id;
+
+    try {
+        const result = await db.query('DELETE FROM inventory WHERE item_id = $1 RETURNING item_name', [itemId]);
+
+        if (result.rowCount > 0) {
+            req.flash('success_msg', `Item "${result.rows[0].item_name}" deleted.`);
+        } else {
+            req.flash('error_msg', 'Item not found.');
+        }
+        res.redirect('/inventory');
+    } catch (err) {
+        console.error('Error deleting item:', err);
+        req.flash('error_msg', 'Error deleting item. Check for dependencies.');
+        res.redirect('/inventory');
+    }
+});
+
 // GET: Public Services
 app.get('/public-services', async (req, res) => {
     try {
