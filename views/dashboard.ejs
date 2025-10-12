@@ -6,11 +6,43 @@
         </h2>
 
         <% if (user.role === 'admin') { %>
-            <div class="alert alert-warning" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                You are logged in as an **Administrator**.
-            </div>
+            <% if (lowStockCount > 0) { %>
+                <div class="alert alert-danger d-flex justify-content-between align-items-center fw-bold" role="alert">
+                    <span>
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        ACTION REQUIRED: <%= lowStockCount %> item<%= lowStockCount !== 1 ? 's' : '' %> are below the safety stock threshold!
+                    </span>
+                    <a href="/inventory" class="btn btn-sm btn-danger-outline text-dark bg-white shadow-sm">View Inventory</a>
+                </div>
+            <% } else { %>
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    You are logged in as an **Administrator**. Use the navigation bar or links below for management.
+                </div>
+            <% } %>
         <% } %>
+
+        <h3 class="mb-4 text-dark">Your Activity Summary</h3>
+
+        <div class="row g-4">
+            
+            <% if (user.role === 'admin') { %>
+                <div class="alert alert-warning" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    You are logged in as an **Administrator**.
+                </div>
+                <div class="col-md-6 col-lg-3">
+                    <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/inventory'">
+                        <div class="card-body">
+                            <i class="fas fa-box-open fa-3x <%= lowStockCount > 0 ? 'text-danger' : 'icon-green' %> mb-3"></i>
+                            <p class="text-uppercase text-muted mb-0 small">Low Stock Items</p>
+                            <h2 class="fw-bold <%= lowStockCount > 0 ? 'text-danger' : 'text-dark' %>"><%= lowStockCount %></h2>
+                        </div>
+                    </div>
+                </div>
+            <% } %>
+
+        </div>
 
         <h3 class="mb-4 text-dark">Your Activity Summary</h3>
 
