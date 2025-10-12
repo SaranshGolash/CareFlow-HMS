@@ -139,3 +139,13 @@ FROM (
 ) sub
 WHERE mr.user_id = sub.user_id
   AND mr.appointment_id IS NULL; -- Only update rows that are currently NULL
+
+-- Create the INVENTORY table to track stock
+CREATE TABLE inventory (
+    item_id SERIAL PRIMARY KEY,
+    item_name VARCHAR(100) UNIQUE NOT NULL,
+    current_stock INTEGER NOT NULL DEFAULT 0,
+    unit VARCHAR(20),                   -- e.g., 'units', 'boxes', 'ml'
+    low_stock_threshold INTEGER NOT NULL DEFAULT 10,
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
