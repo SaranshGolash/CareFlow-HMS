@@ -1,0 +1,97 @@
+<%- include('initials/header.ejs', { title: 'Inventory Management' }) %>
+<link rel="stylesheet" href="/styles/inventory_catalog.css">
+    <div class="container py-5">
+        <h2 class="mb-4 text-primary"><i class="fas fa-boxes me-3"></i> Admin Inventory Management</h2>
+        <p class="text-muted">Track critical supplies and set low stock thresholds to maintain operational readiness.</p>
+
+        <div class="row g-4 mt-3">
+            
+            <div class="col-lg-4">
+                <div class="card shadow-md h-100 catalog-form-card">
+                    <div class="card-header bg-primary text-white fw-bold">
+                        Add New Stock Item
+                    </div>
+                    <div class="card-body">
+                        <form action="/inventory" method="POST" class="row g-3">
+                            
+                            <div class="col-12">
+                                <label for="item_name" class="form-label">Item Name*</label>
+                                <input type="text" id="item_name" name="item_name" class="form-control" required placeholder="e.g., Paracetamol, Gloves, Syringe">
+                            </div>
+
+                            <div class="col-12">
+                                <label for="unit" class="form-label">Unit of Measure*</label>
+                                <input type="text" id="unit" name="unit" class="form-control" required placeholder="e.g., box, unit, ml, pack">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="current_stock" class="form-label">Current Stock*</label>
+                                <input type="number" id="current_stock" name="current_stock" class="form-control" min="0" required value="0">
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="low_stock_threshold" class="form-label">Low Stock Threshold</label>
+                                <input type="number" id="low_stock_threshold" name="low_stock_threshold" class="form-control" min="0" value="10">
+                            </div>
+
+                            <div class="col-12 pt-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-plus-circle me-1"></i> Add Item
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-8">
+                <div class="table-responsive catalog-table-container shadow-md">
+                    <% if (items.length > 0) { %>
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Item</th>
+                                    <th class="text-center">Current Stock</th>
+                                    <th class="text-center">Threshold</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <% items.forEach(item => { %>
+                                    <% const isLow = item.current_stock <= item.low_stock_threshold; %>
+                                    <tr class="<%= isLow ? 'table-danger-light' : '' %>">
+                                        <td><%= item.item_name %> (<%= item.unit %>)</td>
+                                        <td class="text-center fw-bold"><%= item.current_stock %></td>
+                                        <td class="text-center"><%= item.low_stock_threshold %></td>
+                                        <td>
+                                            <span class="badge bg-<%= isLow ? 'danger' : 'success' %>">
+                                                <%= isLow ? 'LOW STOCK' : 'OK' %>
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <form action="/inventory/<%= item.item_id %>?_method=DELETE" method="POST" class="d-inline" 
+                                                  onsubmit="return confirm('WARNING: This will permanently delete the item. Continue?');">
+                                                <button type="submit" class="btn btn-danger btn-sm">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                <% }); %>
+                            </tbody>
+                        </table>
+                    <% } else { %>
+                        <div class="alert alert-info text-center m-4" role="alert">
+                            <i class="fas fa-box-open me-2"></i>
+                            The inventory catalog is empty.
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
