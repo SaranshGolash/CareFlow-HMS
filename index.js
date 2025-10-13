@@ -692,6 +692,135 @@ app.post('/submit-feedback', isAuthenticated, async (req, res) => {
     }
 });
 
+// --- NEW WALLET ROUTES ---
+
+// GET: Display the Patient's Wallet/Deposit Page
+app.get('/wallet', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+
+    // Admin view can show all users' wallets, Patient only sees their own
+    let query = 'SELECT id, username, wallet_balance, email FROM users ';
+    const params = [];
+    
+    if (!isAdminUser) {
+        query += 'WHERE id = $1';
+        params.push(userId);
+    }
+    query += ' ORDER BY id';
+
+    try {
+        const usersResult = await db.query(query, params);
+        
+        // Fetch recent transactions for the logged-in user only
+        const transactionsResult = await db.query(
+            'SELECT * FROM wallet_transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10',
+            [userId]
+        );
+
+        res.render('wallet', { 
+            usersData: usersResult.rows, // All patients (for admin) or just current patient
+            transactions: transactionsResult.rows,
+            isAdmin: isAdminUser
+        });
+    } catch (err) {
+        console.error('Error fetching wallet data:', err);
+        req.flash('error_msg', 'Failed to load wallet data.');
+        res.redirect('/dashboard');
+    }
+});
+
+// POST: Handles Patient Deposit (Mock Transaction)
+app.post('/wallet/deposit', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const { deposit_amount } = req.body;
+    const amount = parseFloat(deposit_amount);
+
+    if (isNaN(amount) || amount <= 0) {
+        req.flash('error_msg', 'Invalid deposit amount.');
+        return res.redirect('/wallet');
+    }
+
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Update user's wallet balance
+        const updateQuery = 'UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2 RETURNING wallet_balance';
+        const userUpdate = await client.query(updateQuery, [amount, userId]);
+        
+        // 2. Log the transaction
+        const transactionQuery = `
+            INSERT INTO wallet_transactions (user_id, amount, transaction_type, description)
+            VALUES ($1, $2, 'Deposit', $3)
+        `;
+        await client.query(transactionQuery, [userId, amount, `Online deposit via payment gateway mock.`]);
+
+        await client.query('COMMIT');
+        
+        // Update the session balance for immediate display (Optional but good UX)
+        req.session.user.wallet_balance = parseFloat(userUpdate.rows[0].wallet_balance);
+
+        req.flash('success_msg', `$${amount.toFixed(2)} added to your wallet!`);
+        res.redirect('/wallet');
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Wallet deposit error:', err);
+        req.flash('error_msg', 'Deposit failed due to a system error.');
+        res.redirect('/wallet');
+    } finally {
+        client.release();
+    }
+});
+
+// POST: Admin Adjustment (Legal Issue/Correction ONLY)
+// Note: This needs to be a separate route to isolate admin actions for security.
+app.post('/admin/wallet/adjust', isAuthenticated, isAdmin, async (req, res) => {
+    const { patient_id, adjustment_amount, adjustment_reason, action_type } = req.body;
+    const amount = parseFloat(adjustment_amount);
+    const patientId = parseInt(patient_id);
+
+    if (isNaN(amount) || !patientId || !adjustment_reason || !['add', 'subtract'].includes(action_type)) {
+        req.flash('error_msg', 'Invalid adjustment data.');
+        return res.redirect('/wallet');
+    }
+    
+    // Determine final amount to apply (positive or negative)
+    const finalAmount = action_type === 'subtract' ? -amount : amount;
+
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Update user's wallet balance
+        const updateQuery = 'UPDATE users SET wallet_balance = wallet_balance + $1 WHERE id = $2';
+        await client.query(updateQuery, [finalAmount, patientId]);
+        
+        // 2. Log the transaction
+        const transactionQuery = `
+            INSERT INTO wallet_transactions (user_id, amount, transaction_type, reference_id, description)
+            VALUES ($1, $2, 'Adjustment', $3, $4)
+        `;
+        await client.query(transactionQuery, [patientId, finalAmount, req.session.user.username, `Admin Action (${adjustment_reason})`]);
+
+        await client.query('COMMIT');
+
+        req.flash('success_msg', `Balance for User ID ${patientId} adjusted by $${finalAmount.toFixed(2)}.`);
+        res.redirect('/wallet');
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Admin wallet adjustment error:', err);
+        req.flash('error_msg', 'Adjustment failed due to system error.');
+        res.redirect('/wallet');
+    } finally {
+        client.release();
+    }
+});
+
+// ADMIN MANAGEMENT ROUTES
+
 // GET: New Medical Record Form (Admin Only)
 app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
     let patients = [];
