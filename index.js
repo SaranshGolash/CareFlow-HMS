@@ -443,12 +443,12 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
         
         // Calculate Outstanding Balance
         const balanceResult = await db.query(
-            'SELECT SUM(total_amount - amount_paid) AS outstanding_balance FROM invoices WHERE user_id = $1 AND status != $2', 
-            [userId, 'Paid']
+                'SELECT SUM(total_amount - amount_paid) AS outstanding_balance FROM invoices WHERE user_id = $1 AND status != $2', 
+                [userId, 'Paid']
         );
         const outstandingBalance = balanceResult.rows[0].outstanding_balance ? 
-                                   parseFloat(balanceResult.rows[0].outstanding_balance).toFixed(2) : 
-                                   '0.00';
+                           parseFloat(balanceResult.rows[0].outstanding_balance).toFixed(2) : 
+                           '0.00';
 
         let lowStockCount = 0;
         if (req.session.user.role === 'admin') {
