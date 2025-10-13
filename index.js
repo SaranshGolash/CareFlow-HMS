@@ -357,13 +357,11 @@ app.post('/login', async (req, res) => {
                     id: user.id, 
                     username: user.username,
                     email: user.email,
-                    role: user.role
+                    role: user.role,
+                    wallet_balance: parseFloat(user.wallet_balance) // <-- NEW: Fetch and store balance
                 };
                 req.flash('success_msg', 'Login successful! Welcome back.');
                 res.redirect('/');
-            } else {
-                req.flash('error_msg', 'Invalid password. Please try again.'); 
-                res.redirect('/login');
             }
         } else {
             req.flash('error_msg', 'User not found with that email address.'); 
