@@ -1153,45 +1153,44 @@ app.get('/invoices/:id', isAuthenticated, async (req, res) => {
 });
 
 
-// POST: Process Payment Transaction
+// POST: Process Payment (Mock Transaction)
 app.post('/pay-invoice', isAuthenticated, async (req, res) => {
     const { invoice_id, payment_amount, outstanding_balance } = req.body;
     const userId = req.session.user.id;
     
+    // Convert inputs and ensure validation
     const amount = parseFloat(payment_amount);
     const outstanding = parseFloat(outstanding_balance);
     const invoiceId = parseInt(invoice_id);
 
     if (isNaN(amount) || amount <= 0 || amount > outstanding) {
-        req.flash('error_msg', 'Invalid payment amount submitted.');
+        req.flash('error_msg', 'Invalid payment amount submitted. Amount must be positive and not exceed outstanding balance.');
         return res.redirect(`/invoices/${invoiceId}`);
     }
 
-    // Use the Pool instance (db) to acquire a dedicated client for transaction
-    const client = await db.connect();
+    const client = await db.connect(); // Acquire client from pool
     try {
         await client.query('BEGIN');
         
-        // 1. Check invoice status and ownership (security check)
+        // 1. Lock the invoice row for update and retrieve current data
         const checkQuery = 'SELECT total_amount, amount_paid, user_id FROM invoices WHERE invoice_id = $1 AND user_id = $2 FOR UPDATE';
         const checkResult = await client.query(checkQuery, [invoiceId, userId]);
         const invoice = checkResult.rows[0];
 
         if (!invoice) {
-            await client.query('ROLLBACK');
-            req.flash('error_msg', 'Invoice not found or unauthorized access.');
-            return res.redirect('/invoices');
+            throw new Error('Invoice not found or unauthorized access.');
         }
 
+        // 2. Calculate new payment status
         const newPaidAmount = parseFloat(invoice.amount_paid) + amount;
-        const newBalance = parseFloat(invoice.total_amount) - newPaidAmount;
+        
+        // Status logic: Check if the new paid amount matches the total amount (allowing for slight floating point error)
         let newStatus = 'Partial';
-
-        if (newBalance <= 0.005) { // Use a tiny buffer for floating point comparisons
+        if (newPaidAmount >= parseFloat(invoice.total_amount) - 0.005) { 
             newStatus = 'Paid';
         }
         
-        // 2. Update the Invoice record
+        // 3. Update the Invoice record
         const updateQuery = `
             UPDATE invoices 
             SET amount_paid = $1, status = $2 
@@ -1199,18 +1198,26 @@ app.post('/pay-invoice', isAuthenticated, async (req, res) => {
         `;
         await client.query(updateQuery, [newPaidAmount.toFixed(2), newStatus, invoiceId]);
 
+        // 4. Log the transaction (Optional for the current bug, but good practice)
+        const transactionQuery = `
+            INSERT INTO wallet_transactions (user_id, amount, transaction_type, reference_id, description)
+            VALUES ($1, $2, 'Payment', $3, $4)
+        `;
+        await client.query(transactionQuery, [userId, amount, String(invoiceId), `Payment submitted via portal.`]);
+
+
         await client.query('COMMIT');
 
-        req.flash('success_msg', `Payment of $${amount.toFixed(2)} processed successfully. Status: ${newStatus}.`);
+        req.flash('success_msg', `Payment of $${amount.toFixed(2)} processed successfully! Status: ${newStatus}.`);
         res.redirect(`/invoices/${invoiceId}`);
 
     } catch (err) {
         await client.query('ROLLBACK');
-        console.error('Payment processing error (Transaction rolled back):', err);
-        req.flash('error_msg', 'Payment failed due to a server error.');
+        console.error('Payment processing error:', err);
+        req.flash('error_msg', `Payment failed: ${err.message}`);
         res.redirect(`/invoices/${invoiceId}`);
     } finally {
-        client.release(); // Release the client back to the pool
+        client.release();
     }
 });
 
