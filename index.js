@@ -168,6 +168,35 @@ app.post('/newappointments', isAuthenticated, async (req, res) => {
     }
 });
 
+// Handle Appointment Confirmation (Patient Action)
+app.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
+    const appointmentId = req.params.id;
+    const userId = req.session.user.id; // Patient ID
+
+    try {
+        // Ensure the appointment belongs to the user AND the status is not already Paid/Canceled
+        const query = `
+            UPDATE appointments
+            SET status = 'Confirmed'
+            WHERE id = $1 AND user_id = $2 AND status = 'Pending'
+            RETURNING id
+        `;
+        const result = await db.query(query, [appointmentId, userId]);
+
+        if (result.rowCount > 0) {
+            req.flash('success_msg', 'Your appointment has been successfully confirmed. Thank you!');
+        } else {
+            req.flash('error_msg', 'Could not confirm appointment. It may already be confirmed or canceled.');
+        }
+        
+        res.redirect('/appointments');
+    } catch (err) {
+        console.error('Error confirming appointment:', err);
+        req.flash('error_msg', 'A server error occurred during confirmation.');
+        res.redirect('/appointments');
+    }
+});
+
 // Records
 app.get('/records', isAuthenticated, async (req, res) => {
     try {
