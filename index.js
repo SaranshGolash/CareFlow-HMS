@@ -793,6 +793,63 @@ app.post('/wallet/deposit', isAuthenticated, async (req, res) => {
     }
 });
 
+// POST: Handles Patient Withdrawal (Mock Transaction)
+// Placement: Place this in the "NEW WALLET ROUTES" section of your index.js.
+app.post('/wallet/withdraw', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const { withdraw_amount } = req.body;
+    const amount = parseFloat(withdraw_amount);
+
+    if (isNaN(amount) || amount <= 0) {
+        req.flash('error_msg', 'Invalid withdrawal amount.');
+        return res.redirect('/wallet');
+    }
+
+    const client = await db.connect();
+    try {
+        await client.query('BEGIN');
+
+        // 1. Fetch current balance and lock the row for the transaction
+        const balanceResult = await client.query('SELECT wallet_balance FROM users WHERE id = $1 FOR UPDATE', [userId]);
+        const currentBalance = parseFloat(balanceResult.rows[0].wallet_balance);
+
+        // 2. CRITICAL CHECK: Ensure user has sufficient funds
+        if (amount > currentBalance) {
+            await client.query('ROLLBACK');
+            req.flash('error_msg', 'Insufficient funds in your wallet to withdraw this amount.');
+            return res.redirect('/wallet');
+        }
+
+        // 3. Update user's wallet balance (subtract the amount)
+        const updateQuery = 'UPDATE users SET wallet_balance = wallet_balance - $1 WHERE id = $2 RETURNING wallet_balance';
+        const userUpdate = await client.query(updateQuery, [amount, userId]);
+        
+        // 4. Log the transaction (Amount is logged as negative for withdrawal)
+        const transactionQuery = `
+            INSERT INTO wallet_transactions (user_id, amount, transaction_type, description)
+            VALUES ($1, $2, 'Withdrawal', $3)
+        `;
+        // Log the amount as negative for auditing purposes
+        await client.query(transactionQuery, [userId, -amount, `Funds withdrawn from wallet.`]); 
+
+        await client.query('COMMIT');
+        
+        // 5. Update the session balance
+        req.session.user.wallet_balance = parseFloat(userUpdate.rows[0].wallet_balance);
+
+        req.flash('success_msg', `$${amount.toFixed(2)} successfully withdrawn.`);
+        res.redirect('/wallet');
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Wallet withdrawal error:', err);
+        req.flash('error_msg', 'Withdrawal failed due to a system error.');
+        res.redirect('/wallet');
+    } finally {
+        client.release();
+    }
+});
+
 // POST: Admin Adjustment (Legal Issue/Correction ONLY)
 // Note: This needs to be a separate route to isolate admin actions for security.
 app.post('/admin/wallet/adjust', isAuthenticated, isAdmin, async (req, res) => {
