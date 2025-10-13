@@ -1150,6 +1150,43 @@ app.delete('/inventory/:id', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
+// Appointment Status Update
+
+// POST: Allows Admin to update the status of ANY appointment (e.g., Cancel, Mark as Completed)
+app.post('/admin/appointments/:id/status', isAuthenticated, isAdmin, async (req, res) => {
+    const appointmentId = req.params.id;
+    // The new status is passed via the form body
+    const { status: newStatus } = req.body; 
+
+    // Basic validation on status
+    if (!['Confirmed', 'Canceled', 'Completed'].includes(newStatus)) {
+        req.flash('error_msg', 'Invalid status update attempt.');
+        return res.redirect('/appointments');
+    }
+
+    try {
+        const query = `
+            UPDATE appointments
+            SET status = $1
+            WHERE id = $2
+            RETURNING patient_name
+        `;
+        const result = await db.query(query, [newStatus, appointmentId]);
+
+        if (result.rowCount > 0) {
+            req.flash('success_msg', `Appointment for ${result.rows[0].patient_name} successfully set to "${newStatus}".`);
+        } else {
+            req.flash('error_msg', 'Appointment not found.');
+        }
+        
+        res.redirect('/appointments');
+    } catch (err) {
+        console.error('Error updating appointment status:', err);
+        req.flash('error_msg', 'A server error occurred while updating the status.');
+        res.redirect('/appointments');
+    }
+});
+
 // GET: Public Services
 app.get('/public-services', async (req, res) => {
     try {
