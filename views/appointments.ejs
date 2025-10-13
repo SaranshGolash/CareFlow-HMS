@@ -11,7 +11,7 @@
                             <th><%= isAdmin ? 'Patient Name' : 'My Name' %></th>
                             <th>Doctor Name</th>
                             <th>Status</th>
-                            <th class="text-center">Action</th>
+                            <th class="text-center" style="width: 250px;">Action</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -24,24 +24,52 @@
                                         let statusClass = 'secondary';
                                         if (appointment.status === 'Confirmed') statusClass = 'success';
                                         if (appointment.status === 'Pending') statusClass = 'warning';
-                                        if (appointment.status === 'Canceled') statusClass = 'danger';
+                                        if (appointment.status === 'Canceled' || appointment.status === 'Completed') statusClass = 'danger';
                                     %>
                                     <span class="badge bg-<%= statusClass %>"><%= appointment.status %></span>
                                 </td>
                                 <td class="text-center">
-                                    <% if (appointment.status === 'Pending' && !isAdmin) { %>
-                                        <form action="/appointments/<%= appointment.id %>/confirm" method="POST" class="d-inline"
-                                              onsubmit="return confirm('Confirming attendance for appointment with Dr. <%= appointment.doctor_name %>. Continue?');">
-                                            <button type="submit" class="btn btn-success btn-sm">
-                                                <i class="fas fa-check-circle me-1"></i> Confirm
-                                            </button>
-                                        </form>
-                                    <% } else if (isAdmin) { %>
-                                        <span class="text-muted small">Admin Tools (Not Implemented)</span>
-                                    <% } else if (appointment.status === 'Confirmed') { %>
-                                        <span class="text-success small">Ready to Go</span>
+                                    <% if (isAdmin) { %>
+                                        <div class="d-flex justify-content-center gap-2">
+                                            
+                                            <% if (appointment.status === 'Confirmed') { %>
+                                                <form action="/admin/appointments/<%= appointment.id %>/status" method="POST" class="d-inline">
+                                                    <input type="hidden" name="status" value="Completed">
+                                                    <button type="submit" class="btn btn-primary btn-sm" title="Mark as Completed">
+                                                        <i class="fas fa-calendar-check"></i> Done
+                                                    </button>
+                                                </form>
+                                            <% } %>
+
+                                            <% if (appointment.status !== 'Canceled' && appointment.status !== 'Completed') { %>
+                                                <form action="/admin/appointments/<%= appointment.id %>/status" method="POST" class="d-inline"
+                                                      onsubmit="return confirm('WARNING: Are you sure you want to CANCEL this appointment?');">
+                                                    <input type="hidden" name="status" value="Canceled">
+                                                    <button type="submit" class="btn btn-danger btn-sm" title="Cancel Appointment">
+                                                        <i class="fas fa-times"></i> Cancel
+                                                    </button>
+                                                </form>
+                                            <% } else { %>
+                                                <span class="text-muted small"><%= appointment.status %></span>
+                                            <% } %>
+                                        </div>
                                     <% } else { %>
-                                        <span class="text-muted small">No action required</span>
+                                        <% if (appointment.status === 'Pending') { %>
+                                            <form action="/appointments/<%= appointment.id %>/confirm" method="POST" class="d-inline"
+                                                  onsubmit="return confirm('Confirming attendance for appointment with Dr. <%= appointment.doctor_name %>. Continue?');">
+                                                <button type="submit" class="btn btn-success btn-sm">
+                                                    <i class="fas fa-check-circle me-1"></i> Confirm
+                                                </button>
+                                            </form>
+                                        <% } else if (appointment.status === 'Confirmed') { %>
+                                            <a href="/teleconsultation/<%= appointment.id %>" class="btn btn-success btn-sm">
+                                                <i class="fas fa-video me-1"></i> Start Call
+                                            </a>
+                                        <% } else if (appointment.status === 'Completed') { %>
+                                            <span class="text-success small">Completed</span>
+                                        <% } else { %>
+                                            <span class="text-muted small">No action required</span>
+                                        <% } %>
                                     <% } %>
                                 </td>
                             </tr>
