@@ -79,3 +79,20 @@
 .table.mb-0 th, .table.mb-0 td {
     padding: 12px 15px;
 }
+
+/* Withdraw card */
+.withdraw-card {
+    border: 1px solid #dc354530 !important; /* Subtle red border */
+}
+
+.withdraw-card .card-header {
+    /* Use light red accent for header */
+    background-color: #fef7f7 !important; 
+    border-bottom: 1px solid #dc354520 !important;
+}
+
+.withdraw-card .btn-danger {
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    font-weight: 700;
+}
