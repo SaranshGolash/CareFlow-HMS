@@ -425,7 +425,13 @@ app.post('/logout', async (req, res) => {
 
 app.get('/dashboard', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id;
+    let lowStockCount = 0; // Initialize lowStockCount for all users
+
     try {
+        // --- 1. Fetch Wallet and Counters (Code remains the same) ---
+        const userDetailsResult = await db.query('SELECT wallet_balance FROM users WHERE id = $1', [userId]);
+        const walletBalance = userDetailsResult.rows[0].wallet_balance ? parseFloat(userDetailsResult.rows[0].wallet_balance).toFixed(2) : '0.00';
+
         const apptResult = await db.query('SELECT COUNT(*) FROM appointments WHERE user_id = $1', [userId]);
         const apptCount = parseInt(apptResult.rows[0].count, 10);
 
@@ -441,41 +447,54 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
         );
         const latestVitalDate = latestVitalResult.rows[0] ? latestVitalResult.rows[0].reading_timestamp : null;
         
-        // Calculate Outstanding Balance
         const balanceResult = await db.query(
-                'SELECT SUM(total_amount - amount_paid) AS outstanding_balance FROM invoices WHERE user_id = $1 AND status != $2', 
-                [userId, 'Paid']
+            'SELECT SUM(total_amount - amount_paid) AS outstanding_balance FROM invoices WHERE user_id = $1 AND status != $2', 
+            [userId, 'Paid']
         );
+        
         const outstandingBalance = balanceResult.rows[0].outstanding_balance ? 
-                           parseFloat(balanceResult.rows[0].outstanding_balance).toFixed(2) : 
-                           '0.00';
+                                   parseFloat(balanceResult.rows[0].outstanding_balance).toFixed(2) : 
+                                   '0.00';
 
-        let lowStockCount = 0;
+        // --- 2. Fetch Low Stock Count (Admin Only Logic) ---
         if (req.session.user.role === 'admin') {
             const lowStockResult = await db.query(
                 'SELECT COUNT(*) AS count FROM inventory WHERE current_stock <= low_stock_threshold'
             );
-            lowStockCount = parseInt(lowStockResult.rows[0].count, 10);
+            // Update the variable that was initialized outside the try block
+            lowStockCount = parseInt(lowStockResult.rows[0].count, 10); 
         }
+        // ---------------------------------------------------
+        
+        // Update Session with Fresh Wallet Balance (Good UX)
+        req.session.user.wallet_balance = parseFloat(walletBalance);
 
+
+        // --- 3. FINAL Render Call ---
         res.render('dashboard', {
             apptCount: apptCount,
             recordCount: recordCount,
             vitalCount: vitalCount,
             latestVitalDate: latestVitalDate,
             outstandingBalance: outstandingBalance,
-            lowStockCount: lowStockCount
+            walletBalance: walletBalance,
+            lowStockCount: lowStockCount // Passed regardless of the admin check outcome
         });
+        // -----------------------------
+
     } catch (err) {
         console.error('Dashboard data fetch error:', err);
         req.flash('error_msg', 'Failed to load dashboard data.');
+        
+        // Ensure ALL variables are passed on error as well
         res.render('dashboard', {
             apptCount: 0,
             recordCount: 0,
             vitalCount: 0,
             latestVitalDate: null,
             outstandingBalance: '0.00',
-            lowStockCount: 0
+            walletBalance: '0.00',
+            lowStockCount: 0 
         });
     }
 });
