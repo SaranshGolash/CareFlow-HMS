@@ -156,9 +156,10 @@ app.post('/newappointments', isAuthenticated, async (req, res) => {
     const { patient_name, gender, phone, doctor_name } = req.body;
     const userId = req.session.user.id;
     try {
-        const query = 'INSERT INTO appointments (patient_name, gender, phone, doctor_name, user_id) VALUES ($1, $2, $3, $4, $5)';
-        await db.query(query, [patient_name, gender, phone, doctor_name, userId]);
-        req.flash('success_msg', 'Appointment added successfully');
+        const query = 'INSERT INTO appointments (patient_name, gender, phone, doctor_name, user_id, status) VALUES ($1, $2, $3, $4, $5, $6)';
+        await db.query(query, [patient_name, gender, phone, doctor_name, userId, 'Pending']);
+        
+        req.flash('success_msg', 'Appointment scheduled successfully. Please confirm your attendance.');
         res.redirect('/appointments');
     } catch (err) {
         console.error('Error adding appointment:', err);
