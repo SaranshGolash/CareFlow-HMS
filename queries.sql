@@ -155,3 +155,16 @@ ALTER SEQUENCE services_service_id_seq RESTART WITH 1;
 
 ALTER TABLE appointments
 ADD COLUMN status VARCHAR(20) NOT NULL DEFAULT 'Pending';
+
+ALTER TABLE users
+ADD COLUMN wallet_balance NUMERIC(10, 2) NOT NULL DEFAULT 0.00;
+
+CREATE TABLE wallet_transactions (
+    transaction_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE RESTRICT NOT NULL,
+    amount NUMERIC(10, 2) NOT NULL,
+    transaction_type VARCHAR(20) NOT NULL, -- 'Deposit', 'Payment', 'Adjustment'
+    reference_id VARCHAR(100),              -- Links to invoice_id, admin action, etc.
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
