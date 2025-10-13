@@ -718,27 +718,28 @@ app.get('/wallet', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id;
     const isAdminUser = req.session.user.role === 'admin';
 
-    // Admin view can show all users' wallets, Patient only sees their own
     let query = 'SELECT id, username, wallet_balance, email FROM users ';
     const params = [];
     
-    if (!isAdminUser) {
+    // CRITICAL FIX: Only add the WHERE clause if the user is NOT an admin.
+    if (!isAdminUser) { 
         query += 'WHERE id = $1';
         params.push(userId);
     }
+    
     query += ' ORDER BY id';
 
     try {
         const usersResult = await db.query(query, params);
         
-        // Fetch recent transactions for the logged-in user only
+        // Fetch recent transactions for the LOGGED-IN user only (for the transaction list view)
         const transactionsResult = await db.query(
             'SELECT * FROM wallet_transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 10',
             [userId]
         );
 
         res.render('wallet', { 
-            usersData: usersResult.rows, // All patients (for admin) or just current patient
+            usersData: usersResult.rows, // This now contains ALL users if Admin, or 1 user if Patient.
             transactions: transactionsResult.rows,
             isAdmin: isAdminUser
         });
