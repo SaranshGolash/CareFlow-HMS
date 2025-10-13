@@ -22,9 +22,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -136,15 +136,38 @@ app.get('/', async (req, res) => {
 
 // Appointments
 app.get('/appointments', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+    
+    let query = 'SELECT * FROM appointments ';
+    const params = [];
+
+    // --- CRITICAL FIX: Filtering Logic ---
+    if (!isAdminUser) {
+        // If the user is NOT an admin, filter by their specific ID
+        query += 'WHERE user_id = $1 ';
+        params.push(userId);
+    }
+    // -------------------------------------
+    
+    query += 'ORDER BY id DESC';
+
     try {
-        const userId = req.session.user.id;
-        const result = await db.query('SELECT * FROM appointments WHERE user_id = $1 ORDER BY id DESC', [userId]);
+        const result = await db.query(query, params);
         const appointments = result.rows;
-        res.render('appointments', { appointments });
+        
+        // Pass isAdmin to the frontend so the view can adjust labels/actions if necessary
+        res.render('appointments', { 
+            appointments: appointments,
+            isAdmin: isAdminUser // Pass status for frontend logic/labels
+        });
     } catch (err) {
         console.error('Error fetching appointments:', err);
         req.flash('error_msg', 'Error fetching appointments');
-        res.render('appointments', { appointments: [] });
+        res.render('appointments', { 
+            appointments: [], 
+            isAdmin: isAdminUser 
+        });
     }
 });
 
