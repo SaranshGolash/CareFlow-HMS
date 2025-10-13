@@ -1,4 +1,3 @@
-/* Variables */
 :root {
     --primary: #0d6efd;
     --primary-light: #e7f1ff;
@@ -130,6 +129,12 @@
     transform: translateY(0);
     box-shadow: 0 2px 8px rgba(13, 110, 253, 0.15);
 }
+
+/* --- Status Badge Color Definitions (for consistency) --- */
+.badge.bg-secondary { background-color: #6c757d !important; }
+.badge.bg-success { background-color: #28a745 !important; }
+.badge.bg-warning { background-color: #ffc107 !important; color: #333; }
+.badge.bg-danger { background-color: #dc3545 !important; }
 
 /* Responsive Design */
 @media (max-width: 992px) {
