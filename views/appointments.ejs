@@ -1,14 +1,14 @@
 <%- include('initials/header.ejs', { title: 'Appointments' }) %>
 <link rel="stylesheet" href="/styles/appointments.css">
     <div class="container py-5">
-        <h2 class="mb-4">Your Appointments</h2>
+        <h2 class="mb-4"><%= isAdmin ? 'All Scheduled Appointments' : 'Your Appointments' %></h2>
 
         <% if (appointments.length > 0) { %>
             <div class="table-responsive">
                 <table class="table table-striped table-hover">
                     <thead>
                         <tr>
-                            <th>Patient Name</th>
+                            <th><%= isAdmin ? 'Patient Name' : 'My Name' %></th>
                             <th>Doctor Name</th>
                             <th>Status</th>
                             <th class="text-center">Action</th>
@@ -29,13 +29,15 @@
                                     <span class="badge bg-<%= statusClass %>"><%= appointment.status %></span>
                                 </td>
                                 <td class="text-center">
-                                    <% if (appointment.status === 'Pending') { %>
+                                    <% if (appointment.status === 'Pending' && !isAdmin) { %>
                                         <form action="/appointments/<%= appointment.id %>/confirm" method="POST" class="d-inline"
                                               onsubmit="return confirm('Confirming attendance for appointment with Dr. <%= appointment.doctor_name %>. Continue?');">
                                             <button type="submit" class="btn btn-success btn-sm">
                                                 <i class="fas fa-check-circle me-1"></i> Confirm
                                             </button>
                                         </form>
+                                    <% } else if (isAdmin) { %>
+                                        <span class="text-muted small">Admin Tools (Not Implemented)</span>
                                     <% } else if (appointment.status === 'Confirmed') { %>
                                         <span class="text-success small">Ready to Go</span>
                                     <% } else { %>
