@@ -1,0 +1,74 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --secondary-accent: #4287f5;
+    --text-color: #1f2937;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 16px rgba(13,110,253,0.08);
+    --success: #28a745;
+    --danger: #dc3545;
+}
+
+/* --- General Structure & Typography --- */
+.container.py-5 h2 {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+h3 {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* --- Analytics Cards (KPIs) --- */
+.analytics-card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.analytics-card:hover {
+    box-shadow: var(--shadow-md);
+}
+
+.analytics-card .card-body {
+    padding: 1.25rem;
+}
+
+/* Background Accents */
+.bg-light-green { background-color: rgba(40, 167, 69, 0.1) !important; } /* Total Billed */
+.bg-light-blue { background-color: rgba(13, 110, 253, 0.1) !important; } /* Total Collected */
+.bg-light-red { background-color: rgba(220, 53, 69, 0.1) !important; }    /* Total Outstanding */
+
+/* List Group Styles */
+.analytics-card .list-group-item {
+    border-color: #f0f0f0 !important;
+}
+
+/* --- Table Styles (Appointment Breakdown) --- */
+.analytics-table-container {
+    background: #fff;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    border: 1px solid #e9ecef;
+}
+
+.analytics-table-container thead th {
+    background-color: var(--primary-light);
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+/* Badge colors redefined for consistency */
+.badge.bg-primary { background-color: var(--primary) !important; }
+.badge.bg-success { background-color: var(--success) !important; }
+.badge.bg-warning { background-color: #ffc107 !important; color: #333; }
+.badge.bg-danger { background-color: var(--danger) !important; }
+.badge.bg-secondary { background-color: #6c757d !important; }
+
+/* Status Alert Card Colors */
+.bg-danger-light { background-color: #fcebeb !important; }
+.bg-success-light { background-color: #f0fff0 !important; }
