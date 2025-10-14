@@ -43,6 +43,36 @@ h3 {
     color: var(--primary);
 }
 
+/* Admin-auick-access-bar styling */
+.admin-quick-access-bar {
+    background: linear-gradient(90deg, #4287f5, var(--primary)) !important; /* Use existing primary gradient */
+    border: none !important;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.admin-quick-access-bar:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(13, 110, 253, 0.4);
+}
+
+.admin-quick-access-bar .text-white-50 {
+    opacity: 0.7;
+}
+
+.admin-quick-access-bar .text-white-50:hover {
+    opacity: 1;
+}
+
+/* Ensure the admin alerts space correctly with admin-quick-access-bar */
+.admin-quick-access-bar + .row {
+    margin-top: 24px; 
+}
+
+#admin-analytics-access {
+    cursor: pointer;
+}
+
 /* Icon Colors for Cards (Matching existing palette) */
 .icon-blue { color: var(--primary); }
 .icon-purple { color: #6f42c1; }
