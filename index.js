@@ -379,15 +379,30 @@ app.get('/signup', (req, res) => {
 });
 
 app.post('/signup', async (req, res) => {
-    const { username, email, password } = req.body;
+    // FIX: Destructure the new 'phone' field from the request body
+    const { username, email, password, phone } = req.body;
     const saltRounds = 10;
+
+    // Basic validation for password match on the server-side
+    if (password !== req.body.confirm_password) {
+        req.flash('error_msg', 'Passwords do not match.');
+        return res.redirect('/signup');
+    }
 
     try {
         const password_hash = await bcrypt.hash(password, saltRounds);
-        const query = 'INSERT INTO users (username, email, password_hash) VALUES ($1, $2, $3) RETURNING id, username, email, role';
-        const result = await db.query(query, [username, email, password_hash]);
+
+        // FIX: Update the INSERT query to include the phone number
+        const query = `
+            INSERT INTO users (username, email, password_hash, phone) 
+            VALUES ($1, $2, $3, $4) 
+            RETURNING id, username, email, role
+        `;
+        // Use 'phone || null' to handle the optional field
+        const result = await db.query(query, [username, email, password_hash, phone || null]);
         const newUser = result.rows[0];
 
+        // Log the user in immediately
         req.session.user = {
             id: newUser.id,
             username: newUser.username,
