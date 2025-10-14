@@ -11,6 +11,13 @@ h1 {
     color: #e0e0e0;
 }
 
+.card {
+    /* Ensures the card itself doesn't hide the rotation effect */
+    backface-visibility: hidden;
+    /* Improves rendering performance and reliability for the effect */
+    transform-style: preserve-3d; 
+}
+
 /* Ensure primary color (Bootstrap's blue) is used for titles */
 .card-body > h3 {
     color: #0d6efd; 
@@ -241,6 +248,22 @@ h1 {
     
     /* Ensure the final CSS state is visible, overriding the initial opacity: 0 */
     opacity: 1; 
+}
+
+/* --- NEW: STAGGERED FLIP/ZOOM EFFECT --- */
+.animate-flip-zoom {
+    /* Initial State: Invisible, rotated 15 degrees (off-axis), and slightly shrunk (0.9) */
+    opacity: 0;
+    transform: perspective(600px) rotateY(15deg) scale(0.95); /* Slightly less dramatic scale */
+    
+    /* CRITICAL: Ensure opacity is included in the transition property */
+    transition: transform 0.8s cubic-bezier(0.2, 0.4, 0.4, 1.2), opacity 0.8s ease-out;
+}
+
+.animate-flip-zoom.is-visible {
+    /* Final State: Fully visible, rotated back to straight (0deg), and at full size (1) */
+    opacity: 1;
+    transform: perspective(600px) rotateY(0deg) scale(1);
 }
 
 /* --- Responsive Styles --- */
