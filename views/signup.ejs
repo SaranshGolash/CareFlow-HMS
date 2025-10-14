@@ -1,127 +1,106 @@
 <%- include('initials/header.ejs', { title: 'CareFlow - Sign Up' }) %>
-<script src="/functionality/signup.js"></script>
+
+<script src="/js/signup.js" defer></script>
 
 <link rel="stylesheet" href="/styles/signup.css">
-    <main class="signup-page">
-        <div class="signup-wrap">
-            <section class="signup-left" aria-hidden="true">
-                <div class="brand">
-                    <h1>CareFlow</h1>
-                    <p class="tag">Patient-first healthcare management</p>
-                </div>
 
-                <div class="hero-illustration" role="img" aria-labelledby="signupIllustrationTitle">
-                    <svg id="signupIllustration" width="320" height="220" viewBox="0 0 320 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                        <defs>
-                            <linearGradient id="g" x1="0" x2="1">
-                                <stop offset="0" stop-color="#6f42c1" stop-opacity="0.9"/>
-                                <stop offset="1" stop-color="#0d6efd" stop-opacity="0.9"/>
-                            </linearGradient>
-                        </defs>
-                        <rect rx="18" width="320" height="220" fill="url(#g)"></rect>
-                        <g transform="translate(28,30)" fill="#fff" opacity="0.18">
-                            <circle cx="40" cy="40" r="40"></circle>
-                            <rect x="100" y="10" width="160" height="8" rx="4"></rect>
-                            <rect x="100" y="36" width="120" height="8" rx="4"></rect>
-                            <rect x="100" y="62" width="80" height="8" rx="4"></rect>
-                        </g>
-                    </svg>
-                </div>
+<main class="signup-page">
+    <div class="signup-wrap">
+        <section class="signup-left" aria-hidden="true">
+            <div class="brand">
+                <h1>CareFlow</h1>
+                <p class="tag">Patient-first healthcare management</p>
+            </div>
 
-                <p class="left-note">Join CareFlow to manage appointments, track patients, and streamline clinic workflows.</p>
-            </section>
+            <div class="hero-illustration" role="img" aria-labelledby="signupIllustrationTitle">
+                <svg id="signupIllustration" width="320" height="220" viewBox="0 0 320 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="g" x1="0" x2="1">
+                            <stop offset="0" stop-color="#6f42c1" stop-opacity="0.9"/>
+                            <stop offset="1" stop-color="#0d6efd" stop-opacity="0.9"/>
+                        </linearGradient>
+                    </defs>
+                    <rect rx="18" width="320" height="220" fill="url(#g)"></rect>
+                    <g transform="translate(28,30)" fill="#fff" opacity="0.18">
+                        <circle cx="40" cy="40" r="40"></circle>
+                        <rect x="100" y="10" width="160" height="8" rx="4"></rect>
+                        <rect x="100" y="36" width="120" height="8" rx="4"></rect>
+                        <rect x="100" y="62" width="80" height="8" rx="4"></rect>
+                    </g>
+                </svg>
+            </div>
+            <p class="left-note">Join CareFlow to manage appointments, track patients, and streamline clinic workflows.</p>
+        </section>
 
-            <aside class="signup-right" aria-label="Create account form area">
-                <% if (success_msg) { %>
-                    <div class="alert alert-success" role="status"><%= success_msg %></div>
-                <% } %>
-                <% if (error_msg) { %>
-                    <div class="alert alert-danger" role="alert"><%= error_msg %></div>
-                <% } %>
-
-                <div class="card" role="region" aria-labelledby="createAccountTitle">
-                    <div class="card-body">
-                        <h2 id="createAccountTitle" class="card-title">Create an account</h2>
-                        <form action="/signup" method="POST" id="signupForm" novalidate>
-                            <div class="form-row">
-                                <label for="username" class="form-label">Full name</label>
-                                <input id="username" name="username" type="text" class="form-control" placeholder="Jane Doe" required autocomplete="name" aria-required="true">
-                            </div>
-
-                            <div class="form-row two-col">
-                                <div>
-                                    <label for="email" class="form-label">Email</label>
-                                    <input id="email" name="email" type="email" class="form-control" placeholder="you@email.com" required autocomplete="email" aria-required="true">
-                                </div>
-                                <div>
-                                    <label for="phone" class="form-label">Phone</label>
-                                    <input id="phone" name="phone" type="tel" class="form-control" placeholder="9876543210" pattern="[0-9]{7,15}" autocomplete="tel" aria-describedby="phoneHelp">
-                                    <div id="phoneHelp" class="form-text">Optional — numbers only, 7–15 digits.</div>
-                                </div>
-                            </div>
-
-                            <div class="form-row two-col">
-                                <div>
-                                    <label for="password" class="form-label">Password</label>
-                                    <div class="input-with-icon">
-                                        <input id="password" name="password" type="password" class="form-control" minlength="6" required autocomplete="new-password" aria-required="true" aria-describedby="pwHelp" placeholder="Enter password">
-                                        <button type="button" class="pw-toggle-icon" data-target="password" aria-pressed="false" aria-label="Show password">
-                                            <!-- eye open -->
-                                            <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                                                <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                                            </svg>
-                                            <!-- eye-off -->
-                                            <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.1 20.1 0 015-5m3-1.1A9 9 0 0112 5c7 0 11 7 11 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                                                <path d="M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label for="confirmPassword" class="form-label">Confirm password</label>
-                                    <div class="input-with-icon">
-                                        <input id="confirmPassword" name="confirm_password" type="password" class="form-control" minlength="6" required autocomplete="new-password" aria-required="true" placeholder="Confirm password">
-                                        <button type="button" class="pw-toggle-icon" data-target="confirmPassword" aria-pressed="false" aria-label="Show confirm password">
-                                            <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                                                <circle cx="12" cy="12" r="3" fill="currentColor"/>
-                                            </svg>
-                                            <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                                                <path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.1 20.1 0 015-5m3-1.1A9 9 0 0112 5c7 0 11 7 11 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                                                <path d="M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-row">
-                                <div class="pw-meter" aria-hidden="true">
-                                    <div id="pwStrength" class="pw-strength"></div>
-                                </div>
-                                <div id="pwNote" class="pw-note" aria-live="polite"></div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary" id="signupBtn" disabled>
-                                    <span id="signupBtnText">Create account</span>
-                                </button>
-                                <a href="/" class="btn btn-light">Cancel</a>
-                            </div>
-
-                            <p class="small muted">By creating an account you agree to our <a href="/terms" class="muted-link">Terms</a> and <a href="/privacy" class="muted-link">Privacy Policy</a>.</p>
-                        </form>
-
-                        <div class="alt">
-                            <p>Already have an account? <a href="/login" class="link-primary">Log in</a></p>
+        <aside class="signup-right" aria-label="Create account form area">
+            
+            <div class="card" role="region" aria-labelledby="createAccountTitle">
+                <div class="card-body">
+                    <h2 id="createAccountTitle" class="card-title">Create an account</h2>
+                    <form action="/signup" method="POST" id="signupForm" novalidate>
+                        <div class="form-row">
+                            <label for="username" class="form-label">Full name</label>
+                            <input id="username" name="username" type="text" class="form-control" placeholder="Jane Doe" required autocomplete="name" aria-required="true">
                         </div>
+
+                        <div class="form-row two-col">
+                            <div>
+                                <label for="email" class="form-label">Email</label>
+                                <input id="email" name="email" type="email" class="form-control" placeholder="you@email.com" required autocomplete="email" aria-required="true">
+                            </div>
+                            <div>
+                                <label for="phone" class="form-label">Phone</label>
+                                <input id="phone" name="phone" type="tel" class="form-control" placeholder="9876543210" pattern="[0-9]{7,15}" autocomplete="tel" aria-describedby="phoneHelp">
+                                <div id="phoneHelp" class="form-text">Optional — numbers only, 7–15 digits.</div>
+                            </div>
+                        </div>
+
+                        <div class="form-row two-col">
+                            <div>
+                                <label for="password" class="form-label">Password</label>
+                                <div class="input-with-icon">
+                                    <input id="password" name="password" type="password" class="form-control" minlength="6" required autocomplete="new-password" aria-required="true" aria-describedby="pwHelp" placeholder="Enter password">
+                                    <button type="button" class="pw-toggle-icon" data-target="password" aria-pressed="false" aria-label="Show password">
+                                        <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+                                        <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.1 20.1 0 015-5m3-1.1A9 9 0 0112 5c7 0 11 7 11 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <label for="confirmPassword" class="form-label">Confirm password</label>
+                                <div class="input-with-icon">
+                                    <input id="confirmPassword" name="confirm_password" type="password" class="form-control" minlength="6" required autocomplete="new-password" aria-required="true" placeholder="Confirm password">
+                                    <button type="button" class="pw-toggle-icon" data-target="confirmPassword" aria-pressed="false" aria-label="Show confirm password">
+                                        <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+                                        <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.1 20.1 0 015-5m3-1.1A9 9 0 0112 5c7 0 11 7 11 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="pw-meter" aria-hidden="true">
+                                <div id="pwStrength" class="pw-strength"></div>
+                            </div>
+                            <div id="pwNote" class="pw-note" aria-live="polite"></div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary" id="signupBtn" disabled>
+                                <span id="signupBtnText">Create account</span>
+                            </button>
+                            <a href="/" class="btn btn-light">Cancel</a>
+                        </div>
+                        <p class="small muted">By creating an account you agree to our <a href="/terms" class="muted-link">Terms</a> and <a href="/privacy" class="muted-link">Privacy Policy</a>.</p>
+                    </form>
+
+                    <div class="alt">
+                        <p>Already have an account? <a href="/login" class="link-primary">Log in</a></p>
                     </div>
                 </div>
-            </aside>
-        </div>
-    </main>
+            </div>
+        </aside>
+    </div>
+</main>
 
 <%- include('initials/footer.ejs') %>
