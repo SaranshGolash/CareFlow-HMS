@@ -178,3 +178,6 @@ ADD COLUMN appointment_time TIME;
 UPDATE users
 SET role = 'doctor'
 WHERE email = 'doctor@email.com';
+
+ALTER TABLE users
+ADD COLUMN phone VARCHAR(20);
