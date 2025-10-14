@@ -1398,6 +1398,84 @@ app.post('/admin/appointments/:id/status', isAuthenticated, isAdmin, async (req,
     }
 });
 
+// GET: Display the Admin Reporting and Analytics Dashboard
+app.get('/admin/analytics', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        // --- 1. Prepare Concurrent Database Queries (KPIs) ---
+        
+        // A. Total Users and Admins
+        const userCountPromise = db.query('SELECT role, COUNT(*) FROM users GROUP BY role');
+        
+        // B. Total Appointments by Status
+        const apptStatusPromise = db.query('SELECT status, COUNT(*) FROM appointments GROUP BY status');
+        
+        // C. Revenue Metrics (Total Billed vs. Total Paid)
+        const revenuePromise = db.query(`
+            SELECT 
+                SUM(total_amount) AS total_billed, 
+                SUM(amount_paid) AS total_collected,
+                SUM(total_amount - amount_paid) AS total_outstanding
+            FROM invoices
+        `);
+        
+        // D. Low Stock Count (Reusing existing logic)
+        const lowStockPromise = db.query(
+            'SELECT COUNT(*) AS count FROM inventory WHERE current_stock <= low_stock_threshold'
+        );
+
+        // --- 2. Execute all queries concurrently ---
+        const [
+            userCounts, 
+            apptStatuses, 
+            revenueMetrics, 
+            lowStock
+        ] = await Promise.all([
+            userCountPromise, 
+            apptStatusPromise, 
+            revenuePromise, 
+            lowStockPromise
+        ]);
+
+        // --- 3. Format Data for Frontend ---
+        
+        // Format User Counts: {user: N, admin: M}
+        const userStats = userCounts.rows.reduce((acc, row) => {
+            acc[row.role] = parseInt(row.count, 10);
+            return acc;
+        }, { user: 0, admin: 0 });
+        
+        // Format Revenue: Ensure numbers are float/fixed
+        const revenueStats = revenueMetrics.rows[0] || {};
+        const totalBilled = parseFloat(revenueStats.total_billed || 0).toFixed(2);
+        const totalCollected = parseFloat(revenueStats.total_collected || 0).toFixed(2);
+        const totalOutstanding = parseFloat(revenueStats.total_outstanding || 0).toFixed(2);
+        
+        // Format Appointment Statuses: {[status]: N}
+        const apptStats = apptStatuses.rows.reduce((acc, row) => {
+            acc[row.status] = parseInt(row.count, 10);
+            return acc;
+        }, { Pending: 0, Confirmed: 0, Canceled: 0, Completed: 0 });
+        
+        // Low Stock Count
+        const lowStockCount = parseInt(lowStock.rows[0].count, 10);
+
+        // --- 4. Render View ---
+        res.render('admin_analytics', {
+            userStats,
+            apptStats,
+            totalBilled,
+            totalCollected,
+            totalOutstanding,
+            lowStockCount
+        });
+
+    } catch (err) {
+        console.error('CRITICAL ANALYTICS DATA FETCH ERROR:', err);
+        req.flash('error_msg', 'Failed to load comprehensive analytics data due to a server error.');
+        res.redirect('/dashboard');
+    }
+});
+
 // GET: Public Services
 app.get('/public-services', async (req, res) => {
     try {
