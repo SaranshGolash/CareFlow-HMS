@@ -1,11 +1,14 @@
 <%- include('initials/header.ejs', { title: 'Dashboard' }) %>
 <link rel="stylesheet" href="/styles/dashboard.css">
+</head>
+<body>
     <div class="container py-5">
         <h2 class="mb-5 text-primary">
             Welcome, <%= user.username %>!
         </h2>
 
         <% if (user.role === 'admin') { %>
+            <!-- Admin Alert Section (Low Stock) -->
             <% if (lowStockCount > 0) { %>
                 <div class="alert alert-danger d-flex justify-content-between align-items-center fw-bold" role="alert">
                     <span>
@@ -20,73 +23,70 @@
                     You are logged in as an **Administrator**. Use the navigation bar or links below for management.
                 </div>
             <% } %>
-        <% } %>
-
-    <% if (user.role === 'admin') { %>
-    <div class="row mb-5">
-        <div class="col-12">
-            <h3 class="mb-3 text-dark">Admin Quick Access</h3>
             
-            <div class="admin-quick-access-bar card shadow-md p-3 bg-primary">
-                <div class="d-flex align-items-center justify-content-between">
-                    <div class="text-white">
-                        <i class="fas fa-chart-bar fa-2x me-3"></i>
-                        <span class="fs-5 fw-bold">Jump to Financial and Operational Analytics</span>
+            <!-- ADMIN QUICK ACCESS BLOCK (Analytics Button Bar) -->
+            <div class="row mb-5">
+                <div class="col-12">
+                    <h3 class="mb-3 text-dark">Admin Quick Access</h3>
+                    
+                    <div class="admin-quick-access-bar card shadow-md p-3 bg-primary" 
+                         onclick="window.location.href='/admin/analytics'">
+                        <div class="d-flex align-items-center justify-content-between">
+                            <div class="text-white">
+                                <i class="fas fa-chart-bar fa-2x me-3"></i>
+                                <span class="fs-5 fw-bold">Jump to Financial and Operational Analytics</span>
+                            </div>
+                            <i class="fas fa-arrow-right fa-2x text-white-50"></i>
+                        </div>
                     </div>
-                    <i class="fas fa-arrow-right fa-2x text-white-50" id="admin-analytics-access" onclick="window.location.href='/admin/analytics'"></i>
                 </div>
             </div>
-        </div>
-    </div>
-<% } %>
+            
+        <% } %>
 
         <h3 class="mb-4 text-dark">
-            <% if (user.role === 'admin') { %>
-                Management Overview
-            <% } else { %>
-                Your Activity Summary
-            <% } %>
+            <%= user.role === 'admin' ? 'Management Overview' : 'Your Activity Summary' %>
         </h3>
 
         <div class="row g-4">
             
-            <div class="col-md-6 col-lg-3">
-                <div class="dashboard-card card h-100 shadow-sm animate-on-scroll animate-fade-up" 
-                 style="transition-delay: 0s;" onclick="window.location.href='/appointments'">
+            <!-- Appointments Card (Visible to all) -->
+            <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.1s;">
+                <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/appointments'">
                     <div class="card-body">
                         <i class="fas fa-calendar-check fa-3x icon-blue mb-3"></i>
                         <p class="text-uppercase text-muted mb-0 small">Appointments Booked</p>
-                        <h2 class="fw-bold"><%= apptCount %></h2>
+                        <h2 class="fw-bold animate-counter" data-target-value="<%= apptCount %>"><%= apptCount %></h2>
                     </div>
                 </div>
             </div>
 
-            <div class="col-md-6 col-lg-3">
-                <div class="dashboard-card card h-100 shadow-sm animate-on-scroll animate-fade-up" 
-                 style="transition-delay: 0.15s;" onclick="window.location.href='/records'">
+            <!-- Medical Records Card (Visible to all) -->
+            <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.2s;">
+                <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/records'">
                     <div class="card-body">
                         <i class="fas fa-notes-medical fa-3x icon-purple mb-3"></i>
                         <p class="text-uppercase text-muted mb-0 small">Total Medical Records</p>
-                        <h2 class="fw-bold"><%= recordCount %></h2>
+                        <h2 class="fw-bold animate-counter" data-target-value="<%= recordCount %>"><%= recordCount %></h2>
                     </div>
                 </div>
             </div>
             
-            <div class="col-md-6 col-lg-3">
-                <div class="dashboard-card card h-100 shadow-sm animate-on-scroll animate-fade-up" 
-                 style="transition-delay: 0.30s;" onclick="window.location.href='/invoices'">
+            <!-- Outstanding Balance Card (Visible to all) -->
+            <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.3s;">
+                <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/invoices'">
                     <div class="card-body">
                         <i class="fas fa-dollar-sign fa-3x <%= (outstandingBalance > 0) ? 'text-danger' : 'text-success' %> mb-3"></i>
                         <p class="text-uppercase text-muted mb-0 small">Outstanding Balance</p>
-                        <h2 class="fw-bold">$<%= outstandingBalance %></h2>
+                        <h2 class="fw-bold animate-counter" data-target-value="<%= outstandingBalance %>">$<%= outstandingBalance %></h2>
                     </div>
                 </div>
             </div>
 
 
-            <div class="col-md-6 col-lg-3">
-                <div class="dashboard-card card h-100 shadow-sm animate-on-scroll animate-fade-up" 
-                 style="transition-delay: 0.45s;" onclick="window.location.href='/monitoring'">
+            <!-- Latest Vitals Card (Visible to all) -->
+            <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.4s;">
+                <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/monitoring'">
                     <div class="card-body">
                         <i class="fas fa-heartbeat fa-3x icon-green mb-3"></i>
                         <p class="text-uppercase text-muted mb-0 small">Last Vitals Check</p>
@@ -101,14 +101,14 @@
                 </div>
             </div>
             
+            <!-- Low Stock Card (Admin View - Placed here to integrate with the main card flow) -->
             <% if (user.role === 'admin') { %>
-                <div class="col-md-6 col-lg-3">
-                    <div class="dashboard-card card h-100 shadow-sm animate-on-scroll animate-fade-up" 
-                 style="transition-delay: 0.60s;" onclick="window.location.href='/inventory'">
+                <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.5s;">
+                    <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/inventory'">
                         <div class="card-body">
                             <i class="fas fa-box-open fa-3x <%= lowStockCount > 0 ? 'text-danger' : 'icon-green' %> mb-3"></i>
                             <p class="text-uppercase text-muted mb-0 small">Low Stock Items</p>
-                            <h2 class="fw-bold <%= lowStockCount > 0 ? 'text-danger' : 'text-dark' %>"><%= lowStockCount %></h2>
+                            <h2 class="fw-bold animate-counter" data-target-value="<%= lowStockCount %> <%= lowStockCount > 0 ? 'text-danger' : 'text-dark' %>"><%= lowStockCount %></h2>
                         </div>
                     </div>
                 </div>

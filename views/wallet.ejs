@@ -12,7 +12,12 @@
                             <i class="fas fa-money-check-alt fa-3x text-primary"></i>
                             <div class="text-start">
                                 <p class="text-uppercase text-muted mb-0">Current Wallet Balance</p>
-                                <h1 class="fw-bold text-success display-5">$<%= user.wallet_balance.toFixed(2) %></h1>
+                                <h1 class="fw-bold text-success display-4 animate-counter" 
+                                    data-target-value="<%= Math.round(user.wallet_balance) %>"
+                                    data-suffix=""
+                                    data-prefix="$">
+                                    0.00
+                                </h1>
                             </div>
                         </div>
                     </div>

@@ -1,31 +1,36 @@
 document.addEventListener('DOMContentLoaded', () => {
     // --- New Function: Animate Number Counting ---
     const animateCount = (element) => {
-        const targetValue = parseInt(element.getAttribute('data-target-value'));
-        const duration = 1500; // 1.5 seconds
-        let startValue = 0;
-        let startTime = null;
+    // Read the integer part for counting, but store the final float value
+    const fullTargetValue = parseFloat(element.getAttribute('data-target-value'));
+    const targetValue = Math.floor(fullTargetValue); // Use integer part for rapid counting
+    const duration = 1500;
+    let startValue = 0;
+    let startTime = null;
+    const prefix = element.getAttribute('data-prefix') || '';
+    const suffix = element.getAttribute('data-suffix') || '';
 
-        const step = (timestamp) => {
-            if (!startTime) startTime = timestamp;
-            const progress = timestamp - startTime;
-            const percentage = Math.min(progress / duration, 1);
+    const step = (timestamp) => {
+        if (!startTime) startTime = timestamp;
+        const progress = timestamp - startTime;
+        const percentage = Math.min(progress / duration, 1);
 
-            // Calculate the current value using easing (optional, but smooth)
-            const currentValue = Math.floor(percentage * targetValue);
+        // Calculate the current *integer* value
+        const currentValue = Math.floor(percentage * targetValue);
 
-            element.textContent = currentValue + (element.getAttribute('data-suffix') || '');
+        // Display the current integer value + prefix/suffix during animation
+        element.textContent = prefix + currentValue + suffix;
 
-            if (percentage < 1) {
-                window.requestAnimationFrame(step);
-            } else {
-                // Ensure final value is the exact target value
-                element.textContent = targetValue + (element.getAttribute('data-suffix') || '');
-            }
-        };
-
-        window.requestAnimationFrame(step);
+        if (percentage < 1) {
+            window.requestAnimationFrame(step);
+        } else {
+            // CRITICAL: Display the full, precise final value
+            element.textContent = prefix + fullTargetValue.toFixed(2);
+        }
     };
+
+    window.requestAnimationFrame(step);
+};
     // ---------------------------------------------
 
 
