@@ -16,17 +16,6 @@ body{
     color:#222;
 }
 
-.signup-right {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-flow: column nowrap;
-}
-
-.alert {
-    display: none !important;
-}
-
 .signup-page{
     min-height:100vh; 
     display:flex; 
@@ -81,7 +70,7 @@ body{
     font-size:0.95rem;
 }
 
-/* Right panel (form card) */
+/* Right panel (form card) - FIX: Consolidated rules */
 .signup-right{
     display:flex; 
     align-items:center; 
