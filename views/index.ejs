@@ -24,7 +24,7 @@
             <h2 class="text-center mb-5">Our Core Features</h2>
             <div class="row g-4">
                 <div class="col-md-4">
-                    <div class="card h-100 animate-on-scroll animate-slide-up " style="transition-delay: 0s;">
+                    <div class="card h-100 animate-on-scroll animate-slide-up" style="transition-delay: 0s;">
                         <div class="clickable-card card-body text-center">
                             <a href="<%= user ? '/appointments' : '/login' %>" class="card-content-link text-decoration-none text-dark">
                                 <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
@@ -35,7 +35,7 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card h-100 animate-on-scroll animate-slide-up " style="transition-delay: 0.15s;">
+                    <div class="card h-100 animate-on-scroll animate-slide-up" style="transition-delay: 0.15s;">
                         <div class="clickable-card card-body text-center">
                             <a href="<%= user ? '/records' : '/login' %>" class="card-content-link text-decoration-none text-dark">
                             <i class="fas fa-notes-medical fa-3x text-primary mb-3"></i>
@@ -46,7 +46,7 @@
                     </div>
                 </div>
                 <div class="col-md-4">
-                    <div class="card h-100 animate-on-scroll animate-slide-up " style="transition-delay: 0.30s;">
+                    <div class="card h-100 animate-on-scroll animate-slide-up" style="transition-delay: 0.30s;">
                         <div class="clickable-card card-body text-center">
                             <a href="<%= user ? '/monitoring' : '/login' %>" class="card-content-link text-decoration-none text-dark">
                             <i class="fas fa-heartbeat fa-3x text-primary mb-3"></i>
@@ -74,22 +74,31 @@
     <section class="stats py-5">
         <div class="container">
             <div class="row text-center">
-                <div class="col-md-3">
-                    <h2 class="display-4 fw-bold text-primary animate-on-scroll animate-pop-in animate-counter" data-target-value="1000" data-suffix="+" style="transition-delay: 0s;">1000+</h2>
-                    <p>Patients Served</p>
-                </div>
-                <div class="col-md-3">
-                    <h2 class="display-4 fw-bold text-primary animate-on-scroll animate-pop-in animate-counter" data-target-value="50" data-suffix="+" style="transition-delay: 0.1s;">50+</h2>
-                    <p>Specialist Doctors</p>
-                </div>
-                <div class="col-md-3">
-                    <h2 class="display-4 fw-bold text-primary">24/7</h2>
-                    <p>Emergency Service</p>
-                </div>
-                <div class="col-md-3">
-                    <h2 class="display-4 fw-bold text-primary animate-counter" data-target-value="98" data-suffix="%">98%</h2>
-                    <p>Patient Satisfaction</p>
-                </div>
+                <div class="col-md-3 animate-on-scroll animate-slide-up" style="transition-delay: 0s;">
+                <h2 class="display-4 fw-bold text-primary animate-counter" 
+                    data-target-value="1000" 
+                    data-suffix="+">0</h2>
+                <p>Patients Served</p>
+            </div>
+            
+            <div class="col-md-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.1s;">
+                <h2 class="display-4 fw-bold text-primary animate-counter" 
+                    data-target-value="50" 
+                    data-suffix="+">0</h2>
+                <p>Specialist Doctors</p>
+            </div>
+            
+            <div class="col-md-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.2s;">
+                <h2 class="display-4 fw-bold text-primary">24/7</h2>
+                <p>Emergency Service</p>
+            </div>
+            
+            <div class="col-md-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.3s;">
+                <h2 class="display-4 fw-bold text-primary animate-counter" 
+                    data-target-value="98" 
+                    data-suffix="%">0</h2>
+                <p>Patient Satisfaction</p>
+            </div>
             </div>
         </div>
     </section>
