@@ -168,3 +168,13 @@ CREATE TABLE wallet_transactions (
     description TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE appointments
+ADD COLUMN appointment_date DATE,
+ADD COLUMN appointment_time TIME;
+
+-- 2. Update an existing user to have the 'doctor' role for testing.
+--    Replace 'doctor@email.com' with the email of a user you want to be a doctor.
+UPDATE users
+SET role = 'doctor'
+WHERE email = 'doctor@email.com';
