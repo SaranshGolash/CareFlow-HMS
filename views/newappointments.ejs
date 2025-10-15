@@ -37,14 +37,18 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="doctorName" class="form-label">Doctor Name<span class="required-asterisk">*</span>:</label>
-                                <select id="doctorName" name="doctor_name" class="form-select" required>
-                                    <option value="" disabled selected>Select doctor</option>
-                                    <option value="Dr. A. Sharma">Dr. A .Sharma</option>
-                                    <option value="Dr. G. Patel">Dr. G. Patel</option>
-                                    <option value="Dr. S. Golash">Dr. S. Golash</option>
+                                <label for="doctor_id" class="form-label">Doctor Name<span class="required-asterisk">*</span></label>
+                                <select id="doctor_id" name="doctor_id" class="form-select" required onchange="this.form.doctor_name.value=this.options[this.selectedIndex].text">
+                                <option value="" disabled selected>Select doctor</option>
+                                    <% if (doctors && doctors.length > 0) { %>
+                                        <% doctors.forEach(doctor => { %>
+                                            <option value="<%= doctor.id %>"><%= doctor.username %></option>
+                                        <% }); %>
+                                    <% } %>
                                 </select>
+                                <input type="hidden" name="doctor_name" value="">
                             </div>
+
 
                             <div class="col-md-6">
                                 <label for="appointment_date" class="form-label">Date<span class="required-asterisk">*</span>:</label>
