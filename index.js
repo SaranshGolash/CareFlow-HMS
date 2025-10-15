@@ -353,29 +353,33 @@ app.post('/login', async (req, res) => {
         if (user) {
             const isMatch = await bcrypt.compare(password, user.password_hash);
             if (isMatch) {
+                // Set session data
                 req.session.user = { 
                     id: user.id, 
                     username: user.username,
                     email: user.email,
                     role: user.role,
-                    wallet_balance: parseFloat(user.wallet_balance) // <-- NEW: Fetch and store balance
+                    wallet_balance: parseFloat(user.wallet_balance)
                 };
                 req.flash('success_msg', 'Login successful! Welcome back.');
-                res.redirect('/');
+
+                if (user.role === 'doctor') {
+                    return res.redirect('/doctor/dashboard');
+                }
+                return res.redirect('/'); // Default redirect for patient/admin
+            } else {
+                req.flash('error_msg', 'Invalid password. Please try again.'); 
+                res.redirect('/login');
             }
         } else {
             req.flash('error_msg', 'User not found with that email address.'); 
             res.redirect('/login');
         }
     } catch (err) {
-        console.error('Login processing error (DB/bcrypt hang):', err);
+        console.error('Login processing error:', err);
         req.flash('error_msg', 'An internal error occurred during login processing.');
         res.redirect('/login');
     }
-});
-
-app.get('/signup', (req, res) => {
-    res.render('signup');
 });
 
 app.post('/signup', async (req, res) => {
