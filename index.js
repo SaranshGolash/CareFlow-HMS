@@ -933,6 +933,65 @@ app.get('/doctor/dashboard', isAuthenticated, async (req, res) => {
     }
 });
 
+// GET: Consolidated view of a single appointment (Record + Vitals)
+app.get('/doctor/appointment/:id', isAuthenticated, async (req, res) => {
+    // Security check: ensure only doctors can access this page
+    if (req.session.user.role !== 'doctor') {
+        req.flash('error_msg', 'Access denied.');
+        return res.redirect('/');
+    }
+    
+    const appointmentId = req.params.id;
+    const doctorId = req.session.user.id;
+
+    try {
+        // --- 1. Fetch Core Appointment & Patient Details ---
+        // We join with the users table to get patient info.
+        // We also check that the appointment belongs to the logged-in doctor.
+        const appointmentQuery = `
+            SELECT a.*, u.username as patient_username, u.email as patient_email 
+            FROM appointments a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.id = $1 AND a.doctor_id = $2
+        `;
+        const appointmentPromise = db.query(appointmentQuery, [appointmentId, doctorId]);
+
+        // --- 2. Fetch the Linked Medical Record ---
+        const medicalRecordPromise = db.query('SELECT * FROM medical_records WHERE appointment_id = $1', [appointmentId]);
+        
+        // --- 3. Fetch Latest Vitals (on the day of the appointment) ---
+        // This query depends on the result of the first query, so it runs after.
+        const appointmentResult = await appointmentPromise;
+        if (appointmentResult.rows.length === 0) {
+            req.flash('error_msg', 'Appointment not found or you do not have permission to view it.');
+            return res.redirect('/doctor/dashboard');
+        }
+        const appointment = appointmentResult.rows[0];
+        
+        const vitalsQuery = `
+            SELECT * FROM health_vitals 
+            WHERE user_id = $1 AND reading_timestamp::date <= $2 
+            ORDER BY reading_timestamp DESC 
+            LIMIT 1
+        `;
+        const vitalsPromise = db.query(vitalsQuery, [appointment.user_id, appointment.appointment_date]);
+
+        // --- 4. Resolve all promises and render ---
+        const [medicalRecordResult, latestVitalsResult] = await Promise.all([medicalRecordPromise, vitalsPromise]);
+
+        res.render('doctor_appointment_view', {
+            appointment: appointment,
+            medicalRecord: medicalRecordResult.rows[0] || null, // Pass the record or null if not found
+            latestVitals: latestVitalsResult.rows[0] || null   // Pass latest vitals or null
+        });
+
+    } catch (err) {
+        console.error('Error fetching consolidated appointment data:', err);
+        req.flash('error_msg', 'Could not load appointment details.');
+        res.redirect('/doctor/dashboard');
+    }
+});
+
 // ADMIN MANAGEMENT ROUTES
 
 // POST: Admin Adjustment (Legal Issue/Correction ONLY)
