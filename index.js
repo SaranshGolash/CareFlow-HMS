@@ -889,7 +889,7 @@ app.post('/wallet/withdraw', isAuthenticated, async (req, res) => {
 
 // DOCTOR ROUTES
 
-// GET: Doctor's Dashboard (Shows today's AND upcoming appointments)
+// GET: Doctor's Dashboard (Shows upcoming AND past appointments)
 app.get('/doctor/dashboard', isAuthenticated, async (req, res) => {
     // Security check: ensure only doctors can access this page
     if (req.session.user.role !== 'doctor') {
@@ -901,28 +901,37 @@ app.get('/doctor/dashboard', isAuthenticated, async (req, res) => {
     const doctorName = req.session.user.username;
 
     try {
-        // UPDATED QUERY: Fetch all appointments from today onwards for the logged-in doctor
+        // UPDATED QUERY: Fetch ALL appointments for the logged-in doctor, sorted by most recent first.
         const query = `
             SELECT * FROM appointments 
             WHERE doctor_id = $1 
-            AND appointment_date >= CURRENT_DATE 
-            ORDER BY appointment_date ASC, appointment_time ASC
+            ORDER BY appointment_date DESC, appointment_time DESC
         `;
         const result = await db.query(query, [doctorId]);
         
-        // --- NEW LOGIC: Group appointments by date ---
-        const groupedAppointments = result.rows.reduce((acc, appt) => {
-            const date = new Date(appt.appointment_date).toDateString();
-            if (!acc[date]) {
-                acc[date] = [];
+        // --- NEW LOGIC: Separate appointments into UPCOMING and PAST ---
+        const allAppointments = result.rows;
+        const upcomingAppointments = [];
+        const pastAppointments = [];
+        const today = new Date();
+        today.setHours(0, 0, 0, 0); // Set to midnight for accurate date comparison
+
+        allAppointments.forEach(appt => {
+            const apptDate = new Date(appt.appointment_date);
+            if (apptDate >= today) {
+                upcomingAppointments.push(appt);
+            } else {
+                pastAppointments.push(appt);
             }
-            acc[date].push(appt);
-            return acc;
-        }, {});
-        // ---------------------------------------------
-        
+        });
+
+        // Reverse the upcoming appointments to show the soonest first
+        upcomingAppointments.reverse();
+        // ----------------------------------------------------------------
+
         res.render('doctor_dashboard', { 
-            groupedAppointments: groupedAppointments, // Pass the new grouped data
+            upcomingAppointments: upcomingAppointments, // Pass upcoming list
+            pastAppointments: pastAppointments,         // Pass past list
             doctorName: doctorName 
         });
 
