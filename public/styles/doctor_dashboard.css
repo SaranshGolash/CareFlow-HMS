@@ -71,6 +71,10 @@
         padding: 8px 12px;
         min-width: 90px;
     }
+
+    .past-appointment {
+        opacity: 0.75;
+    }
 }
 
 /* For Mobile Devices (screens less than 576px wide) */
@@ -107,5 +111,20 @@
 
     .appointment-card .actions .btn {
         width: 100%; /* Make the button itself full width */
+    }
+
+    .past-appointment .time-block {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        border: 1px solid #eee;
+    }
+
+    .past-appointment {
+        opacity: 0.8;
+    }
+
+    .past-appointment:hover {
+        transform: translateX(0); /* Disable the horizontal shift on hover */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Keep the shadow lift effect */
     }
 }
