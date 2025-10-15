@@ -866,6 +866,42 @@ app.post('/wallet/withdraw', isAuthenticated, async (req, res) => {
     }
 });
 
+// DOCTOR ROUTES
+
+// GET: Doctor's Dashboard (Shows today's appointments for the logged-in doctor)
+app.get('/doctor/dashboard', isAuthenticated, async (req, res) => {
+    // Security check: ensure only doctors can access this page
+    if (req.session.user.role !== 'doctor') {
+        req.flash('error_msg', 'Access denied.');
+        return res.redirect('/');
+    }
+    
+    const doctorName = req.session.user.username;
+
+    try {
+        // Query for appointments matching the doctor's name AND today's date
+        const query = `
+            SELECT * FROM appointments 
+            WHERE doctor_name = $1 
+            AND appointment_date = CURRENT_DATE 
+            ORDER BY appointment_time ASC
+        `;
+        const result = await db.query(query, [doctorName]);
+        
+        res.render('doctor_dashboard', { 
+            appointments: result.rows,
+            doctorName: doctorName 
+        });
+
+    } catch (err) {
+        console.error('Error fetching doctor dashboard data:', err);
+        req.flash('error_msg', 'Could not load your dashboard.');
+        res.redirect('/');
+    }
+});
+
+// ADMIN MANAGEMENT ROUTES
+
 // POST: Admin Adjustment (Legal Issue/Correction ONLY)
 // Note: This needs to be a separate route to isolate admin actions for security.
 app.post('/admin/wallet/adjust', isAuthenticated, isAdmin, async (req, res) => {
@@ -910,8 +946,6 @@ app.post('/admin/wallet/adjust', isAuthenticated, isAdmin, async (req, res) => {
         client.release();
     }
 });
-
-// ADMIN MANAGEMENT ROUTES
 
 // GET: New Medical Record Form (Admin Only)
 app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
