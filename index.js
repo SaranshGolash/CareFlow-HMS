@@ -176,11 +176,16 @@ app.get('/newappointments', isAuthenticated, async (req, res) => {
 });
 
 app.post('/newappointments', isAuthenticated, async (req, res) => {
-    const { patient_name, gender, phone, doctor_name } = req.body;
+    // Add appointment_date and appointment_time from the form body
+    const { patient_name, gender, phone, doctor_name, appointment_date, appointment_time } = req.body;
     const userId = req.session.user.id;
+    
     try {
-        const query = 'INSERT INTO appointments (patient_name, gender, phone, doctor_name, user_id, status) VALUES ($1, $2, $3, $4, $5, $6)';
-        await db.query(query, [patient_name, gender, phone, doctor_name, userId, 'Pending']);
+        const query = `
+            INSERT INTO appointments (patient_name, gender, phone, doctor_name, user_id, status, appointment_date, appointment_time) 
+            VALUES ($1, $2, $3, $4, $5, 'Pending', $6, $7)
+        `;
+        await db.query(query, [patient_name, gender, phone, doctor_name, userId, appointment_date, appointment_time]);
         
         req.flash('success_msg', 'Appointment scheduled successfully. Please confirm your attendance.');
         res.redirect('/appointments');
