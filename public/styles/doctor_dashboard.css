@@ -24,3 +24,10 @@
     border-radius: var(--border-radius);
     min-width: 100px;
 }
+
+.date-header {
+    font-weight: 600;
+    color: var(--primary);
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+}
