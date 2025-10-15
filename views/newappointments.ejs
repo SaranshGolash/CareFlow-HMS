@@ -46,6 +46,16 @@
                                 </select>
                             </div>
 
+                            <div class="col-md-6">
+                                <label for="appointment_date" class="form-label">Date<span class="required-asterisk">*</span>:</label>
+                                <input id="appointment_date" name="appointment_date" type="date" class="form-control" required>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="appointment_time" class="form-label">Time<span class="required-asterisk">*</span>:</label>
+                                <input id="appointment_time" name="appointment_time" type="time" class="form-control" required>
+                            </div>
+
                             <div class="col-12 text-end">
                                 <button type="submit" class="btn btn-primary">Request Appointment</button>
                                 <a href="#" onclick="window.location.href='/appointments'" class="btn btn-light ms-2">Cancel</a>
