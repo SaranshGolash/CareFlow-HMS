@@ -889,29 +889,40 @@ app.post('/wallet/withdraw', isAuthenticated, async (req, res) => {
 
 // DOCTOR ROUTES
 
-// GET: Doctor's Dashboard (Shows today's appointments for the logged-in doctor)
+// GET: Doctor's Dashboard (Shows today's AND upcoming appointments)
 app.get('/doctor/dashboard', isAuthenticated, async (req, res) => {
+    // Security check: ensure only doctors can access this page
     if (req.session.user.role !== 'doctor') {
         req.flash('error_msg', 'Access denied.');
         return res.redirect('/');
     }
     
-    // Use the logged-in doctor's unique ID for filtering
     const doctorId = req.session.user.id;
     const doctorName = req.session.user.username;
 
     try {
-        // CRITICAL FIX: Query by 'doctor_id' instead of 'doctor_name'
+        // UPDATED QUERY: Fetch all appointments from today onwards for the logged-in doctor
         const query = `
             SELECT * FROM appointments 
             WHERE doctor_id = $1 
-            AND appointment_date = CURRENT_DATE 
-            ORDER BY appointment_time ASC
+            AND appointment_date >= CURRENT_DATE 
+            ORDER BY appointment_date ASC, appointment_time ASC
         `;
         const result = await db.query(query, [doctorId]);
         
+        // --- NEW LOGIC: Group appointments by date ---
+        const groupedAppointments = result.rows.reduce((acc, appt) => {
+            const date = new Date(appt.appointment_date).toDateString();
+            if (!acc[date]) {
+                acc[date] = [];
+            }
+            acc[date].push(appt);
+            return acc;
+        }, {});
+        // ---------------------------------------------
+        
         res.render('doctor_dashboard', { 
-            appointments: result.rows,
+            groupedAppointments: groupedAppointments, // Pass the new grouped data
             doctorName: doctorName 
         });
 
