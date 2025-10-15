@@ -181,3 +181,6 @@ WHERE email = 'doctor@email.com';
 
 ALTER TABLE users
 ADD COLUMN phone VARCHAR(20);
+
+ALTER TABLE appointments
+ADD COLUMN doctor_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
