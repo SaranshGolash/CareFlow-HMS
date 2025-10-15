@@ -171,8 +171,6 @@ app.get('/appointments', isAuthenticated, async (req, res) => {
     }
 });
 
-// Placement: In your CORE ROUTES section in index.js
-
 app.get('/newappointments', isAuthenticated, async (req, res) => {
     try {
         // Fetch all users with the 'doctor' role to populate the dropdown
@@ -187,8 +185,6 @@ app.get('/newappointments', isAuthenticated, async (req, res) => {
         res.render('newappointments', { doctors: [] }); // Render with an empty list on error
     }
 });
-
-// Placement: In your CORE ROUTES section in index.js
 
 app.post('/newappointments', isAuthenticated, async (req, res) => {
     // Destructure the new 'doctor_id' field
@@ -895,23 +891,24 @@ app.post('/wallet/withdraw', isAuthenticated, async (req, res) => {
 
 // GET: Doctor's Dashboard (Shows today's appointments for the logged-in doctor)
 app.get('/doctor/dashboard', isAuthenticated, async (req, res) => {
-    // Security check: ensure only doctors can access this page
     if (req.session.user.role !== 'doctor') {
         req.flash('error_msg', 'Access denied.');
         return res.redirect('/');
     }
     
+    // Use the logged-in doctor's unique ID for filtering
+    const doctorId = req.session.user.id;
     const doctorName = req.session.user.username;
 
     try {
-        // Query for appointments matching the doctor's name AND today's date
+        // CRITICAL FIX: Query by 'doctor_id' instead of 'doctor_name'
         const query = `
             SELECT * FROM appointments 
-            WHERE doctor_name = $1 
+            WHERE doctor_id = $1 
             AND appointment_date = CURRENT_DATE 
             ORDER BY appointment_time ASC
         `;
-        const result = await db.query(query, [doctorName]);
+        const result = await db.query(query, [doctorId]);
         
         res.render('doctor_dashboard', { 
             appointments: result.rows,
