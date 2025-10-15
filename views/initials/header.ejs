@@ -49,8 +49,11 @@
                                 <i class="fas fa-user-circle me-1"></i> <%= user.username %>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                                <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
-                                
+                                <% if (user.role === 'doctor') { %>
+                                    <li><a class="dropdown-item" href="/doctor/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                                <% } else { %>
+                                    <li><a class="dropdown-item" href="/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                                    <% } %>
                                 <li><a class="dropdown-item" href="/invoices"><i class="fas fa-file-invoice me-2"></i>My Invoices</a></li>
                                 
                                 <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>Settings</a></li>
