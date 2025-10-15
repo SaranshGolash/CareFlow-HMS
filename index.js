@@ -171,21 +171,37 @@ app.get('/appointments', isAuthenticated, async (req, res) => {
     }
 });
 
+// Placement: In your CORE ROUTES section in index.js
+
 app.get('/newappointments', isAuthenticated, async (req, res) => {
-    res.render('newappointments');
+    try {
+        // Fetch all users with the 'doctor' role to populate the dropdown
+        const doctorsResult = await db.query("SELECT id, username FROM users WHERE role = 'doctor' ORDER BY username");
+        
+        res.render('newappointments', {
+            doctors: doctorsResult.rows // Pass the list of doctors to the form
+        });
+    } catch (err) {
+        console.error('Error fetching doctors list:', err);
+        req.flash('error_msg', 'Could not load the list of doctors.');
+        res.render('newappointments', { doctors: [] }); // Render with an empty list on error
+    }
 });
 
+// Placement: In your CORE ROUTES section in index.js
+
 app.post('/newappointments', isAuthenticated, async (req, res) => {
-    // Add appointment_date and appointment_time from the form body
-    const { patient_name, gender, phone, doctor_name, appointment_date, appointment_time } = req.body;
+    // Destructure the new 'doctor_id' field
+    const { patient_name, gender, phone, doctor_id, doctor_name, appointment_date, appointment_time } = req.body;
     const userId = req.session.user.id;
     
     try {
         const query = `
-            INSERT INTO appointments (patient_name, gender, phone, doctor_name, user_id, status, appointment_date, appointment_time) 
-            VALUES ($1, $2, $3, $4, $5, 'Pending', $6, $7)
+            INSERT INTO appointments (patient_name, gender, phone, doctor_id, doctor_name, user_id, status, appointment_date, appointment_time) 
+            VALUES ($1, $2, $3, $4, $5, $6, 'Pending', $7, $8)
         `;
-        await db.query(query, [patient_name, gender, phone, doctor_name, userId, appointment_date, appointment_time]);
+        // Add doctor_id to the query parameters
+        await db.query(query, [patient_name, gender, phone, doctor_id, doctor_name, userId, appointment_date, appointment_time]);
         
         req.flash('success_msg', 'Appointment scheduled successfully. Please confirm your attendance.');
         res.redirect('/appointments');
