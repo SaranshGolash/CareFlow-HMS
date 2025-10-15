@@ -1,0 +1,83 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --border-radius: 12px;
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.08);
+}
+
+.detail-card {
+    border: none;
+    border-radius: var(--border-radius);
+    overflow: hidden; /* Ensures header radius is applied */
+}
+
+.detail-card .card-header {
+    font-weight: 600;
+}
+
+.vitals-list li {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.vitals-list li:last-child {
+    border-bottom: none;
+}
+
+.vitals-list i {
+    width: 20px;
+    text-align: center;
+    margin-right: 10px;
+}
+
+.vitals-list span {
+    font-weight: bold;
+}
+
+/* --- RESPONSIVE MEDIA QUERIES --- */
+
+/* For Tablets (screens less than 992px wide) */
+@media (max-width: 992px) {
+    /* Since the columns stack, add some space above the right-hand column content */
+    .col-lg-4 {
+        margin-top: 2rem;
+    }
+
+    /* Reduce the overall vertical padding of the page */
+    .container.py-5 {
+        padding-top: 2.5rem !important;
+        padding-bottom: 2.5rem !important;
+    }
+}
+
+/* For Mobile Devices (screens less than 576px wide) */
+@media (max-width: 576px) {
+    /* Further reduce padding for a tighter feel on small screens */
+    .container.py-5 {
+        padding-top: 1.5rem !important;
+        padding-bottom: 1.5rem !important;
+    }
+
+    /* Make the main title smaller */
+    .container.py-5 h2 {
+        font-size: 1.75rem;
+    }
+    .container.py-5 p.text-muted {
+        font-size: 0.95rem;
+    }
+
+    /* Reduce padding inside the cards */
+    .detail-card .card-body {
+        padding: 1rem;
+    }
+    .detail-card .card-header {
+        padding: 0.75rem 1rem;
+    }
+
+    /* Reduce font size in the vitals list to prevent text from wrapping awkwardly */
+    .vitals-list li {
+        font-size: 0.9rem;
+    }
+}
