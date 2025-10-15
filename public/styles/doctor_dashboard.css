@@ -31,3 +31,65 @@
     border-bottom: 2px solid #eee;
     padding-bottom: 10px;
 }
+
+/* --- RESPONSIVE MEDIA QUERIES --- */
+
+/* For Tablets (screens less than 768px wide) */
+@media (max-width: 768px) {
+    /* Reduce overall container padding for a tighter feel */
+    .container.py-5 {
+        padding-top: 2rem !important;
+        padding-bottom: 2rem !important;
+    }
+
+    /* Make headings slightly smaller */
+    .date-header {
+        font-size: 1.5rem;
+    }
+
+    .appointment-card .card-body h5 {
+        font-size: 1.1rem; /* Slightly smaller patient name */
+    }
+
+    .time-block {
+        padding: 8px 12px;
+        min-width: 90px;
+    }
+}
+
+/* For Mobile Devices (screens less than 576px wide) */
+@media (max-width: 576px) {
+    /* Further reduce main title size and padding */
+    .container.py-5 h2 {
+        font-size: 1.75rem;
+    }
+    .container.py-5 {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+    }
+
+    /* Change the appointment card's flex layout to vertical */
+    .appointment-card .card-body {
+        flex-direction: column;
+        align-items: flex-start; /* Align all items to the start (left) */
+    }
+
+    /* Adjust the time block for the vertical layout */
+    .time-block {
+        min-width: 0; /* Remove fixed minimum width */
+        width: 100%;  /* Make it full width for a block effect */
+        margin-right: 0 !important; /* Remove the side margin */
+        margin-bottom: 1rem; /* Add bottom margin instead */
+        text-align: left; /* Align text to the left for consistency */
+    }
+
+    /* Adjust the actions button for the vertical layout */
+    .appointment-card .actions {
+        width: 100%; /* Make the container full width */
+        margin-top: 1rem; /* Add space above the button */
+    }
+
+    .appointment-card .actions .btn {
+        width: 100%; /* Make the button itself full width */
+    }
+}
