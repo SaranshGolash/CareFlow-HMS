@@ -1,0 +1,68 @@
+<%- include('initials/header.ejs', { title: 'Appointment Details' }) %>
+<link rel="stylesheet" href="/styles/doctor_appointment_view.css">
+    <div class="container py-5">
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2 class="mb-1 text-primary">Appointment Detail</h2>
+                        <p class="text-muted">Consolidated view for patient: <strong><%= appointment.patient_username %></strong></p>
+                    </div>
+                    <a href="/doctor/dashboard" class="btn btn-outline-secondary"><i class="fas fa-arrow-left me-2"></i>Back to Dashboard</a>
+                </div>
+
+                <div class="detail-card card shadow-md mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <i class="fas fa-notes-medical me-2"></i> Medical Record
+                    </div>
+                    <div class="card-body">
+                        <% if (medicalRecord) { %>
+                            <h5 class="card-title">Diagnosis: <%= medicalRecord.diagnosis %></h5>
+                            <hr>
+                            <h6>Treatment Plan:</h6>
+                            <p class="text-muted"><%= medicalRecord.treatment_plan || 'No plan specified.' %></p>
+                            <h6>Doctor's Notes:</h6>
+                            <p class="text-muted"><%= medicalRecord.doctor_notes || 'No additional notes.' %></p>
+                        <% } else { %>
+                            <div class="alert alert-warning mb-0">
+                                <i class="fas fa-exclamation-triangle me-2"></i> No medical record has been linked to this appointment yet.
+                            </div>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="detail-card card shadow-sm mb-4">
+                    <div class="card-header bg-light text-dark fw-bold">
+                        <i class="fas fa-calendar-check me-2"></i> Appointment Info
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><strong>Date:</strong> <%= new Date(appointment.appointment_date).toDateString() %></li>
+                        <li class="list-group-item"><strong>Time:</strong> <%= new Date('1970-01-01T' + appointment.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></li>
+                        <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-success"><%= appointment.status %></span></li>
+                    </ul>
+                </div>
+
+                <div class="detail-card card shadow-sm">
+                    <div class="card-header bg-light text-dark fw-bold">
+                        <i class="fas fa-heartbeat me-2"></i> Latest Vitals
+                    </div>
+                    <div class="card-body">
+                        <% if (latestVitals) { %>
+                            <ul class="list-unstyled vitals-list">
+                                <li><i class="fas fa-heartbeat text-danger"></i> <strong>Heart Rate:</strong> <span><%= latestVitals.heart_rate || 'N/A' %> BPM</span></li>
+                                <li><i class="fas fa-thermometer-half text-warning"></i> <strong>Temp:</strong> <span><%= latestVitals.temperature || 'N/A' %> °C</span></li>
+                                <li><i class="fas fa-lungs text-info"></i> <strong>SpO2:</strong> <span><%= latestVitals.spo2 || 'N/A' %> %</span></li>
+                                <li><i class="fas fa-tint text-primary"></i> <strong>Blood Pressure:</strong> <span><%= latestVitals.systolic_bp || 'N/A' %> / <%= latestVitals.diastolic_bp || 'N/A' %></span></li>
+                                <li><i class="fas fa-bacterium text-success"></i> <strong>Glucose:</strong> <span><%= latestVitals.glucose_level || 'N/A' %></span></li>
+                            </ul>
+                        <% } else { %>
+                            <p class="text-muted mb-0">No vital signs recorded for this patient on or before the appointment date.</p>
+                        <% } %>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
