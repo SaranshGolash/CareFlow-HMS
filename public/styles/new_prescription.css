@@ -79,3 +79,39 @@ textarea.form-control {
     border: 1px solid #ddd;
     color: #333;
 }
+
+/* --- Responsive Adjustments --- */
+
+/* For Tablets (screens less than 768px wide) */
+@media (max-width: 768px) {
+    .form-container {
+        /* Reduce container padding to give the form more space */
+        padding: 2rem 1rem;
+        align-items: flex-start; /* Align card to the top on smaller screens */
+    }
+
+    .prescription-form-card .card-body {
+        padding: 24px;
+    }
+
+    .card-title {
+        font-size: 1.5rem;
+    }
+}
+
+/* For Mobile Devices (screens less than 576px wide) */
+@media (max-width: 576px) {
+    .form-container {
+        padding: 1.5rem 0.5rem;
+    }
+
+    .prescription-form-card .card-body {
+        padding: 20px;
+    }
+
+    /* Stack buttons vertically on small screens for better usability */
+    .form-actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+    }
+}
