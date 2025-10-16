@@ -184,3 +184,16 @@ ADD COLUMN phone VARCHAR(20);
 
 ALTER TABLE appointments
 ADD COLUMN doctor_id INTEGER REFERENCES users(id) ON DELETE SET NULL;
+
+CREATE TABLE prescriptions (
+    prescription_id SERIAL PRIMARY KEY,
+    record_id INTEGER REFERENCES medical_records(record_id) ON DELETE CASCADE NOT NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL, -- Patient ID
+    doctor_id INTEGER REFERENCES users(id) ON DELETE SET NULL, -- Doctor who prescribed
+    medication_name VARCHAR(100) NOT NULL,
+    dosage VARCHAR(100) NOT NULL,
+    frequency VARCHAR(100) NOT NULL, -- e.g., "Once daily", "Twice daily with meals"
+    duration VARCHAR(50), -- e.g., "10 days", "Until finished"
+    notes TEXT,
+    issued_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
