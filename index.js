@@ -22,9 +22,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -1011,6 +1011,34 @@ app.get('/doctor/appointment/:id', isAuthenticated, async (req, res) => {
     } catch (err) {
         console.error('Error fetching consolidated appointment data:', err);
         req.flash('error_msg', 'Could not load appointment details.');
+        res.redirect('/doctor/dashboard');
+    }
+});
+
+// GET: Display all medical records for a specific patient (for Doctor/Admin view)
+app.get('/doctor/patient/:userId/records', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
+    const patientId = req.params.userId;
+    
+    try {
+        // Fetch the patient's username for the page title
+        const patientResult = await db.query('SELECT username FROM users WHERE id = $1', [patientId]);
+        if (patientResult.rows.length === 0) {
+            req.flash('error_msg', 'Patient not found.');
+            return res.redirect('/doctor/dashboard');
+        }
+        const patientName = patientResult.rows[0].username;
+
+        // Fetch all medical records for that patient
+        const recordsResult = await db.query('SELECT * FROM medical_records WHERE user_id = $1 ORDER BY record_date DESC', [patientId]);
+        
+        res.render('doctor_patient_records', {
+            records: recordsResult.rows,
+            patientName: patientName
+        });
+
+    } catch (err) {
+        console.error('Error fetching patient records for doctor:', err);
+        req.flash('error_msg', 'Failed to load patient history.');
         res.redirect('/doctor/dashboard');
     }
 });
