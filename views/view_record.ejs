@@ -56,12 +56,19 @@
                     </div>
                     
                     <div class="card-footer text-end bg-white">
-                        <a href="/records" class="btn btn-outline-secondary">
+                         <% 
+                            // Determine the correct "Back" URL based on the user's role
+                            let backUrl = "/records"; // Default URL for patients
+                            if (user.role === 'doctor' || user.role === 'admin') {
+                                // FIX: Use the 'record' object to get the user_id for the URL
+                                backUrl = `/doctor/patient/${record.user_id}/records`;
+                            }
+                        %>
+
+                        <a href="<%= backUrl %>" class="btn btn-outline-secondary">
                             <i class="fas fa-arrow-left me-2"></i> Back to Records List
                         </a>
                     </div>
-                </div>
-
             </div>
         </div>
     </div>
