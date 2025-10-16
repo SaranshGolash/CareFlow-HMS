@@ -55,7 +55,11 @@
                                 <button type="submit" class="btn btn-primary btn-lg">
                                     <i class="fas fa-save me-2"></i> Save Profile
                                 </button>
-                                <a href="/dashboard" class="btn btn-light btn-lg ms-2">
+                                <% if (user.role === 'doctor') {%>
+                                <a href="/doctor/dashboard" class="btn btn-light btn-lg ms-2">
+                                <% } else { %>
+                                <a href="/dashboard" class="btn btn-light btn-lg ms-2"></a>
+                                <% } %>
                                     <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
                                 </a>
                             </div>
