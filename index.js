@@ -83,6 +83,7 @@ const isAdmin = (req, res, next) => {
     res.redirect('/');
 };
 
+// Middleware to check if user is a doctor or an admin
 const isDoctorOrAdmin = (req, res, next) => {
     if (req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'doctor')) {
         return next();
@@ -1015,6 +1016,58 @@ app.get('/doctor/appointment/:id', isAuthenticated, async (req, res) => {
 });
 
 // ADMIN MANAGEMENT ROUTES
+
+// GET: Display the E-Prescribing Form
+app.get('/prescribe/:record_id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
+    const recordId = req.params.record_id;
+    try {
+        // Fetch the medical record and join with users to get patient name
+        const query = `
+            SELECT mr.record_id, mr.user_id, u.username as patient_name
+            FROM medical_records mr
+            JOIN users u ON mr.user_id = u.id
+            WHERE mr.record_id = $1
+        `;
+        const result = await db.query(query, [recordId]);
+
+        if (result.rows.length === 0) {
+            req.flash('error_msg', 'Medical record not found.');
+            return res.redirect('/dashboard'); // Or doctor's dashboard
+        }
+        res.render('new_prescription', { record: result.rows[0] });
+    } catch (err) {
+        console.error('Error fetching record for prescription:', err);
+        req.flash('error_msg', 'Failed to load prescription form.');
+        res.redirect('/dashboard');
+    }
+});
+
+// POST: Save the New Prescription
+app.post('/prescribe', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
+    const { record_id, user_id, medication_name, dosage, frequency, duration, notes } = req.body;
+    const doctorId = req.session.user.id; // The logged-in doctor/admin is the prescriber
+
+    if (!record_id || !user_id || !medication_name || !dosage || !frequency) {
+        req.flash('error_msg', 'All required fields (Medication, Dosage, Frequency) must be filled.');
+        return res.redirect(`/prescribe/${record_id}`);
+    }
+
+    try {
+        const query = `
+            INSERT INTO prescriptions 
+            (record_id, user_id, doctor_id, medication_name, dosage, frequency, duration, notes)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        `;
+        await db.query(query, [record_id, user_id, doctorId, medication_name, dosage, frequency, duration, notes]);
+
+        req.flash('success_msg', 'Prescription issued successfully.');
+        res.redirect(`/records/${record_id}`); // Redirect back to the patient's record detail page
+    } catch (err) {
+        console.error('Error issuing prescription:', err);
+        req.flash('error_msg', 'Failed to issue prescription due to a server error.');
+        res.redirect(`/prescribe/${record_id}`);
+    }
+});
 
 // POST: Admin Adjustment (Legal Issue/Correction ONLY)
 // Note: This needs to be a separate route to isolate admin actions for security.
