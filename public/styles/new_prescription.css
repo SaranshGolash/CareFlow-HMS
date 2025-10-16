@@ -1,0 +1,81 @@
+:root {
+    --primary: #0d6efd;
+    --accent: #6f42c1;
+    --card: #ffffff;
+    --bg: #f8f9fa;
+    --radius: 12px;
+    --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+body {
+    background-color: var(--bg);
+}
+.form-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 1rem;
+    min-height: calc(100vh - 120px);
+}
+.prescription-form-card {
+    width: 100%;
+    max-width: 700px;
+    border: none;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--card);
+    box-shadow: var(--shadow-md);
+}
+.card-body {
+    padding: 32px;
+}
+.card-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+.form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+}
+.form-control, .form-select {
+    width: 100%;
+    height: 48px;
+    font-size: 1rem;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ced4da;
+    background-color: #fcfdff;
+    transition: box-shadow .18s ease, border-color .18s ease;
+    outline: none;
+}
+textarea.form-control {
+    height: auto;
+}
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
+}
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #eee;
+}
+.btn {
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-weight: 600;
+}
+.btn-primary {
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border: none;
+    color: #fff;
+}
+.btn-light {
+    background: #fff;
+    border: 1px solid #ddd;
+    color: #333;
+}
