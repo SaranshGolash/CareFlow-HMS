@@ -19,7 +19,6 @@
                             </div>
                             <div class="card-body">
                                 <h5 class="card-title text-dark mb-3">Diagnosis: <%= record.diagnosis %></h5>
-                                
                                 <p class="card-text text-muted mb-1">
                                     <i class="fas fa-calendar-alt me-2"></i>
                                     <strong>Date:</strong> <%= new Date(record.record_date).toLocaleDateString() %>
@@ -27,7 +26,7 @@
                                 
                                 <p class="card-text mb-2">
                                     <i class="fas fa-user-md me-2 text-info"></i>
-                                    <strong>Doctor:</strong> <%= record.doctor_name || 'N/A (No linked appointment)' %>
+                                    <strong>Doctor:</strong> <%= record.doctor_name || 'N/A (Unlinked)' %>
                                 </p>
                                 
                                 <p class="card-text mb-2">
