@@ -7,7 +7,7 @@
     --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.08);
 }
 
-/* --- Page Layout & Background --- */
+/* --- Page Layout --- */
 body {
     background-color: var(--bg);
 }
@@ -17,7 +17,7 @@ body {
     justify-content: center;
     align-items: center;
     padding: 3rem 1rem;
-    min-height: calc(100vh - 120px); /* Adjust based on your header/footer height */
+    min-height: calc(100vh - 120px);
 }
 
 /* --- Login Card Styling --- */
@@ -31,26 +31,24 @@ body {
     padding: 32px;
 }
 
-/* --- Card Content & Typography --- */
+/* --- Card Content --- */
 .card-title {
     font-size: 1.8rem;
     font-weight: 700;
     color: var(--primary);
 }
 
-/* --- Demo Credentials Alert Box Styling --- */
+.text-muted {
+    color: #6c757d !important;
+}
+
+/* --- Demo Credentials Alert --- */
 .alert-info {
-    background-color: #e7f1ff; /* Use primary-light color */
+    background-color: #e7f1ff;
     border-color: #b8d4fe;
     color: #052c65;
     border-radius: 8px;
 }
-
-.alert-info .alert-heading {
-    color: inherit;
-    font-weight: 700;
-}
-
 .alert-info code {
     background-color: #d0e3ff;
     padding: 2px 6px;
@@ -58,11 +56,16 @@ body {
     font-weight: 600;
 }
 
-/* --- Form Controls Styling --- */
+/* --- Form --- */
+.form-row {
+    margin-bottom: 1rem;
+}
+
 .form-label {
     font-weight: 600;
     color: #333;
     margin-bottom: 8px;
+    display: block;
 }
 
 .form-control {
@@ -75,20 +78,37 @@ body {
     transition: box-shadow .18s ease, border-color .18s ease;
     outline: none;
 }
-
 .form-control:focus {
     border-color: var(--primary);
     box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.2);
 }
 
-/* --- Buttons --- */
+.input-with-icon {
+    position: relative;
+}
+.pw-toggle-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    color: #6c757d;
+}
+.pw-toggle-icon svg { display: block; width: 18px; height: 18px; }
+.pw-toggle-icon .icon-eye-off { display: none; }
+.pw-toggle-icon.showing .icon-eye { display: none; }
+.pw-toggle-icon.showing .icon-eye-off { display: block; }
+
+/* --- Buttons & Links --- */
 .btn-primary {
     background: linear-gradient(90deg, var(--primary), var(--accent));
     border: none;
     font-weight: 600;
     transition: transform .12s ease;
 }
-
 .btn-primary:hover {
     transform: translateY(-2px);
 }
@@ -99,7 +119,52 @@ body {
     font-weight: 600;
 }
 
-/* --- Responsive Adjustments --- */
+/* --- NEW: Divider & Social Login --- */
+.divider {
+    text-align: center;
+    margin: 1.5rem 0;
+    color: #ccc;
+    position: relative;
+}
+.divider span {
+    background: var(--card);
+    padding: 0 10px;
+    position: relative;
+    z-index: 1;
+}
+.divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: #eee;
+    z-index: 0;
+}
+
+.socials {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.btn-social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: 1px solid #ddd;
+    background-color: var(--card);
+    color: #333;
+}
+.btn-social:hover {
+    background-color: #f8f9fa;
+}
+
+/* --- Responsive --- */
 @media (max-width: 576px) {
     .auth-container {
         padding: 24px;

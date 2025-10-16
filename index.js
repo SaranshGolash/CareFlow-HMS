@@ -399,6 +399,11 @@ app.post('/login', async (req, res) => {
     }
 });
 
+// GET: Display the Signup Page
+app.get('/signup', (req, res) => {
+    res.render('signup');
+});
+
 app.post('/signup', async (req, res) => {
     // FIX: Destructure the new 'phone' field from the request body
     const { username, email, password, phone } = req.body;
