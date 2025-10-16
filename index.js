@@ -1043,6 +1043,46 @@ app.get('/doctor/patient/:userId/records', isAuthenticated, isDoctorOrAdmin, asy
     }
 });
 
+// GET: Allows a Doctor/Admin to view any specific record detail
+// This is the secure equivalent of the patient's /records/:id route
+app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
+    const recordId = req.params.id;
+
+    try {
+        // This query fetches the record and joins to get patient and doctor names,
+        // but it does NOT check for ownership by the logged-in user.
+        const query = `
+            SELECT 
+                mr.*, 
+                u.username,
+                a.doctor_name
+            FROM 
+                medical_records mr
+            JOIN 
+                users u ON mr.user_id = u.id
+            LEFT JOIN 
+                appointments a ON mr.appointment_id = a.id
+            WHERE 
+                mr.record_id = $1
+        `;
+        const result = await db.query(query, [recordId]);
+        const record = result.rows[0];
+
+        if (!record) {
+            req.flash('error_msg', 'Medical record not found.');
+            return res.redirect('/doctor/dashboard');
+        }
+        
+        // We can reuse the same EJS template as the patient's view!
+        res.render('view_record', { record: record });
+
+    } catch (err) {
+        console.error(`Error fetching record ID ${recordId} for admin/doctor:`, err);
+        req.flash('error_msg', 'An error occurred while retrieving the record.');
+        res.redirect('/doctor/dashboard');
+    }
+});
+
 // ADMIN MANAGEMENT ROUTES
 
 // GET: Display the E-Prescribing Form
