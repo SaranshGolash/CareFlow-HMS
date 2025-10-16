@@ -246,16 +246,16 @@ app.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
     }
 });
 
-// Records
+// Records of patients view route
 app.get('/records', isAuthenticated, async (req, res) => {
     try {
         const userId = req.session.user.id;
         
-        // UPDATED QUERY: LEFT JOIN appointments (a) to fetch doctor_name
+        // --- UPDATED QUERY: LEFT JOIN with appointments to get doctor_name ---
         const query = `
             SELECT 
                 mr.*, 
-                a.doctor_name -- Select the doctor's name from the appointments table
+                a.doctor_name 
             FROM 
                 medical_records mr
             LEFT JOIN 
