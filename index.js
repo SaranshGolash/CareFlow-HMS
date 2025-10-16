@@ -285,13 +285,12 @@ app.get('/records/:id', isAuthenticated, async (req, res) => {
     const userId = req.session.user.id; 
 
     try {
-        // --- UPDATED QUERY: JOIN with 'users (u)' AND 'appointments (a)' ---
+        // --- UPDATED QUERY: JOIN with users AND LEFT JOIN with appointments ---
         const query = `
             SELECT 
                 mr.*, 
                 u.username,
-                a.doctor_name,
-                a.patient_name AS appointment_patient_name
+                a.doctor_name
             FROM 
                 medical_records mr
             JOIN 
@@ -301,7 +300,6 @@ app.get('/records/:id', isAuthenticated, async (req, res) => {
             WHERE 
                 mr.record_id = $1 AND mr.user_id = $2
         `;
-        // -------------------------------------------------------------------
         const result = await db.query(query, [recordId, userId]);
         const record = result.rows[0];
 
