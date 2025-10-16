@@ -44,6 +44,14 @@
                         <div class="p-3 bg-light rounded-3 detail-box">
                             <p class="text-secondary"><%= record.doctor_notes || 'No detailed doctor notes provided for this visit.' %></p>
                         </div>
+                        
+                        <% if (user && (user.role === 'admin' || user.role === 'doctor')) { %>
+                            <div class="mt-4 text-end">
+                                <a href="/prescribe/<%= record.record_id %>" class="btn btn-primary">
+                                    <i class="fas fa-file-prescription me-2"></i> Issue E-Prescription
+                                </a>
+                            </div>
+                        <% } %>
 
                     </div>
                     
