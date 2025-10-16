@@ -197,3 +197,16 @@ CREATE TABLE prescriptions (
     notes TEXT,
     issued_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+UPDATE medical_records mr
+SET appointment_id = sub.latest_appointment_id
+FROM (
+    -- This subquery finds the single most recent appointment ID for each user
+    SELECT DISTINCT ON (a.user_id)
+           a.id AS latest_appointment_id,
+           a.user_id
+    FROM appointments a
+    ORDER BY a.user_id, a.id DESC -- 'id DESC' assumes a higher ID is a newer appointment
+) AS sub
+WHERE mr.user_id = sub.user_id -- Match the medical record to the patient
+  AND mr.appointment_id IS NULL; -- Only update records that are currently unlinked
