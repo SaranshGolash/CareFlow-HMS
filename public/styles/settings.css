@@ -7,12 +7,27 @@
     --transition: all 0.3s ease;
 }
 
-/* --- Settings Card --- */
-.card.shadow-md {
+/* --- Page Layout --- */
+.settings-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 3rem 1rem;
+    min-height: calc(100vh - 120px); /* Adjust based on your header/footer height */
+}
+
+/* --- Settings Card Styling --- */
+.settings-card {
+    width: 100%;
+    max-width: 800px;
     border: none;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-md);
-    transition: var(--transition);
+    overflow: hidden;
+}
+
+.settings-card .card-body {
+    padding: 32px;
 }
 
 .card-title {
@@ -28,7 +43,14 @@
     margin-bottom: 1rem;
 }
 
-/* --- Form Fields (Matching Input/Table Style) --- */
+/* --- Form Fields --- */
+.form-label {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    display: block;
+}
+
 .form-control {
     height: 48px; 
     border-radius: 8px;
@@ -42,18 +64,14 @@
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
-.form-label {
-    font-weight: 600;
-    color: #333;
-}
-
 /* --- Verification Block --- */
-.bg-light {
+.verification-block {
     background-color: #f8f9fa !important;
     border: 1px solid #ddd;
+    border-radius: 8px;
 }
 
-/* --- Buttons (Matching Primary Button Gradient) --- */
+/* --- Buttons --- */
 .btn-primary {
     background: linear-gradient(45deg, var(--primary), var(--secondary-accent));
     border: none;
@@ -76,4 +94,16 @@
 
 .btn-light:hover {
     background-color: #f0f0f0;
+}
+
+/* --- Responsive Adjustments --- */
+@media (max-width: 768px) {
+    .settings-container {
+        padding: 2rem 1rem;
+        align-items: flex-start;
+    }
+    
+    .settings-card .card-body {
+        padding: 24px;
+    }
 }
