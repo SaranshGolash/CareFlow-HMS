@@ -1,0 +1,48 @@
+<%- include('initials/header.ejs', { title: 'Issue Prescription' }) %>
+<link rel="stylesheet" href="/styles/new_prescription.css">
+    <div class="form-container">
+        <div class="prescription-form-card">
+            <div class="card-body">
+                <h3 class="card-title mb-2">Issue New E-Prescription</h3>
+                <p class="text-muted mb-4">For Patient: <strong><%= record.patient_name %></strong> (Record #<%= record.record_id %>)</p>
+
+                <form action="/prescribe" method="POST" class="row g-3">
+                    <input type="hidden" name="record_id" value="<%= record.record_id %>">
+                    <input type="hidden" name="user_id" value="<%= record.user_id %>">
+
+                    <div class="col-12">
+                        <label for="medication_name" class="form-label">Medication Name*</label>
+                        <input id="medication_name" name="medication_name" type="text" class="form-control" required placeholder="e.g., Paracetamol 500mg">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="dosage" class="form-label">Dosage*</label>
+                        <input id="dosage" name="dosage" type="text" class="form-control" required placeholder="e.g., 1 tablet">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="frequency" class="form-label">Frequency*</label>
+                        <input id="frequency" name="frequency" type="text" class="form-control" required placeholder="e.g., Twice daily">
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="duration" class="form-label">Duration</label>
+                        <input id="duration" name="duration" type="text" class="form-control" placeholder="e.g., For 7 days">
+                    </div>
+                    
+                    <div class="col-12">
+                        <label for="notes" class="form-label">Additional Notes</label>
+                        <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="e.g., Take with food. Do not exceed 8 tablets in 24 hours."></textarea>
+                    </div>
+
+                    <div class="col-12 form-actions">
+                        <a href="/records/<%= record.record_id %>" class="btn btn-light">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-check-circle me-2"></i> Issue Prescription
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
