@@ -83,6 +83,14 @@ const isAdmin = (req, res, next) => {
     res.redirect('/');
 };
 
+const isDoctorOrAdmin = (req, res, next) => {
+    if (req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'doctor')) {
+        return next();
+    }
+    req.flash('error_msg', 'Access denied. You must be a doctor or administrator.');
+    res.redirect('/');
+};
+
 // --- Reusable Functions ---
 
 // Function to fetch all active services
