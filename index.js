@@ -195,25 +195,45 @@ app.get('/newappointments', isAuthenticated, async (req, res) => {
     }
 });
 
+// POST: Handle new appointment creation and queue a reminder
 app.post('/newappointments', isAuthenticated, async (req, res) => {
-    // Destructure the new 'doctor_id' field
     const { patient_name, gender, phone, doctor_id, doctor_name, appointment_date, appointment_time } = req.body;
     const userId = req.session.user.id;
     
+    // Use a dedicated client for transaction
+    const client = await db.connect();
     try {
-        const query = `
+        await client.query('BEGIN');
+
+        // 1. Insert the new appointment
+        const appointmentQuery = `
             INSERT INTO appointments (patient_name, gender, phone, doctor_id, doctor_name, user_id, status, appointment_date, appointment_time) 
             VALUES ($1, $2, $3, $4, $5, $6, 'Pending', $7, $8)
         `;
-        // Add doctor_id to the query parameters
-        await db.query(query, [patient_name, gender, phone, doctor_id, doctor_name, userId, appointment_date, appointment_time]);
+        await client.query(appointmentQuery, [patient_name, gender, phone, doctor_id, doctor_name, userId, appointment_date, appointment_time]);
         
-        req.flash('success_msg', 'Appointment scheduled successfully. Please confirm your attendance.');
+        // 2. Queue the reminder notification
+        // Calculate the reminder time (24 hours before the appointment date at 9:00 AM)
+        const reminderDate = new Date(`${appointment_date}T09:00:00`);
+        reminderDate.setDate(reminderDate.getDate() - 1);
+
+        const notificationQuery = `
+            INSERT INTO notifications (user_id, type, status, send_at)
+            VALUES ($1, 'Appointment Reminder', 'Queued', $2)
+        `;
+        await client.query(notificationQuery, [userId, reminderDate]);
+
+        await client.query('COMMIT');
+        
+        req.flash('success_msg', 'Appointment scheduled and reminder queued successfully.');
         res.redirect('/appointments');
     } catch (err) {
-        console.error('Error adding appointment:', err);
+        await client.query('ROLLBACK');
+        console.error('Error adding appointment and queuing reminder:', err);
         req.flash('error_msg', 'Error adding appointment. Please try again.');
         res.redirect('/newappointments');
+    } finally {
+        client.release();
     }
 });
 
