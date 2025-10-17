@@ -96,3 +96,11 @@ h3 {
     background-color: #f7f9fc !important;
     border-radius: var(--border-radius);
 }
+
+.list-group-item {
+    border-color: #eee;
+}
+
+.list-group-item h5 {
+    font-weight: 600;
+}
