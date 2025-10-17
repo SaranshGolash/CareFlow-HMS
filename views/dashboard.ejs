@@ -116,6 +116,33 @@
 
         </div>
         
+        <% if (user.role === 'user' && prescriptions) { %>
+            <div class="row mt-5">
+                <div class="col-12">
+                    <h3 class="mb-3 text-dark">Recent Prescriptions</h3>
+                    
+                    <% if (prescriptions.length > 0) { %>
+                        <div class="list-group shadow-sm">
+                            <% prescriptions.forEach(rx => { %>
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1 text-primary"><%= rx.medication_name %></h5>
+                                        <small class="text-muted">Issued: <%= new Date(rx.issued_at).toLocaleDateString() %></small>
+                                    </div>
+                                    <p class="mb-1"><strong>Dosage:</strong> <%= rx.dosage %> | <strong>Frequency:</strong> <%= rx.frequency %></p>
+                                    <small class="text-muted">Prescribed by: Dr. <%= rx.doctor_name %></small>
+                                </div>
+                            <% }); %>
+                        </div>
+                    <% } else { %>
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i> You have no recent prescriptions on file.
+                        </div>
+                    <% } %>
+                </div>
+            </div>
+        <% } %>
+        
         <div class="row mt-5">
             <div class="col-12">
                 <div class="card p-4 bg-light text-center">
