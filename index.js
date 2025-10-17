@@ -504,6 +504,19 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
                                    parseFloat(balanceResult.rows[0].outstanding_balance).toFixed(2) : 
                                    '0.00';
 
+        let recentPrescriptions = [];
+        if (req.session.user.role === 'user') {
+            const prescriptionsPromise = db.query(`
+                SELECT p.*, u.username as doctor_name 
+                FROM prescriptions p
+                JOIN users u ON p.doctor_id = u.id
+                WHERE p.user_id = $1 
+                ORDER BY p.issued_at DESC 
+                LIMIT 5
+            `, [userId]);
+            recentPrescriptions = (await prescriptionsPromise).rows;
+        }
+
         // --- 2. Fetch Low Stock Count (Admin Only Logic) ---
         if (req.session.user.role === 'admin') {
             const lowStockResult = await db.query(
@@ -526,6 +539,7 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
             latestVitalDate: latestVitalDate,
             outstandingBalance: outstandingBalance,
             walletBalance: walletBalance,
+            prescriptions: recentPrescriptions,
             lowStockCount: lowStockCount // Passed regardless of the admin check outcome
         });
         // -----------------------------
@@ -542,6 +556,7 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
             latestVitalDate: null,
             outstandingBalance: '0.00',
             walletBalance: '0.00',
+            prescriptions: [],
             lowStockCount: 0 
         });
     }
