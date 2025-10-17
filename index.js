@@ -195,44 +195,53 @@ app.get('/newappointments', isAuthenticated, async (req, res) => {
     }
 });
 
-// POST: Handle new appointment creation and queue a reminder
+// POST: Handle new appointment creation and automatically queue a reminder
 app.post('/newappointments', isAuthenticated, async (req, res) => {
     const { patient_name, gender, phone, doctor_id, doctor_name, appointment_date, appointment_time } = req.body;
     const userId = req.session.user.id;
     
-    // Use a dedicated client for transaction
+    // Acquire a client from the connection pool for the transaction
     const client = await db.connect();
+    
     try {
+        // Start the transaction
         await client.query('BEGIN');
 
-        // 1. Insert the new appointment
+        // 1. Insert the new appointment into the 'appointments' table
         const appointmentQuery = `
             INSERT INTO appointments (patient_name, gender, phone, doctor_id, doctor_name, user_id, status, appointment_date, appointment_time) 
             VALUES ($1, $2, $3, $4, $5, $6, 'Pending', $7, $8)
         `;
         await client.query(appointmentQuery, [patient_name, gender, phone, doctor_id, doctor_name, userId, appointment_date, appointment_time]);
         
-        // 2. Queue the reminder notification
-        // Calculate the reminder time (24 hours before the appointment date at 9:00 AM)
-        const reminderDate = new Date(`${appointment_date}T09:00:00`);
-        reminderDate.setDate(reminderDate.getDate() - 1);
+        // 2. Calculate the reminder time (24 hours before the appointment)
+        // Combine date and time strings into a single Date object
+        const appointmentDateTime = new Date(`${appointment_date}T${appointment_time}`);
+        
+        // Subtract 24 hours (24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
+        const reminderTimestamp = new Date(appointmentDateTime.getTime() - (24 * 60 * 60 * 1000));
 
+        // 3. Insert the "Queued" reminder into the 'notifications' table
         const notificationQuery = `
             INSERT INTO notifications (user_id, type, status, send_at)
             VALUES ($1, 'Appointment Reminder', 'Queued', $2)
         `;
-        await client.query(notificationQuery, [userId, reminderDate]);
+        await client.query(notificationQuery, [userId, reminderTimestamp]);
 
+        // If both queries succeed, commit the transaction
         await client.query('COMMIT');
         
-        req.flash('success_msg', 'Appointment scheduled and reminder queued successfully.');
+        req.flash('success_msg', 'Appointment scheduled successfully. A reminder has been set for 24 hours prior.');
         res.redirect('/appointments');
+
     } catch (err) {
+        // If any query fails, roll back the entire transaction
         await client.query('ROLLBACK');
-        console.error('Error adding appointment and queuing reminder:', err);
-        req.flash('error_msg', 'Error adding appointment. Please try again.');
+        console.error('Error in new appointment transaction:', err);
+        req.flash('error_msg', 'Error scheduling appointment. The operation was canceled.');
         res.redirect('/newappointments');
     } finally {
+        // VERY IMPORTANT: Release the client back to the pool
         client.release();
     }
 });

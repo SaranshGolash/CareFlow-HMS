@@ -28,6 +28,7 @@
     "express-session": "^1.18.2",
     "index.js": "^0.0.3",
     "method-override": "^3.0.0",
+    "nodemailer": "^7.0.9",
     "pg": "^8.16.3",
     "sequelize": "^6.37.7",
     "stripe": "^19.1.0"
