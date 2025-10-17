@@ -210,3 +210,12 @@ FROM (
 ) AS sub
 WHERE mr.user_id = sub.user_id -- Match the medical record to the patient
   AND mr.appointment_id IS NULL; -- Only update records that are currently unlinked
+
+CREATE TABLE notifications (
+    notification_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    type VARCHAR(50) NOT NULL, -- e.g., 'Appointment Reminder'
+    status VARCHAR(20) NOT NULL DEFAULT 'Queued', -- 'Queued', 'Sent', 'Failed'
+    send_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
