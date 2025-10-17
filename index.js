@@ -1118,6 +1118,35 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
 
 // ADMIN MANAGEMENT ROUTES
 
+// POST: Admin action to "send" all due reminders (Mock)
+app.post('/admin/process-reminders', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        // This query finds all queued reminders that are due to be sent (send_at is in the past)
+        // and updates their status to 'Sent'.
+        const query = `
+            UPDATE notifications
+            SET status = 'Sent'
+            WHERE status = 'Queued' AND send_at <= CURRENT_TIMESTAMP
+            RETURNING notification_id
+        `;
+        const result = await db.query(query);
+
+        const processedCount = result.rowCount;
+
+        if (processedCount > 0) {
+            req.flash('success_msg', `${processedCount} reminder(s) have been processed and marked as sent.`);
+        } else {
+            req.flash('success_msg', 'No pending reminders were due to be sent.');
+        }
+        
+        res.redirect('/dashboard');
+    } catch (err) {
+        console.error('Error processing reminders:', err);
+        req.flash('error_msg', 'A server error occurred while processing reminders.');
+        res.redirect('/dashboard');
+    }
+});
+
 // GET: Display the E-Prescribing Form
 app.get('/prescribe/:record_id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     const recordId = req.params.record_id;
