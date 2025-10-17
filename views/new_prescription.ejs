@@ -37,7 +37,7 @@
 
                     <div class="col-12 form-actions">
                         <a href="/doctor/record/<%= record.record_id %>" class="btn btn-light">Cancel</a>    
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary" onclick="window.location.href='/doctor/patient/<%= record.user_id %>/records'">
                             <i class="fas fa-check-circle me-2"></i> Issue Prescription
                         </button>
                     </div>
