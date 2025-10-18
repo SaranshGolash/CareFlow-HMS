@@ -19,7 +19,40 @@
         const passwordInput = document.getElementById('password');
         const confirmPasswordInput = document.getElementById('confirmPassword');
         const pwNote = document.getElementById('pwNote');
-        
+        const pw = document.getElementById('password');
+        const strengthBar = document.getElementById('pwStrength');
+
+        function scorePassword(s) {
+            let score = 0;
+            if (!s) return score;
+            if (s.length >= 6) score += 1;
+            if (s.length >= 10) score += 1;
+            if (/[A-Z]/.test(s)) score += 1;
+            if (/[0-9]/.test(s)) score += 1;
+            if (/[^A-Za-z0-9]/.test(s)) score += 1;
+            return score; // 0-5
+        }
+
+        function updateUI() {
+            const p = pw ? pw.value : '';
+            const s = scorePassword(p);
+
+            if (strengthBar) {
+                // Calculate percentage width
+                const pct = Math.round((s / 5) * 100);
+                strengthBar.style.width = pct + '%'; // Update width
+
+                // Update background color based on score
+                if (s <= 1) {
+                    strengthBar.style.background = '#dc3545'; // Bootstrap Danger (Red)
+                } else if (s <= 3) {
+                    strengthBar.style.background = '#ffc107'; // Bootstrap Warning (Yellow)
+                } else {
+                    strengthBar.style.background = '#198754'; // Bootstrap Success (Green)
+                }
+            }
+        }
+
         if (!signupForm || !passwordInput || !confirmPasswordInput || !signupBtn) {
             console.error("One or more critical form elements are missing!");
             return;
@@ -83,4 +116,8 @@
         });
 
         updateValidation(); // Initial check
+        pw.addEventListener('input', updateUI);
+
+        // Initial call to set the state when the page loads
+        updateUI();
     });
