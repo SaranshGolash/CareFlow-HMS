@@ -64,6 +64,19 @@
         </div>
     </div>
 </footer>
+<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script type="text/javascript">
+   (function(){
+      // CRITICAL: Ensure this is your correct Public Key from EmailJS Account -> API Keys
+      emailjs.init({
+        publicKey: "YOUR_PUBLIC_KEY", 
+      });
+      console.log("EmailJS Initialized in footer."); // Add this log for checking
+   })();
+</script>
+
+<script src="/functionality/admin_dashboard.js" defer></script>
 <script src="/functionality/signup.js" defer></script>
 <script src="/functionality/animation.js" defer></script>
 <script src="/functionality/splashscreen.js" defer></script>

@@ -41,6 +41,25 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Process Reminders Card/Button -->
+                <div class="col-md-6 col-lg-4">
+                    <div class="dashboard-card card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column justify-content-center">
+                            <i class="fas fa-paper-plane fa-3x text-primary mb-3"></i>
+                            <h5 class="card-title">Communications</h5>
+                            <p class="text-muted small">Process all queued appointment reminders and notifications.</p>
+            
+                            <!-- UPDATE: Remove form, add ID to button -->
+                            <div class="mt-auto">
+                                <button type="button" id="processRemindersBtn" class="btn btn-primary w-100">
+                                    <span id="reminderBtnText">Send Email Reminders</span>
+                                </button>
+                            </div>
+                            <div id="reminderStatus" class="small text-muted mt-2 text-center"></div>
+                        </div>
+                    </div>
+                </div>
         <% } %>
 
         <h3 class="mb-4 text-dark">
@@ -111,25 +130,6 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Process Reminders Card/Button -->
-                <div class="col-md-6 col-lg-4">
-                    <div class="dashboard-card card h-100 shadow-sm">
-                        <div class="card-body d-flex flex-column justify-content-center">
-                            <i class="fas fa-paper-plane fa-3x text-primary mb-3"></i>
-                            <h5 class="card-title">Communications</h5>
-                            <p class="text-muted small">Process all queued appointment reminders and notifications.</p>
-            
-                            <!-- UPDATE: Remove form, add ID to button -->
-                            <div class="mt-auto">
-                                <button type="button" id="processRemindersBtn" class="btn btn-primary w-100">
-                                    <span id="reminderBtnText">Send Email Reminders</span>
-                                </button>
-                            </div>
-                            <div id="reminderStatus" class="small text-muted mt-2 text-center"></div>
-                        </div>
-                    </div>
-                </div>
             <% } %>
 
         </div>
@@ -173,5 +173,4 @@
         </div>
 
     </div>
-    <script src="/functionality/admin_dashboard.js" defer></script>
 <%- include('initials/footer.ejs') %>

@@ -2,7 +2,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const processBtn = document.getElementById('processRemindersBtn');
     const btnText = document.getElementById('reminderBtnText');
     const statusText = document.getElementById('reminderStatus');
-
+    (function(){
+      // CRITICAL: Ensure this is your correct Public Key from EmailJS Account -> API Keys
+      emailjs.init({
+        publicKey: "yCJKnmiujlOeKNAtD", 
+      });
+      console.log("EmailJS Initialized in footer."); // Add this log for checking
+   })();
     if (!processBtn) return;
 
     processBtn.addEventListener('click', async () => {
@@ -28,8 +34,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // 3. Loop through reminders and send emails using EmailJS
             const emailPromises = reminders.map(reminder => {
-                const serviceID = 'YOUR_EMAILJS_SERVICE_ID'; // Replace
-                const templateID = 'YOUR_REMINDER_TEMPLATE_ID'; // Replace
+                const serviceID = 'service_p617k5f';
+                const templateID = 'template_1xqxcuv';
 
                 // Format date and time for the email
                 const formattedDate = reminder.appointment_date ? new Date(reminder.appointment_date).toLocaleDateString() : 'N/A';
