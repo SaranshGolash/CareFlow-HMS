@@ -202,18 +202,43 @@
         }
         initToggleButtons();
 
-        // --- Email Sending Logic ---
         function sendWelcomeEmail() {
-            // ... (your emailjs.send logic remains here) ...
+            // CRITICAL: Replace placeholders with your actual EmailJS IDs
+            const serviceID = 'YOUR_SERVICE_ID';   
+            const templateID = 'YOUR_TEMPLATE_ID'; 
+
+            // Get the current values from the form fields
+            const templateParams = {
+                username: signupUsername.value, // Assumes signupUsername element is defined above
+                email: signupEmail.value,       // Assumes signupEmail element is defined above
+            };
+
+            // Check if emailjs object exists before sending
+            if (typeof emailjs !== 'undefined') {
+                console.log("Attempting to send email via EmailJS..."); // Debug log
+                emailjs.send(serviceID, templateID, templateParams)
+                    .then(function(response) {
+                       console.log('EmailJS SUCCESS!', response.status, response.text);
+                    }, function(error) {
+                       console.error('EmailJS FAILED...', error);
+                    });
+            } else {
+                console.error("EmailJS library is not loaded or initialized. Cannot send email.");
+            }
         }
 
         // --- Form Submission Handler ---
         signupForm.addEventListener('submit', function (e) {
+            // First, check if the button is disabled. If so, stop.
             if (signupBtn.disabled) {
                 e.preventDefault();
                 return;
             }
-            // sendWelcomeEmail(); // Temporarily disable to isolate the issue if needed
+
+            // CRITICAL: Call the email function right here!
+            sendWelcomeEmail();
+
+            // Then, disable the button to prevent multiple submissions.
             signupBtn.disabled = true;
             document.getElementById('signupBtnText').textContent = 'Creating…';
         });
