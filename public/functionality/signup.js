@@ -104,6 +104,24 @@
             }
         }
 
+        function initToggleButtons() {
+            const toggles = document.querySelectorAll('.pw-toggle-icon');
+            toggles.forEach(t => {
+                const targetId = t.getAttribute('data-target');
+                const input = document.getElementById(targetId);
+                if (!input) return;
+
+                t.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const isHidden = input.type === 'password';
+                    input.type = isHidden ? 'text' : 'password';
+                    t.classList.toggle('showing', isHidden);
+                    t.setAttribute('aria-pressed', String(isHidden));
+                });
+            });
+        }
+        initToggleButtons();
+
         // --- Form Submission Handler ---
         signupForm.addEventListener('submit', function (e) {
             if (signupBtn.disabled) {
