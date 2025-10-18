@@ -23,9 +23,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -1128,32 +1128,52 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
 
 // ADMIN MANAGEMENT ROUTES
 
-// POST: Admin action to "send" all due reminders (Mock)
-app.post('/admin/process-reminders', isAuthenticated, isAdmin, async (req, res) => {
+// --- Email Reminders API ---
+
+// GET: Fetches all reminders that are due, including appointment details.
+app.get('/api/get-due-reminders', isAuthenticated, isAdmin, async (req, res) => {
     try {
-        // This query finds all queued reminders that are due to be sent (send_at is in the past)
-        // and updates their status to 'Sent'.
-        const query = `
-            UPDATE notifications
-            SET status = 'Sent'
-            WHERE status = 'Queued' AND send_at <= CURRENT_TIMESTAMP
-            RETURNING notification_id
-        `;
-        const result = await db.query(query);
-
-        const processedCount = result.rowCount;
-
-        if (processedCount > 0) {
-            req.flash('success_msg', `${processedCount} reminder(s) have been processed and marked as sent.`);
-        } else {
-            req.flash('success_msg', 'No pending reminders were due to be sent.');
-        }
+        // Find all queued reminders, join with users and appointments
+        const remindersResult = await db.query(`
+            SELECT 
+                n.notification_id, 
+                u.email, 
+                u.username,
+                a.appointment_date, 
+                a.appointment_time,
+                a.doctor_name
+            FROM notifications n
+            JOIN users u ON n.user_id = u.id
+            LEFT JOIN appointments a ON n.user_id = a.user_id 
+                AND n.send_at BETWEEN (a.appointment_date + a.appointment_time - INTERVAL '25 hours') 
+                AND (a.appointment_date + a.appointment_time - INTERVAL '23 hours') -- Link reminder to the specific appointment
+            WHERE n.status = 'Queued' AND n.send_at <= CURRENT_TIMESTAMP
+        `);
         
-        res.redirect('/dashboard');
+        // Return the list including appointment details as JSON
+        res.json(remindersResult.rows);
+
     } catch (err) {
-        console.error('Error processing reminders:', err);
-        req.flash('error_msg', 'A server error occurred while processing reminders.');
-        res.redirect('/dashboard');
+        console.error('API Error: Could not fetch due reminders with details:', err);
+        res.status(500).json({ error: 'Failed to fetch reminders' });
+    }
+});
+
+// POST: Updates the status of reminders after they have been sent by the frontend.
+app.post('/api/update-reminder-status', isAuthenticated, isAdmin, async (req, res) => {
+    // Expects an array of notification IDs that were successfully sent
+    const { sentIds } = req.body;
+
+    if (!sentIds || !Array.isArray(sentIds) || sentIds.length === 0) {
+        return res.status(400).json({ error: 'No valid IDs provided' });
+    }
+
+    try {
+        await db.query("UPDATE notifications SET status = 'Sent' WHERE notification_id = ANY($1::int[])", [sentIds]);
+        res.json({ success: true, message: `${sentIds.length} reminders updated.` });
+    } catch (err) {
+        console.error('API Error: Could not update reminder statuses:', err);
+        res.status(500).json({ error: 'Failed to update statuses in database' });
     }
 });
 
