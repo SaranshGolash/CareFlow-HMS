@@ -1140,41 +1140,41 @@ app.get('/doctor/patient/:userId/monitoring', isAuthenticated, isDoctorOrAdmin, 
     }
 });
 
-// GET: Allows a Doctor/Admin to view any specific record detail
-// This is the secure equivalent of the patient's /records/:id route
+// GET: Doctor views a specific medical record detail page
 app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     const recordId = req.params.id;
+    const doctorId = req.session.user.id;
 
     try {
-        // This query fetches the record and joins to get patient and doctor names,
-        // but it does NOT check for ownership by the logged-in user.
-        const query = `
-            SELECT 
-                mr.*, 
-                u.username,
-                a.doctor_name
-            FROM 
-                medical_records mr
-            JOIN 
-                users u ON mr.user_id = u.id
-            LEFT JOIN 
-                appointments a ON mr.appointment_id = a.id
-            WHERE 
-                mr.record_id = $1
-        `;
-        const result = await db.query(query, [recordId]);
-        const record = result.rows[0];
-
-        if (!record) {
+        // 1. Fetch the record first to get the patient's user_id
+        const recordResult = await db.query('SELECT user_id FROM medical_records WHERE record_id = $1', [recordId]);
+        if (recordResult.rows.length === 0) {
             req.flash('error_msg', 'Medical record not found.');
             return res.redirect('/doctor/dashboard');
         }
+        const patientId = recordResult.rows[0].user_id;
+
+        // 2. SECURITY CHECK
+        const hasRelationship = await checkDoctorPatientRelationship(doctorId, patientId);
+        if (!hasRelationship) {
+            req.flash('error_msg', 'Access Denied: You are not authorized to view this patient\'s record.');
+            return res.redirect('/doctor/dashboard');
+        }
         
-        // We can reuse the same EJS template as the patient's view!
-        res.render('view_record', { record: record });
+        // 3. Fetch full record details if authorized
+        const query = `
+            SELECT mr.*, u.username, a.doctor_name FROM medical_records mr
+            JOIN users u ON mr.user_id = u.id
+            LEFT JOIN appointments a ON mr.appointment_id = a.id
+            WHERE mr.record_id = $1
+        `;
+        const result = await db.query(query, [recordId]);
+
+        // 4. REUSE view_record.ejs for the view
+        res.render('view_record', { record: result.rows[0] });
 
     } catch (err) {
-        console.error(`Error fetching record ID ${recordId} for admin/doctor:`, err);
+        console.error(`Error fetching record ID ${recordId} for doctor:`, err);
         req.flash('error_msg', 'An error occurred while retrieving the record.');
         res.redirect('/doctor/dashboard');
     }
