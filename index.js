@@ -1104,6 +1104,42 @@ app.get('/doctor/patient/:userId/records', isAuthenticated, isDoctorOrAdmin, asy
         res.redirect('/doctor/dashboard');
     }
 });
+
+// GET: Doctor views a specific patient's health monitoring/vitals
+app.get('/doctor/patient/:userId/monitoring', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
+    const patientId = req.params.userId;
+    const doctorId = req.session.user.id;
+    
+    try {
+        // 1. SECURITY CHECK
+        const hasRelationship = await checkDoctorPatientRelationship(doctorId, patientId);
+        if (!hasRelationship) {
+            req.flash('error_msg', 'Access Denied.');
+            return res.redirect('/doctor/dashboard');
+        }
+
+        // 2. Fetch data if authorized (same logic as the patient's /monitoring route)
+        const patientResult = await db.query('SELECT username FROM users WHERE id = $1', [patientId]);
+        const vitalsResult = await db.query('SELECT * FROM health_vitals WHERE user_id = $1 ORDER BY reading_timestamp ASC', [patientId]);
+        
+        // Data processing for charts (same as before)
+        const rawVitals = vitalsResult.rows.map(v => ({...v, glucose_level: parseFloat(v.glucose_level), /* etc */}));
+        const chartData = { /* ... chart data processing logic ... */ };
+        const latestVitals = rawVitals.length > 0 ? rawVitals[rawVitals.length - 1] : null;
+        
+        // 3. REUSE monitoring.ejs for the view
+        res.render('monitoring', {
+            vitals: rawVitals.slice(-10).reverse(),
+            latest: latestVitals,
+            chartData: chartData,
+            username: patientResult.rows[0].username,
+            isDoctorView: true // Pass a flag
+        });
+    } catch (err) {
+        // ... error handling
+    }
+});
+
 // GET: Allows a Doctor/Admin to view any specific record detail
 // This is the secure equivalent of the patient's /records/:id route
 app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
