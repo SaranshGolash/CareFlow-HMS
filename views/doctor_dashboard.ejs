@@ -73,7 +73,8 @@
                                 </div>
                             </div>
                             <div class="actions">
-                                <a href="/doctor/appointment/<%= appt.id %>" class="btn btn-sm btn-outline-secondary">View Record</a>
+                                 <!-- This link now correctly points to the secure patient history page -->
+                                <a href="/doctor/patient/<%= appt.user_id %>/records" class="btn btn-sm btn-outline-primary">View History</a>
                             </div>
                         </div>
                     </div>
