@@ -39,9 +39,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -1111,32 +1111,49 @@ app.get('/doctor/patient/:userId/monitoring', isAuthenticated, isDoctorOrAdmin, 
     const doctorId = req.session.user.id;
     
     try {
-        // 1. SECURITY CHECK
+        // 1. SECURITY CHECK (Remains the same)
         const hasRelationship = await checkDoctorPatientRelationship(doctorId, patientId);
         if (!hasRelationship) {
             req.flash('error_msg', 'Access Denied.');
             return res.redirect('/doctor/dashboard');
         }
 
-        // 2. Fetch data if authorized (same logic as the patient's /monitoring route)
+        // 2. Fetch data (Remains the same)
         const patientResult = await db.query('SELECT username FROM users WHERE id = $1', [patientId]);
         const vitalsResult = await db.query('SELECT * FROM health_vitals WHERE user_id = $1 ORDER BY reading_timestamp ASC', [patientId]);
         
-        // Data processing for charts (same as before)
-        const rawVitals = vitalsResult.rows.map(v => ({...v, glucose_level: parseFloat(v.glucose_level), /* etc */}));
-        const chartData = { /* ... chart data processing logic ... */ };
+        // --- START OF CRITICAL FIX ---
+        // 3. Process data for Chart.js (This was missing)
+        const rawVitals = vitalsResult.rows.map(vital => ({
+            ...vital,
+            glucose_level: vital.glucose_level ? parseFloat(vital.glucose_level) : null,
+            temperature: vital.temperature ? parseFloat(vital.temperature) : null,
+            spo2: vital.spo2 ? parseFloat(vital.spo2) : null
+        }));
+
+        const chartData = {
+            labels: rawVitals.map(v => new Date(v.reading_timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })),
+            heartRate: rawVitals.map(v => v.heart_rate),
+            systolicBP: rawVitals.map(v => v.systolic_bp),
+            diastolicBP: rawVitals.map(v => v.diastolic_bp),
+            glucose: rawVitals.map(v => v.glucose_level)
+        };
+        // --- END OF CRITICAL FIX ---
+
         const latestVitals = rawVitals.length > 0 ? rawVitals[rawVitals.length - 1] : null;
         
-        // 3. REUSE monitoring.ejs for the view
+        // 4. REUSE monitoring.ejs for the view, now with chartData
         res.render('monitoring', {
-            vitals: rawVitals.slice(-10).reverse(),
+            vitals: rawVitals.slice(-10).reverse(), // Show last 10 readings in table
             latest: latestVitals,
-            chartData: chartData,
+            chartData: chartData, // Pass the processed chart data
             username: patientResult.rows[0].username,
-            isDoctorView: true // Pass a flag
+            isDoctorView: true // Pass the flag
         });
     } catch (err) {
-        // ... error handling
+        console.error('Error fetching patient vitals for doctor:', err);
+        req.flash('error_msg', 'Could not load patient monitoring data.');
+        res.redirect('/doctor/dashboard');
     }
 });
 
