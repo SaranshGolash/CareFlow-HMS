@@ -5,6 +5,7 @@ const flash = require('connect-flash');
 const methodOverride = require('method-override');
 const path = require('path');
 const bcrypt = require('bcrypt');
+const OpenAI = require('openai');
 const nodemailer = require('nodemailer');
 require('dotenv').config();
 
@@ -16,6 +17,13 @@ pg.types.setTypeParser(NUMERIC_OID, (value) => {
 
 const app = express();
 
+// Initialize open ai client
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY, // Ensure this is set in your .env/Render
+});
+
+console.log("OpenAI API Key loaded:", process.env.OPENAI_API_KEY ? 'Yes' : 'NO - THIS IS THE PROBLEM!');
+
 // --- 1. Database Connection Pool Setup (CRITICAL FIX) ---
 const pool = new pg.Pool({
     user: process.env.DB_USER,
@@ -23,9 +31,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -1123,6 +1131,70 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
         console.error(`Error fetching record ID ${recordId} for admin/doctor:`, err);
         req.flash('error_msg', 'An error occurred while retrieving the record.');
         res.redirect('/doctor/dashboard');
+    }
+});
+
+// --- API ROUTES (Chatbot) ---
+
+// --- API ROUTES (Chatbot using OpenAI) ---
+
+app.post('/api/chat', isAuthenticated, async (req, res) => {
+    const userMessage = req.body.message;
+    const userId = req.session.user.id; 
+
+    if (!userMessage) {
+        return res.status(400).json({ error: 'Message content is required.' });
+    }
+
+    const client = await db.connect(); 
+    try {
+        await client.query('BEGIN');
+
+        let aiResponseText = "Sorry, I couldn't process that request at the moment."; 
+        try {
+            console.log("Attempting to get completion from OpenAI...");
+            
+            // --- Call OpenAI API ---
+            const completion = await openai.chat.completions.create({
+                model: "gpt-3.5-turbo", // Or another model like "gpt-4" if you have access
+                messages: [
+                    { role: "system", content: "You are a helpful assistant for CareFlow HMS. Answer concisely." },
+                    { role: "user", content: userMessage }
+                ],
+            });
+            // -----------------------
+
+            aiResponseText = completion.choices[0]?.message?.content?.trim() || aiResponseText;
+            console.log("OpenAI Response:", aiResponseText); 
+
+        } catch (aiError) {
+             console.error("!!! OpenAI API CRASH:", aiError); 
+             if (aiError.status === 401) {
+                 aiResponseText = "OpenAI API authentication failed. Check your API key.";
+             } else if (aiError.status === 429) {
+                 aiResponseText = "OpenAI API rate limit reached or billing issue.";
+             } else {
+                 aiResponseText = "Sorry, the AI service couldn't respond. Please try again later.";
+             }
+        }
+
+        // --- Save chat to database (code remains the same) ---
+        const historyQuery = `
+            INSERT INTO chat_history (user_id, user_message, ai_response)
+            VALUES ($1, $2, $3)
+        `;
+        await client.query(historyQuery, [userId, userMessage, aiResponseText]); 
+        await client.query('COMMIT');
+
+        // --- Send AI response back to frontend (code remains the same) ---
+        res.json({ reply: aiResponseText });
+
+    } catch (dbOrOtherError) { 
+        await client.query('ROLLBACK');
+        console.error('Chat processing or DB error:', dbOrOtherError); 
+        res.status(500).json({ error: 'Failed to process chat message due to a server error.' }); 
+    } finally {
+        client.release();
     }
 });
 
