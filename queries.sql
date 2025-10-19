@@ -219,3 +219,11 @@ CREATE TABLE notifications (
     send_at TIMESTAMP WITH TIME ZONE NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE chat_history (
+    chat_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, -- Link to user, allow null if anonymous/logged out
+    user_message TEXT NOT NULL,
+    ai_response TEXT,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
