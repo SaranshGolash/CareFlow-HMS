@@ -1074,25 +1074,28 @@ app.get('/doctor/appointment/:id', isAuthenticated, async (req, res) => {
     }
 });
 
-// GET: Display all medical records for a specific patient (for Doctor/Admin view)
+// GET: Doctor views a specific patient's list of medical records
 app.get('/doctor/patient/:userId/records', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     const patientId = req.params.userId;
-    
+    const doctorId = req.session.user.id;
+
     try {
-        // Fetch the patient's username for the page title
-        const patientResult = await db.query('SELECT username FROM users WHERE id = $1', [patientId]);
-        if (patientResult.rows.length === 0) {
-            req.flash('error_msg', 'Patient not found.');
+        // 1. SECURITY CHECK: Verify the doctor has an appointment history with this patient.
+        const hasRelationship = await checkDoctorPatientRelationship(doctorId, patientId);
+        if (!hasRelationship) {
+            req.flash('error_msg', 'Access Denied: You do not have a recorded appointment with this patient.');
             return res.redirect('/doctor/dashboard');
         }
-        const patientName = patientResult.rows[0].username;
 
-        // Fetch all medical records for that patient
-        const recordsResult = await db.query('SELECT * FROM medical_records WHERE user_id = $1 ORDER BY record_date DESC', [patientId]);
+        // 2. Fetch data if authorized
+        const patientResult = await db.query('SELECT username FROM users WHERE id = $1', [patientId]);
+        const recordsResult = await db.query('SELECT mr.*, a.doctor_name FROM medical_records mr LEFT JOIN appointments a ON mr.appointment_id = a.id WHERE mr.user_id = $1 ORDER BY record_date DESC', [patientId]);
         
-        res.render('doctor_patient_records', {
+        // 3. REUSE records.ejs for the view
+        res.render('records', {
             records: recordsResult.rows,
-            patientName: patientName
+            username: patientResult.rows[0].username,
+            isDoctorView: true // Pass a flag to the template
         });
 
     } catch (err) {
@@ -1101,7 +1104,6 @@ app.get('/doctor/patient/:userId/records', isAuthenticated, isDoctorOrAdmin, asy
         res.redirect('/doctor/dashboard');
     }
 });
-
 // GET: Allows a Doctor/Admin to view any specific record detail
 // This is the secure equivalent of the patient's /records/:id route
 app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
