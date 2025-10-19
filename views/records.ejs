@@ -2,11 +2,17 @@
 <link rel="stylesheet" href="/styles/records.css">
     <div class="container py-5">
         <h2 class="mb-4 text-primary">
-            <% if (username) { %>
-                <%= username %>'s 
-            <% } %>
-            Medical History
+        <%= (locals.isDoctorView) ? `Medical History for ${username}` : 'Your Medical History' %>
         </h2>
+
+        <!-- NEW: Button for Doctors to view vitals -->
+        <% if (locals.isDoctorView && records.length > 0) { %>
+            <div class="mb-4">
+                <a href="/doctor/patient/<%= records[0].user_id %>/monitoring" class="btn btn-info text-white">
+                    <i class="fas fa-heartbeat me-2"></i> View Patient's Health Vitals
+                </a>
+            </div>
+        <% } %>
 
         <% if (records.length > 0) { %>
             <div class="row g-4">
