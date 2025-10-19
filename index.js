@@ -22,6 +22,14 @@ const openai = new OpenAI({
     apiKey: process.env.OPENAI_API_KEY, // Ensure this is set in your .env/Render
 });
 
+const checkDoctorPatientRelationship = async (doctorId, patientId) => {
+    const result = await db.query(
+        'SELECT 1 FROM appointments WHERE doctor_id = $1 AND user_id = $2 LIMIT 1',
+        [doctorId, patientId]
+    );
+    return result.rowCount > 0;
+};
+
 console.log("OpenAI API Key loaded:", process.env.OPENAI_API_KEY ? 'Yes' : 'NO - THIS IS THE PROBLEM!');
 
 // --- 1. Database Connection Pool Setup (CRITICAL FIX) ---
