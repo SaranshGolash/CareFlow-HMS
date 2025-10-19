@@ -53,7 +53,10 @@
 
                             </div>
                             <div class="card-footer bg-light border-0 text-end">
-                                <a href="/records/<%= record.record_id %>" class="btn btn-sm btn-outline-primary">View Details</a>
+                            <!-- This link now points to the secure doctor route if it's a doctor view -->
+                                <a href="<%= (locals.isDoctorView) ? `/doctor/record/${record.record_id}` : `/records/${record.record_id}` %>" class="btn btn-sm btn-outline-primary">
+                                    View Details
+                                </a>
                             </div>
                         </div>
                     </div>
