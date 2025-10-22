@@ -315,29 +315,28 @@ h1 {
     min-height: 500px; /* Adjust as needed */
 }
 
-/* Base style for individual bubbles */
-.bubble {
-    position: absolute;
-    display: block;
-    list-style: none;
-    background: rgba(255, 255, 255, 0.15); /* Semi-transparent white */
-    animation: animateBubbles 25s linear infinite; /* All bubbles animate */
-    bottom: -150px; /* Start below the visible area */
-    border-radius: 50%;
-    backdrop-filter: blur(2px); /* Add a subtle blur for depth */
+.hero {
+    position: relative; /* Needed for z-index stacking */
+    overflow: hidden;   /* Keep Vanta canvas contained */
+    /* Ensure a minimum height if content is short */
+    min-height: 500px; 
 }
 
-/* Define different sizes and positions for varied bubbles */
-.bubble:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; animation-duration: 15s; }
-.bubble:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
-.bubble:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; animation-duration: 18s; }
-.bubble:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 17s; }
-.bubble:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; animation-duration: 10s; }
-.bubble:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; animation-duration: 20s; }
-.bubble:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; animation-duration: 30s; }
-.bubble:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 16s; }
-.bubble:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
-.bubble:nth-child(10){ left: 85%; width: 150px; height: 150px; animation-delay: 11s; animation-duration: 11s; }
+/* Ensure the content container sits above the background */
+.hero .container-hero {
+    position: relative; 
+    z-index: 2; /* Higher z-index than the Vanta canvas (which defaults to 0 or -1) */
+}
+
+/* Vanta canvas itself might need positioning if it overlaps oddly */
+.hero canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; 
+}
 
 /* Keyframes for bubble animation */
 @keyframes animateBubbles {
