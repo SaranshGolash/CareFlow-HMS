@@ -29,4 +29,30 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.backgroundImage = 'linear-gradient(135deg, #0d6efd, #6f42c1)';
         });
     }
+    
+    // --- Initialize Vanta DOTS for white backgrounds ---
+    if (window.VANTA && window.VANTA.DOTS) {
+        const vantaDotsElements = document.querySelectorAll('.vanta-dots-bg');
+        vantaDotsElements.forEach(el => {
+            VANTA.DOTS({
+                el: el,
+                mouseControls: true,
+                touchControls: true,
+                gyroControls: false,
+                minHeight: 200.00,
+                minWidth: 200.00,
+                scale: 1.00,
+                scaleMobile: 1.00,
+                color: 0x6f42c1,     // Use your accent purple for the dots
+                backgroundColor: 0xffffff, // White background
+                spacing: 20.00,      // Distance between dots
+                showLines: true      // Connect dots with subtle lines
+            });
+        });
+    } else {
+        console.warn("Vanta.js DOTS effect not loaded or VANTA object not found. White background animation will not run.");
+        document.querySelectorAll('.vanta-dots-bg').forEach(el => {
+            el.style.background = '#ffffff'; // Fallback to pure white
+        });
+    }
 });

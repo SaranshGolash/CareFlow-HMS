@@ -329,23 +329,20 @@ h1 {
     z-index: 1; /* Ensure it's behind content but visible */
 }
 
-/* --- Vanta.js Container Styles for Dots --- */
-.vanta-dots-bg {
-    position: relative; /* Crucial for Vanta canvas positioning */
-    overflow: hidden;   /* Prevents canvas overflow */
-    min-height: 250px;  /* Ensure the element has a height */
-    /* Add a fallback background if JS fails to load Vanta */
-    background: #ffffff !important; /* Pure white fallback */
+/* --- Vanta.js Container Styles for Cells --- */
+.vanta-cells-bg { /* Renamed class */
+    position: relative;
+    overflow: hidden;
+    min-height: 250px;
+    background: #ffffff !important;
 }
 
-/* Ensure content sits above the Vanta canvas */
-.vanta-dots-bg > * { 
+.vanta-cells-bg > * { 
     position: relative;
     z-index: 2; 
 }
 
-/* Vanta canvas itself might need specific styling for position */
-.vanta-dots-bg canvas {
+.vanta-cells-bg canvas {
     position: absolute;
     top: 0;
     left: 0;
