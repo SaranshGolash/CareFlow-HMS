@@ -43,8 +43,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 minWidth: 200.00,
                 scale: 1.00,
                 scaleMobile: 1.00,
-                color1: 0x0d6efd, // Your primary blue
-                color2: 0x6f42c1, // Your accent purple
+                color1: 0x0d6efd, // Primary blue (from WAVES)
+                color2: 0x6f42c1, // Accent purple (from WAVES)
                 backgroundColor: 0xffffff, // White
                 size: 3.50, // Size of the cells
                 speed: 1.50 // How fast they move
