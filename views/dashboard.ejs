@@ -3,14 +3,14 @@
 </head>
 <body>
     <div class="container py-5">
-        <h2 class="mb-5 text-primary">
+        <h2 class="mb-5 text-primary nimate-load-slide-up" style="animation-delay: 0.1s;">
             Welcome, <%= user.username %>!
         </h2>
 
         <% if (user.role === 'admin') { %>
             <!-- Admin Alert Section (Low Stock) -->
             <% if (lowStockCount > 0) { %>
-                <div class="alert alert-danger d-flex justify-content-between align-items-center fw-bold" role="alert">
+                <div class="alert alert-danger d-flex justify-content-between align-items-center fw-bold animate-load-slide-up" role="alert" style="animation-delay: 0.2s;">
                     <span>
                         <i class="fas fa-exclamation-triangle me-2"></i> 
                         ACTION REQUIRED: <%= lowStockCount %> item<%= lowStockCount !== 1 ? 's' : '' %> are below the safety stock threshold!
@@ -18,14 +18,14 @@
                     <a href="/inventory" class="btn btn-sm btn-danger-outline text-dark bg-white shadow-sm">View Inventory</a>
                 </div>
             <% } else { %>
-                <div class="alert alert-warning" role="alert">
+                <div class="alert alert-warning animate-load-slide-up" role="alert" style="animation-delay: 0.2s;">
                     <i class="fas fa-exclamation-triangle me-2"></i>
                     You are logged in as an **Administrator**. Use the navigation bar or links below for management.
                 </div>
             <% } %>
             
             <!-- ADMIN QUICK ACCESS BLOCK (Analytics Button Bar) -->
-            <div class="row mb-5">
+            <div class="row mb-5 animate-on-scroll animate-slide-up">
                 <div class="col-12">
                     <h3 class="mb-3 text-dark">Admin Quick Access</h3>
                     
@@ -62,7 +62,7 @@
                 </div>
         <% } %>
 
-        <h3 class="mb-4 text-dark">
+        <h3 class="mb-4 text-dark animate-on-scroll animate-fade-in">
             <%= user.role === 'admin' ? 'Management Overview' : 'Your Activity Summary' %>
         </h3>
 
@@ -70,7 +70,7 @@
             
             <!-- Appointments Card (Visible to all) -->
             <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.1s;">
-                <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/appointments'">
+                <div class="dashboard-card card h-100 shadow-sm card-3d-hover" onclick="window.location.href='/appointments'">
                     <div class="card-body">
                         <i class="fas fa-calendar-check fa-3x icon-blue mb-3"></i>
                         <p class="text-uppercase text-muted mb-0 small">Appointments Booked</p>
@@ -81,7 +81,7 @@
 
             <!-- Medical Records Card (Visible to all) -->
             <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.2s;">
-                <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/records'">
+                <div class="dashboard-card card h-100 shadow-sm card-3d-hover" onclick="window.location.href='/records'">
                     <div class="card-body">
                         <i class="fas fa-notes-medical fa-3x icon-purple mb-3"></i>
                         <p class="text-uppercase text-muted mb-0 small">Total Medical Records</p>
@@ -92,7 +92,7 @@
             
             <!-- Outstanding Balance Card (Visible to all) -->
             <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.3s;">
-                <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/invoices'">
+                <div class="dashboard-card card h-100 shadow-sm card-3d-hover" onclick="window.location.href='/invoices'">
                     <div class="card-body">
                         <i class="fas fa-dollar-sign fa-3x <%= (outstandingBalance > 0) ? 'text-danger' : 'text-success' %> mb-3"></i>
                         <p class="text-uppercase text-muted mb-0 small">Outstanding Balance</p>
@@ -104,7 +104,7 @@
 
             <!-- Latest Vitals Card (Visible to all) -->
             <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.4s;">
-                <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/monitoring'">
+                <div class="dashboard-card card h-100 shadow-sm card-3d-hover" onclick="window.location.href='/monitoring'">
                     <div class="card-body">
                         <i class="fas fa-heartbeat fa-3x icon-green mb-3"></i>
                         <p class="text-uppercase text-muted mb-0 small">Last Vitals Check</p>
@@ -122,7 +122,7 @@
             <!-- Low Stock Card (Admin View - Placed here to integrate with the main card flow) -->
             <% if (user.role === 'admin') { %>
                 <div class="col-md-6 col-lg-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.5s;">
-                    <div class="dashboard-card card h-100 shadow-sm" onclick="window.location.href='/inventory'">
+                    <div class="dashboard-card card h-100 shadow-sm card-3d-hover" onclick="window.location.href='/inventory'">
                         <div class="card-body">
                             <i class="fas fa-box-open fa-3x <%= lowStockCount > 0 ? 'text-danger' : 'icon-green' %> mb-3"></i>
                             <p class="text-uppercase text-muted mb-0 small">Low Stock Items</p>

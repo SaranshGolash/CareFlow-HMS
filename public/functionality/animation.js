@@ -49,10 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     // 2. If it's a counter, trigger the counting animation
                     if (entry.target.classList.contains('animate-counter')) {
                         animateCount(entry.target);
+                        entry.target.dataset.hasAnimated = 'true';
                     }
                     
-                    // 3. Stop observing once animated
-                    observer.unobserve(entry.target);
+                    
+                } else {
+                    // Remove the class to trigger the "out" (reverse) animation
+                    entry.target.classList.remove('is-visible');
                 }
             });
         };

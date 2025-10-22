@@ -1,183 +1,121 @@
 <%- include('initials/header.ejs', { title: 'CareFlow HMS' }) %>
-    <section class="hero text-white py-5 vanta-waves-bg">
-        <div class="container-hero">
-            <div class="hero-section row align-items-center">
-                <div class="col-lg-6">
-                    <h1 class="hero-section-texts display-4 fw-bold">Welcome<% if (user) { %>, <%= user.username %><% } %> to CareFlow HMS</h1>
-                    <p class="hero-section-texts lead">Streamlining healthcare management for better patient care</p>
-                    <div class="d-flex gap-3">
-                        <a href="<%= user ? '/appointments' : '/signup' %>" class="btn btn-light btn-lg hero-section-btn">
-                            <%= user ? 'Go to Appointments' : 'Get Started' %>
-                        </a>
-                        <a href="/about" class="btn btn-outline-light btn-lg hero-section-btn">Learn More</a>
-                    </div>
-                </div>
-                <div class="col-lg-6">
-                    <img src="/images/CareFlow-HMS.png" alt="CareFlow HMS" class="img-fluid">
-                </div>
-            </div>    
-        </div>
-    </section>
 
-    <section class="features py-5 card p-4">
-        <div class="container">
-            <h2 class="text-center mb-5">Our Core Features</h2>
-            <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card h-100 animate-on-scroll animate-slide-up" style="transition-delay: 0s;">
-                        <div class="clickable-card card-body text-center">
-                            <a href="<%= user ? '/appointments' : '/login' %>" class="card-content-link text-decoration-none text-dark">
-                                <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
-                                <h3 class="card-title">Doctor Appointments</h3>
-                                <p class="card-text">Schedule and manage appointments with our experienced healthcare professionals.</p>
-                            </a>
-                        </div>
+<section class="hero text-white py-5 vanta-waves-bg" id="hero-background">
+    <div class="container-hero">
+        <div class="hero-section row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="hero-section-texts display-4 fw-bold animate-load-slide-up" style="animation-delay: 0.2s;">Welcome<% if (user) { %>, <%= user.username %><% } %> to CareFlow HMS</h1>
+                <p class="hero-section-texts lead animate-load-slide-up" style="animation-delay: 0.4s;">Streamlining healthcare management for better patient care</p>
+                <div class="d-flex gap-3 animate-load-slide-up" style="animation-delay: 0.6s;">
+                    <a href="<%= user ? '/appointments' : '/signup' %>" class="btn btn-light btn-lg hero-section-btn">
+                        <%= user ? 'Go to Appointments' : 'Get Started' %>
+                    </a>
+                    <a href="/about" class="btn btn-outline-light btn-lg hero-section-btn">Learn More</a>
+                </div>
+            </div>
+            <div class="col-lg-6 animate-load-slide-up" style="animation-delay: 0.5s;">
+                <img src="/images/CareFlow-HMS.png" alt="CareFlow HMS" class="img-fluid">
+            </div>
+        </div>    
+    </div>
+</section>
+
+<section class="features py-5 vanta-fog-bg">
+    <div class="container">
+        <h2 class="text-center mb-5 animate-on-scroll animate-slide-up">Our Core Features</h2>
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 animate-on-scroll animate-slide-up card-3d-hover" style="transition-delay: 0s;">
+                    <div class="clickable-card card-body text-center">
+                        <a href="<%= user ? '/appointments' : '/login' %>" class="card-content-link text-decoration-none text-dark">
+                            <i class="fas fa-user-md fa-3x text-primary mb-3"></i>
+                            <h3 class="card-title">Doctor Appointments</h3>
+                            <p class="card-text">Schedule and manage appointments with our experienced healthcare professionals.</p>
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100 animate-on-scroll animate-slide-up" style="transition-delay: 0.15s;">
-                        <div class="clickable-card card-body text-center">
-                            <a href="<%= user ? '/records' : '/login' %>" class="card-content-link text-decoration-none text-dark">
-                            <i class="fas fa-notes-medical fa-3x text-primary mb-3"></i>
-                            <h3 class="card-title">Patient Records</h3>
-                            <p class="card-text">Secure digital storage and easy access to patient medical records and history.</p>
-                            </a>
-                        </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 animate-on-scroll animate-slide-up card-3d-hover" style="transition-delay: 0.15s;">
+                    <div class="clickable-card card-body text-center">
+                        <a href="<%= user ? '/records' : '/login' %>" class="card-content-link text-decoration-none text-dark">
+                        <i class="fas fa-notes-medical fa-3x text-primary mb-3"></i>
+                        <h3 class="card-title">Patient Records</h3>
+                        <p class="card-text">Secure digital storage and easy access to patient medical records and history.</p>
+                        </a>
                     </div>
                 </div>
-                <div class="col-md-4">
-                    <div class="card h-100 animate-on-scroll animate-slide-up" style="transition-delay: 0.30s;">
-                        <div class="clickable-card card-body text-center">
-                            <a href="<%= user ? '/monitoring' : '/login' %>" class="card-content-link text-decoration-none text-dark">
-                            <i class="fas fa-heartbeat fa-3x text-primary mb-3"></i>
-                            <h3 class="card-title">Health Monitoring</h3>
-                            <p class="card-text">Track and monitor patient health progress with comprehensive analytics.</p>
-                            </a>
-                        </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 animate-on-scroll animate-slide-up card-3d-hover" style="transition-delay: 0.30s;">
+                    <div class="clickable-card card-body text-center">
+                        <a href="<%= user ? '/monitoring' : '/login' %>" class="card-content-link text-decoration-none text-dark">
+                        <i class="fas fa-heartbeat fa-3x text-primary mb-3"></i>
+                        <h3 class="card-title">Health Monitoring</h3>
+                        <p class="card-text">Track and monitor patient health progress with comprehensive analytics.</p>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Promotional Services Section -->
-    <section class="services-promo bg-light py-5">
-        <div class="container text-center">
-            <h2 class="mb-4">Explore Our Healthcare Service Offerings</h2>
-            <p class="lead mb-4">View our full catalog, including consultation fees, lab tests, and procedures.</p>
-            <a href="/public-services" class="btn btn-primary btn-lg">
-                <i class="fas fa-hand-holding-medical me-2"></i> Browse Services & Pricing
-            </a>
-        </div>
-    </section>
+<section class="services-promo bg-light py-5">
+    <div class="container text-center">
+        <h2 class="mb-4 animate-on-scroll animate-slide-up" style="transition-delay: 0s;">Explore Our Healthcare Service Offerings</h2>
+        <p class="lead mb-4 animate-on-scroll animate-slide-up" style="transition-delay: 0.1s;">View our full catalog, including consultation fees, lab tests, and procedures.</p>
+        <a href="/public-services" class="btn btn-primary btn-lg animate-on-scroll animate-slide-up" style="transition-delay: 0.2s;">
+            <i class="fas fa-hand-holding-medical me-2"></i> Browse Services & Pricing
+        </a>
+    </div>
+</section>
 
-    <section class="stats py-5">
-        <div class="container">
-            <div class="row text-center">
-                <div class="col-md-3 animate-on-scroll animate-slide-up" style="transition-delay: 0s;">
-                <h2 class="display-4 fw-bold text-primary animate-counter" 
-                    data-target-value="1000" 
-                    data-suffix="+">0</h2>
+<section class="stats py-5">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-md-3 animate-on-scroll animate-slide-up" style="transition-delay: 0s;">
+                <h2 class="display-4 fw-bold text-primary animate-counter" data-target-value="1000" data-suffix="+">0</h2>
                 <p>Patients Served</p>
             </div>
-            
             <div class="col-md-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.1s;">
-                <h2 class="display-4 fw-bold text-primary animate-counter" 
-                    data-target-value="50" 
-                    data-suffix="+">0</h2>
+                <h2 class="display-4 fw-bold text-primary animate-counter" data-target-value="50" data-suffix="+">0</h2>
                 <p>Specialist Doctors</p>
             </div>
-            
             <div class="col-md-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.2s;">
                 <h2 class="display-4 fw-bold text-primary">24/7</h2>
                 <p>Emergency Service</p>
             </div>
-            
             <div class="col-md-3 animate-on-scroll animate-slide-up" style="transition-delay: 0.3s;">
-                <h2 class="display-4 fw-bold text-primary animate-counter" 
-                    data-target-value="98" 
-                    data-suffix="%">0</h2>
+                <h2 class="display-4 fw-bold text-primary animate-counter" data-target-value="98" data-suffix="%">0</h2>
                 <p>Patient Satisfaction</p>
-            </div>
-            </div>
-        </div>
-    </section>
-    
-    <section class="billing-promo bg-primary text-white py-5 vanta-waves-bg">
-        <div class="container text-center">
-            <h2 class="mb-4">Need to Settle Your Account?</h2>
-            <p class="lead mb-4">Securely view your payment history and outstanding balances.</p>
-            <a href="/invoices" class="btn btn-light btn-lg">
-                <i class="fas fa-file-invoice-dollar me-2"></i> View My Invoices
-            </a>
-        </div>
-    </section>
-
-    <section class="cta py-5 vanta-waves-bg">
-        <div class="container">
-            <div class="row justify-content-center">
-                <div class="col-md-8 text-center">
-                    <h2 class="mb-4">Ready to Experience Better Healthcare Management?</h2>
-                    <p class="lead mb-4">Join CareFlow HMS today and transform your healthcare facility's efficiency.</p>
-                    <a href="<%= user ? '/appointments' : '/signup' %>" class="btn btn-light btn-lg">
-                        <%= user ? 'Manage Appointments' : 'Sign Up Now' %>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </section>
-    <div class="modal fade" id="demoSplashModal" tabindex="-1" aria-labelledby="demoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="demoModalLabel">Welcome to CareFlow HMS!</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <p>Feel free to explore the features of our application using the public demo account.</p>
-                <div class="alert alert-secondary">
-                    <p class="demo-heads "><Strong>Patient Credentials:</Strong></p>
-                    <p class="mb-0"><strong>Email:</strong> <code>patient@gmail.com</code></p>
-                    <p class="mb-0"><strong>Password:</strong> <code>Patient@10</code></p>
-                    <p class="demo-heads"><Strong>Admin Credentials:</Strong></p>
-                    <p class="mb-0"><strong>Email:</strong> <code>admin@gmail.com</code></p>
-                    <p class="mb-0"><strong>Password:</strong> <code>Admin@10</code></p>
-                    <p class="demo-heads"><Strong>Doctor Credentials:</Strong></p>
-                    <p class="mb-0"><strong>Email:</strong> <code>doctor@gmail.com</code></p>
-                    <p class="mb-0"><strong>Password:</strong> <code>Doctor@10</code></p>
-                </div>
-                <div class="d-grid gap-2 mt-3">
-                    <a href="/login" class="btn btn-primary">Go to Login</a>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
-</div>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Check if the VANTA object and the specific effect exist
-  if (window.VANTA && window.VANTA.NET) {
-    VANTA.NET({
-      el: "#hero-background", // Selector for your hero section
-      mouseControls: true,
-      touchControls: true,
-      gyroControls: false,
-      minHeight: 200.00, // Adjust as needed
-      minWidth: 200.00,  // Adjust as needed
-      scale: 1.00,
-      scaleMobile: 1.00,
-      color: 0x6f42c1,     // Your accent purple color
-      backgroundColor: 0x0d6efd, // Your primary blue color
-      points: 10.00,       // Density of points
-      maxDistance: 20.00,  // Max length of lines
-      spacing: 15.00       // Spacing between points
-    });
-  } else {
-    console.error("Vanta.js or Vanta.NET effect not loaded properly.");
-  }
-});
-</script>
-    <%- include('initials/footer.ejs') %>
+</section>
+
+<section class="billing-promo bg-primary text-white py-5 vanta-waves-bg">
+    <div class="container text-center">
+        <h2 class="mb-4 animate-on-scroll animate-slide-up" style="transition-delay: 0s;">Need to Settle Your Account?</h2>
+        <p class="lead mb-4 animate-on-scroll animate-slide-up" style="transition-delay: 0.1s;">Securely view your payment history and outstanding balances.</p>
+        <a href="/invoices" class="btn btn-light btn-lg animate-on-scroll animate-slide-up" style="transition-delay: 0.2s;">
+            <i class="fas fa-file-invoice-dollar me-2"></i> View My Invoices
+        </a>
+    </div>
+</section>
+
+<section class="cta py-5 vanta-waves-bg">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h2 class="mb-4 animate-on-scroll animate-slide-up" style="transition-delay: 0s;">Ready to Experience Better Healthcare Management?</h2>
+                <p class="lead mb-4 animate-on-scroll animate-slide-up" style="transition-delay: 0.1s;">Join CareFlow HMS today and transform your healthcare facility's efficiency.</p>
+                <a href="<%= user ? '/appointments' : '/signup' %>" class="btn btn-light btn-lg animate-on-scroll animate-slide-up" style="transition-delay: 0.2s;">
+                    <%= user ? 'Manage Appointments' : 'Sign Up Now' %>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<%- include('initials/footer.ejs') %>

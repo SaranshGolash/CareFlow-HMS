@@ -14,6 +14,11 @@ h1 {
     color: #e0e0e0;
 }
 
+.navbar {
+    position: relative; /* Establishes a stacking context */
+    z-index: 1050;      /* High z-index to ensure it's on top of other content */
+}
+
 .card {
     /* Ensures the card itself doesn't hide the rotation effect */
     backface-visibility: hidden;
@@ -246,6 +251,15 @@ h1 {
     opacity: 1;
 }
 
+/* 4. Keep your counter animation JS, but you can style the initial state here if needed */
+.animate-counter {
+    opacity: 0; /* Start invisible until JS runs */
+    transition: opacity 0.5s ease-out; /* Fade in as it counts */
+}
+.animate-counter.is-visible {
+    opacity: 1;
+}
+
 /* --- NEW: STAGGERED FLIP/ZOOM EFFECT --- */
 .animate-flip-zoom {
     /* Initial State: Invisible, rotated 15 degrees (off-axis), and slightly shrunk (0.9) */
@@ -262,49 +276,61 @@ h1 {
     transform: perspective(600px) rotateY(0deg) scale(1);
 }
 
-/* --- REFINED AOS ANIMATION DEFINITIONS --- */
+/* --- PAGE LOAD ANIMATIONS --- */
 
-/* Base Class: Hides elements initially, smoother transition */
-.animate-on-scroll {
-    opacity: 0;
-    transition: opacity 0.8s cubic-bezier(0.17, 0.55, 0.55, 1), 
-                transform 0.8s cubic-bezier(0.17, 0.55, 0.55, 1);
-}
-
-/* 1. Gentle Slide-Up (Cleaner than previous version) */
-.animate-slide-up {
-    transform: translateY(50px); /* Start slightly lower */
-}
-.animate-slide-up.is-visible {
-    opacity: 1;
-    transform: translateY(0);
+/* 1. Keyframes for the animations */
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
-/* 2. Gentle Slide-In From Left (Good for rows or sections) */
-.animate-slide-in-left {
-    transform: translateX(-50px);
-}
-.animate-slide-in-left.is-visible {
-    opacity: 1;
-    transform: translateX(0);
-}
-
-/* 3. Gentle Zoom-In (Good for images or key info boxes) */
-.animate-zoom-in {
-    transform: scale(0.9);
-}
-.animate-zoom-in.is-visible {
-    opacity: 1;
-    transform: scale(1);
+@keyframes slideUpFade {
+    from {
+        transform: translateY(30px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
-/* 4. Keep your counter animation JS, but you can style the initial state here if needed */
-.animate-counter {
-    opacity: 0; /* Start invisible until JS runs */
-    transition: opacity 0.5s ease-out; /* Fade in as it counts */
+/* 2. Classes to apply the animations */
+.animate-load-slide-down {
+    /* Apply the 'slideDown' animation */
+    animation: slideDown 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
 }
-.animate-counter.is-visible {
-    opacity: 1;
+
+.animate-load-slide-up {
+    /* Apply the 'slideUpFade' animation */
+    animation: slideUpFade 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+    /* 'both' keeps the final state */
+}
+
+/* --- 3D CARD TILT ON HOVER --- */
+
+/* Apply this class to any card you want to have the tilt effect */
+.card-3d-hover {
+    /* Set the perspective on the PARENT of the card for a better group effect */
+    /* e.g., apply 'perspective: 1000px;' to the .row.g-4 */
+    
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.card-3d-hover:hover {
+    /* Apply a slight 3D rotation and lift */
+    transform: perspective(1000px) rotateX(2deg) rotateY(-3deg) scale(1.03);
+    
+    /* Enhance the shadow for a lifting effect */
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15) !important; 
+    z-index: 10; /* Bring the card to the front */
 }
 
 /* --- Vanta.js Container Styles --- */
