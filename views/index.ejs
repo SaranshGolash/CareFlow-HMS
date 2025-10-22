@@ -1,5 +1,5 @@
 <%- include('initials/header.ejs', { title: 'CareFlow HMS' }) %>
-    <section class="hero text-white py-5 hero-3d-animated-bg">
+    <section class="hero text-white py-5" id="hero-background">
         <ul class="bubbles">
             <li></li>
             <li></li>
@@ -168,4 +168,28 @@
         </div>
     </div>
 </div>
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Check if the VANTA object and the specific effect exist
+  if (window.VANTA && window.VANTA.NET) {
+    VANTA.NET({
+      el: "#hero-background", // Selector for your hero section
+      mouseControls: true,
+      touchControls: true,
+      gyroControls: false,
+      minHeight: 200.00, // Adjust as needed
+      minWidth: 200.00,  // Adjust as needed
+      scale: 1.00,
+      scaleMobile: 1.00,
+      color: 0x6f42c1,     // Your accent purple color
+      backgroundColor: 0x0d6efd, // Your primary blue color
+      points: 10.00,       // Density of points
+      maxDistance: 20.00,  // Max length of lines
+      spacing: 15.00       // Spacing between points
+    });
+  } else {
+    console.error("Vanta.js or Vanta.NET effect not loaded properly.");
+  }
+});
+</script>
     <%- include('initials/footer.ejs') %>
