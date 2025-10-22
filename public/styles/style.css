@@ -320,6 +320,59 @@ h1 {
     opacity: 1;
 }
 
+/* --- 3D Animated Background - Floating Bubbles --- */
+
+/* The container for the animation, apply this to your hero section */
+.hero-3d-animated-bg {
+    position: relative;
+    overflow: hidden; /* Crucial to keep bubbles within bounds */
+    background: linear-gradient(135deg, #0d6efd, #6f42c1); /* Your base gradient */
+    /* Ensure the hero section has a defined height */
+    min-height: 500px; /* Adjust as needed */
+}
+
+/* Base style for individual bubbles */
+.bubble {
+    position: absolute;
+    display: block;
+    list-style: none;
+    background: rgba(255, 255, 255, 0.15); /* Semi-transparent white */
+    animation: animateBubbles 25s linear infinite; /* All bubbles animate */
+    bottom: -150px; /* Start below the visible area */
+    border-radius: 50%;
+    backdrop-filter: blur(2px); /* Add a subtle blur for depth */
+}
+
+/* Define different sizes and positions for varied bubbles */
+.bubble:nth-child(1) { left: 25%; width: 80px; height: 80px; animation-delay: 0s; animation-duration: 15s; }
+.bubble:nth-child(2) { left: 10%; width: 20px; height: 20px; animation-delay: 2s; animation-duration: 12s; }
+.bubble:nth-child(3) { left: 70%; width: 20px; height: 20px; animation-delay: 4s; animation-duration: 18s; }
+.bubble:nth-child(4) { left: 40%; width: 60px; height: 60px; animation-delay: 0s; animation-duration: 17s; }
+.bubble:nth-child(5) { left: 65%; width: 20px; height: 20px; animation-delay: 0s; animation-duration: 10s; }
+.bubble:nth-child(6) { left: 75%; width: 110px; height: 110px; animation-delay: 3s; animation-duration: 20s; }
+.bubble:nth-child(7) { left: 35%; width: 150px; height: 150px; animation-delay: 7s; animation-duration: 30s; }
+.bubble:nth-child(8) { left: 50%; width: 25px; height: 25px; animation-delay: 15s; animation-duration: 16s; }
+.bubble:nth-child(9) { left: 20%; width: 15px; height: 15px; animation-delay: 2s; animation-duration: 35s; }
+.bubble:nth-child(10){ left: 85%; width: 150px; height: 150px; animation-delay: 11s; animation-duration: 11s; }
+
+/* Keyframes for bubble animation */
+@keyframes animateBubbles {
+    0% {
+        transform: translateY(0) rotate(0deg) scale(1);
+        opacity: 0;
+        border-radius: 0;
+    }
+    20% {
+        opacity: 0.6;
+        border-radius: 50%;
+    }
+    100% {
+        transform: translateY(-1000px) rotate(720deg) scale(2);
+        opacity: 0;
+        border-radius: 50%;
+    }
+}
+
 /* --- Responsive Styles --- */
 
 @media (max-width: 992px) {
