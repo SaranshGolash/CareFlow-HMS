@@ -1987,6 +1987,35 @@ app.get('/admin/analytics', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
+// GET: Admin View All Patient Feedback
+app.get('/admin/feedback', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        // Join with the users table to get the patient's username
+        const query = `
+            SELECT 
+                cf.*, 
+                u.username, 
+                u.email 
+            FROM 
+                consultation_feedback cf
+            JOIN 
+                users u ON cf.user_id = u.id
+            ORDER BY 
+                cf.submitted_at DESC
+        `;
+        const result = await db.query(query);
+        
+        res.render('admin_feedback', { 
+            feedback: result.rows 
+        });
+
+    } catch (err) {
+        console.error('Error fetching admin feedback:', err);
+        req.flash('error_msg', 'Could not load feedback data.');
+        res.redirect('/dashboard'); // Redirect to the main admin dashboard on error
+    }
+});
+
 // GET: Public Services
 app.get('/public-services', async (req, res) => {
     try {

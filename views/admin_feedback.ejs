@@ -1,14 +1,19 @@
 <%- include('initials/header.ejs', { title: 'Feedback View' }) %>
 <link rel="stylesheet" href="/styles/admin_feedback.css">
-    <div class="container py-5">
-        <h2 class="mb-4 text-primary"><i class="fas fa-chart-bar me-3"></i> Patient Consultation Feedback</h2>
-        <p class="text-muted lead">Total Feedback Entries: **<%= feedback.length %>**</p>
+<div class="container py-5">
+        <h2 class="mb-4 text-primary animate-load-slide-up" style="animation-delay: 0.1s;">
+            <i class="fas fa-chart-bar me-3"></i> Patient Consultation Feedback
+        </h2>
+        <p class="text-muted lead animate-load-slide-up" style="animation-delay: 0.2s;">
+            Total Feedback Entries: <strong><%= feedback.length %></strong>
+        </p>
         
         <% if (feedback.length > 0) { %>
             <div class="row g-4 mt-3">
-                <% feedback.forEach(entry => { %>
-                    <div class="col-md-6">
-                        <div class="card shadow-sm feedback-card-item">
+                <% feedback.forEach((entry, index) => { %>
+                    <div class="col-md-6 animate-on-scroll animate-slide-up" style="transition-delay: <%= (index % 2) * 0.1 %>s;">
+                        
+                        <div class="card shadow-sm feedback-card-item card-3d-hover">
                             <div class="card-header bg-light d-flex justify-content-between">
                                 <span class="fw-bold text-dark">
                                     <i class="fas fa-user-circle me-1"></i> <%= entry.username %>
@@ -41,7 +46,7 @@
                 <% }); %>
             </div>
         <% } else { %>
-            <div class="alert alert-info text-center mt-4" role="alert">
+            <div class="alert alert-info text-center mt-4 animate-on-scroll animate-slide-up">
                 <i class="fas fa-info-circle me-2"></i>
                 No consultation feedback has been submitted yet.
             </div>
