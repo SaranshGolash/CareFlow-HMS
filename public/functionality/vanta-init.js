@@ -29,28 +29,4 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.backgroundImage = 'linear-gradient(135deg, #0d6efd, #6f42c1)';
         });
     }
-
-    // --- Initialize Vanta TOPOLOGY for white backgrounds ---
-    if (window.VANTA && window.VANTA.TOPOLOGY) {
-        const vantaTopologyElements = document.querySelectorAll('.vanta-topology-bg');
-        vantaTopologyElements.forEach(el => {
-            VANTA.TOPOLOGY({
-                el: el,
-                mouseControls: true,
-                touchControls: true,
-                gyroControls: false,
-                minHeight: 200.00,
-                minWidth: 200.00,
-                scale: 1.00,
-                scaleMobile: 1.00,
-                color: 0x0d6efd, // Your primary blue
-                backgroundColor: 0xffffff, // White
-            });
-        });
-    } else {
-        console.warn("Vanta.js TOPOLOGY effect not loaded. White background animation will not run.");
-        document.querySelectorAll('.vanta-topology-bg').forEach(el => {
-            el.style.background = '#ffffff'; // Fallback to pure white
-        });
-    }
 });
