@@ -329,20 +329,20 @@ h1 {
     z-index: 1; /* Ensure it's behind content but visible */
 }
 
-/* --- Vanta.js Container Styles for Cells --- */
-.vanta-cells-bg { /* Renamed class */
+/* --- Vanta.js Container Styles for Topology --- */
+.vanta-topology-bg { /* Renamed class */
     position: relative;
     overflow: hidden;
     min-height: 250px;
     background: #ffffff !important;
 }
 
-.vanta-cells-bg > * { 
+.vanta-topology-bg > * { 
     position: relative;
     z-index: 2; 
 }
 
-.vanta-cells-bg canvas {
+.vanta-topology-bg canvas {
     position: absolute;
     top: 0;
     left: 0;

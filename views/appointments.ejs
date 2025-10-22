@@ -1,5 +1,6 @@
 <%- include('initials/header.ejs', { title: 'Appointments' }) %>
 <link rel="stylesheet" href="/styles/appointments.css">
+<section class="vanta-cells-bg">
     <div class="container py-5">
         <h2 class="mb-4"><%= isAdmin ? 'All Scheduled Appointments' : 'Your Appointments' %></h2>
 
@@ -90,4 +91,5 @@
             <a href="/newappointments" id="new-entry" class="btn btn-primary">New Appointment</a>
         </div>
     </div>
+    </section>
 <%- include('initials/footer.ejs') %>
