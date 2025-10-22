@@ -275,8 +275,50 @@ h1 {
     100% { background-position: 0% 50%; }
 }
 
-/* Example usage on the Hero section in index.ejs */
-/* <section class="hero text-white py-5 animated-gradient-background"> */
+/* --- REFINED AOS ANIMATION DEFINITIONS --- */
+
+/* Base Class: Hides elements initially, smoother transition */
+.animate-on-scroll {
+    opacity: 0;
+    transition: opacity 0.8s cubic-bezier(0.17, 0.55, 0.55, 1), 
+                transform 0.8s cubic-bezier(0.17, 0.55, 0.55, 1);
+}
+
+/* 1. Gentle Slide-Up (Cleaner than previous version) */
+.animate-slide-up {
+    transform: translateY(50px); /* Start slightly lower */
+}
+.animate-slide-up.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* 2. Gentle Slide-In From Left (Good for rows or sections) */
+.animate-slide-in-left {
+    transform: translateX(-50px);
+}
+.animate-slide-in-left.is-visible {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* 3. Gentle Zoom-In (Good for images or key info boxes) */
+.animate-zoom-in {
+    transform: scale(0.9);
+}
+.animate-zoom-in.is-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* 4. Keep your counter animation JS, but you can style the initial state here if needed */
+.animate-counter {
+    opacity: 0; /* Start invisible until JS runs */
+    transition: opacity 0.5s ease-out; /* Fade in as it counts */
+}
+.animate-counter.is-visible {
+    opacity: 1;
+}
 
 /* --- Responsive Styles --- */
 
