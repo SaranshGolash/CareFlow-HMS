@@ -1,14 +1,21 @@
 <%- include('initials/header.ejs', { title: 'CareFlow - Add Vitals' }) %>
 <link rel="stylesheet" href="/styles/add_vitals.css">
-    <div class="container py-5">
+<div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-8">
-                <div class="card shadow-md">
+                
+                <div class="card shadow-md animate-on-scroll animate-slide-up">
                     <div class="card-body">
-                        <h3 class="card-title mb-4 text-primary"><i class="fas fa-stethoscope me-2"></i> Manually Add Patient Vitals</h3>
-                        <p class="text-muted">Inputting vitals as: <strong><%= admin_username %> (Admin)</strong></p>
+                        
+                        <h3 class="card-title mb-4 text-primary animate-load-slide-up" style="animation-delay: 0.1s;">
+                            <i class="fas fa-stethoscope me-2"></i> Manually Add Patient Vitals
+                        </h3>
+                        
+                        <p class="text-muted animate-load-slide-up" style="animation-delay: 0.2s;">
+                            Inputting vitals as: <strong><%= admin_username %> (Admin)</strong>
+                        </p>
 
-                        <form action="/add-vitals" method="POST" class="row g-4">
+                        <form action="/add-vitals" method="POST" class="row g-4 animate-load-slide-up" style="animation-delay: 0.3s;">
                             
                             <div class="col-md-12">
                                 <label for="patient_id" class="form-label">Patient Name<span class="required-asterisk">*</span>:</label>
