@@ -304,56 +304,29 @@ h1 {
     opacity: 1;
 }
 
-/* --- 3D Animated Background - Floating Bubbles --- */
+/* --- Vanta.js Container Styles --- */
+.vanta-waves-bg {
+    position: relative; /* Crucial for Vanta canvas positioning */
+    overflow: hidden;   /* Prevents canvas overflow */
+    min-height: 400px;  /* Ensure the element has a height for the animation to fill */
+    /* Add a fallback background if JS fails to load Vanta */
+    background: linear-gradient(135deg, #0d6efd, #6f42c1) !important; 
+}
 
-/* The container for the animation, apply this to your hero section */
-.hero-3d-animated-bg {
+/* Ensure content sits above the Vanta canvas */
+.vanta-waves-bg > * { /* Targets direct children of the Vanta container */
     position: relative;
-    overflow: hidden; /* Crucial to keep bubbles within bounds */
-    background: linear-gradient(135deg, #0d6efd, #6f42c1); /* Your base gradient */
-    /* Ensure the hero section has a defined height */
-    min-height: 500px; /* Adjust as needed */
+    z-index: 2; /* Vanta canvas usually has z-index 0 or 1 */
 }
 
-.hero {
-    position: relative; /* Needed for z-index stacking */
-    overflow: hidden;   /* Keep Vanta canvas contained */
-    /* Ensure a minimum height if content is short */
-    min-height: 500px; 
-}
-
-/* Ensure the content container sits above the background */
-.hero .container-hero {
-    position: relative; 
-    z-index: 2; /* Higher z-index than the Vanta canvas (which defaults to 0 or -1) */
-}
-
-/* Vanta canvas itself might need positioning if it overlaps oddly */
-.hero canvas {
+/* Vanta canvas itself might need specific styling for position */
+.vanta-waves-bg canvas {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    z-index: 1; 
-}
-
-/* Keyframes for bubble animation */
-@keyframes animateBubbles {
-    0% {
-        transform: translateY(0) rotate(0deg) scale(1);
-        opacity: 0;
-        border-radius: 0;
-    }
-    20% {
-        opacity: 0.6;
-        border-radius: 50%;
-    }
-    100% {
-        transform: translateY(-1000px) rotate(720deg) scale(2);
-        opacity: 0;
-        border-radius: 50%;
-    }
+    z-index: 1; /* Ensure it's behind content but visible */
 }
 
 /* --- Responsive Styles --- */
