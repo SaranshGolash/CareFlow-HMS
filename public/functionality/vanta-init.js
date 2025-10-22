@@ -30,11 +30,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // --- Initialize Vanta CELLS for white backgrounds ---
-    if (window.VANTA && window.VANTA.CELLS) {
-        const vantaCellsElements = document.querySelectorAll('.vanta-cells-bg');
-        vantaCellsElements.forEach(el => {
-            VANTA.CELLS({
+    // --- Initialize Vanta TOPOLOGY for white backgrounds ---
+    if (window.VANTA && window.VANTA.TOPOLOGY) {
+        const vantaTopologyElements = document.querySelectorAll('.vanta-topology-bg');
+        vantaTopologyElements.forEach(el => {
+            VANTA.TOPOLOGY({
                 el: el,
                 mouseControls: true,
                 touchControls: true,
@@ -43,16 +43,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 minWidth: 200.00,
                 scale: 1.00,
                 scaleMobile: 1.00,
-                color1: 0x8ec5ff, // Bright Sky Blue
-                color2: 0xb5d8ff, // Lighter, Softer Blue
+                color: 0x0d6efd, // Your primary blue
                 backgroundColor: 0xffffff, // White
-                size: 3.50, // Size of the cells
-                speed: 1.50 // How fast they move
             });
         });
     } else {
-        console.warn("Vanta.js CELLS effect not loaded. White background animation will not run.");
-        document.querySelectorAll('.vanta-cells-bg').forEach(el => {
+        console.warn("Vanta.js TOPOLOGY effect not loaded. White background animation will not run.");
+        document.querySelectorAll('.vanta-topology-bg').forEach(el => {
             el.style.background = '#ffffff'; // Fallback to pure white
         });
     }
