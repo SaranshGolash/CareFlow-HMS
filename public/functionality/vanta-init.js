@@ -29,34 +29,4 @@ document.addEventListener('DOMContentLoaded', () => {
             el.style.backgroundImage = 'linear-gradient(135deg, #0d6efd, #6f42c1)';
         });
     }
-    // --- Initialize Vanta FOG for white backgrounds ---
-    if (window.VANTA && window.VANTA.FOG) {
-        const vantaFogElements = document.querySelectorAll('.vanta-fog-bg');
-        vantaFogElements.forEach(el => {
-            VANTA.FOG({
-                el: el,
-                mouseControls: true,
-                touchControls: true,
-                gyroControls: false,
-                minHeight: 200.00,
-                minWidth: 200.00,
-                
-                // --- Subtle & Professional "Clinical Air" Colors ---
-                highlightColor: 0xe7f1ff, // Your "primary-light" color
-                midtoneColor: 0xb5d8ff,   // A light, airy sky blue
-                lowlightColor: 0x0d6efd,    // Your primary blue
-                baseColor: 0xffffff,       // White
-                // ---------------------------------
-                
-                blurFactor: 0.60, // How much the fog blurs
-                speed: 1.20,      // How fast it moves
-                zoom: 0.80        // A slight zoom for depth
-            });
-        });
-    } else {
-        console.warn("Vanta.js FOG effect not loaded. White background animation will not run.");
-        document.querySelectorAll('.vanta-fog-bg').forEach(el => {
-            el.style.background = '#ffffff'; // Fallback
-        });
-    }
 });
