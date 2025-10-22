@@ -259,22 +259,6 @@ h1 {
     transform: perspective(600px) rotateY(0deg) scale(1);
 }
 
-/* --- Subtle Animated Gradient Background --- */
-
-/* Apply this class to the element needing the animated background (e.g., body or .hero) */
-.animated-gradient-background {
-    /* Define your base gradient */
-    background: linear-gradient(135deg, #0d6efd, #6f42c1, #4f8ff7, #8a4af3);
-    background-size: 300% 300%; /* Make the gradient larger than the element */
-    animation: gradientShift 15s ease infinite; /* 15-second loop, smooth easing */
-}
-
-@keyframes gradientShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
 /* --- REFINED AOS ANIMATION DEFINITIONS --- */
 
 /* Base Class: Hides elements initially, smoother transition */
