@@ -332,6 +332,28 @@ h1 {
     z-index: 1; /* Ensure it's behind content but visible */
 }
 
+/* --- Vanta.js Container Styles for Fog --- */
+.vanta-fog-bg { /* Renamed class */
+    position: relative;
+    overflow: hidden;
+    min-height: 250px;
+    background: #ffffff !important; /* White fallback */
+}
+
+.vanta-fog-bg > * { 
+    position: relative;
+    z-index: 2; 
+}
+
+.vanta-fog-bg canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1; 
+}
+
 /* --- Responsive Styles --- */
 
 @media (max-width: 992px) {
