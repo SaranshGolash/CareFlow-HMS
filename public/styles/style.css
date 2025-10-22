@@ -4,7 +4,10 @@ body {
     line-height: 1.6;
     margin: 0;
     padding: 0;
-    background-color: #f8f9fa;
+    /* Set the starting background color (your light grey theme color) */
+    background-color: var(--bg, #f8f9fa); 
+    /* Fallback transition for non-JS or for the GSAP scrub */
+    transition: background-color 0.5s ease;
 }
 
 h1 {
@@ -327,28 +330,6 @@ h1 {
     width: 100%;
     height: 100%;
     z-index: 1; /* Ensure it's behind content but visible */
-}
-
-/* --- Vanta.js Container Styles for Topology --- */
-.vanta-topology-bg { /* Renamed class */
-    position: relative;
-    overflow: hidden;
-    min-height: 250px;
-    background: #ffffff !important;
-}
-
-.vanta-topology-bg > * { 
-    position: relative;
-    z-index: 2; 
-}
-
-.vanta-topology-bg canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1; 
 }
 
 /* --- Responsive Styles --- */
