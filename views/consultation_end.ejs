@@ -1,18 +1,21 @@
 <%- include('initials/header.ejs', { title: 'Consultation Complete' }) %>
 <link rel="stylesheet" href="/styles/consultation_end.css">
+<section class="vanta-waves-bg">
     <div class="container py-5">
         <div class="row justify-content-center">
             <div class="col-lg-8 text-center">
-                <div class="card feedback-card shadow-md p-5">
-                    <i class="fas fa-heartbeat fa-5x text-primary mb-4"></i>
-                    <h3 class="mb-3">Thank You for Your Consultation!</h3>
-                    <p class="lead text-muted">Your session has successfully ended. We appreciate you choosing CareFlow HMS for your virtual health needs.</p>
+                <div class="card feedback-card shadow-md p-5 animate-on-scroll animate-slide-up card-3d-hover">
                     
-                    <hr class="my-4">
+                    <!-- Page Load Animations for Inner Content -->
+                    <i class="fas fa-heartbeat fa-5x text-primary mb-4 animate-load-slide-up" style="animation-delay: 0.1s;"></i>
+                    <h3 class="mb-3 animate-load-slide-up" style="animation-delay: 0.2s;">Thank You for Your Consultation!</h3>
+                    <p class="lead text-muted animate-load-slide-up" style="animation-delay: 0.3s;">Your session has successfully ended. We appreciate you choosing CareFlow HMS for your virtual health needs.</p>
+                    
+                    <hr class="my-4 animate-load-slide-up" style="animation-delay: 0.4s;">
 
-                    <p class="h5 mb-4 text-dark">Please take a moment to rate your experience:</p>
+                    <p class="h5 mb-4 text-dark animate-load-slide-up" style="animation-delay: 0.5s;">Please take a moment to rate your experience:</p>
                     
-                    <div class="rating-stars mb-4">
+                    <div class="rating-stars mb-4 animate-load-slide-up" style="animation-delay: 0.6s;">
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star"></i>
                         <i class="fas fa-star"></i>
@@ -20,7 +23,8 @@
                         <i class="far fa-star"></i>
                     </div>
 
-                    <form action="/submit-feedback" method="POST" class="text-start">
+                    <!-- Page Load Animation for the Form -->
+                    <form action="/submit-feedback" method="POST" class="text-start animate-load-slide-up" style="animation-delay: 0.7s;">
                         <input type="hidden" name="user_id" value="<%= user.id %>">
                         <input type="hidden" name="rating" value="4">    
                         <div class="mb-3">
@@ -53,4 +57,5 @@
             </div>
         </div>
     </div>
+</section>
 <%- include('initials/footer.ejs') %>
