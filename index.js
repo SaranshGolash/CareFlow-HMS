@@ -612,7 +612,9 @@ app.get('/settings', isAuthenticated, (req, res) => {
     res.render('settings');
 });
 
+// POST: Handles Profile (username, email, insurance) Updates
 app.post('/settings/update', isAuthenticated, async (req, res) => {
+    // 1. Get all data from the form
     const { username, email, user_id, insurance_provider, policy_number } = req.body;
     const userId = req.session.user.id;
 
@@ -622,6 +624,7 @@ app.post('/settings/update', isAuthenticated, async (req, res) => {
     }
 
     try {
+        // 2. Update the database
         const query = `
             UPDATE users 
             SET username = $1, email = $2, insurance_provider = $3, policy_number = $4 
@@ -629,12 +632,16 @@ app.post('/settings/update', isAuthenticated, async (req, res) => {
         `;
         await db.query(query, [username, email, insurance_provider, policy_number, userId]);
 
-        // Update session data
+        // --- 3. CRITICAL FIX: Update the session object with ALL new data ---
         req.session.user.username = username;
         req.session.user.email = email;
+        req.session.user.insurance_provider = insurance_provider;
+        req.session.user.policy_number = policy_number;
+        // -----------------------------------------------------------------
 
-        req.flash('success_msg', 'Profile updated successfully.');
+        req.flash('success_msg', 'Profile updated successfully!');
         res.redirect('/settings');
+
     } catch (err) {
         console.error('Profile update error:', err);
         if (err.code === '23505') {
