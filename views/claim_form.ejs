@@ -1,0 +1,75 @@
+<%- include('initials/header.ejs', { title: 'Generate Claim' }) %>
+<link rel="stylesheet" href="/styles/claim_form.css">
+    <div class="container py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                <div class="card shadow-md claim-card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Mock Insurance Claim Form (CMS-1500)</h4>
+                    </div>
+                    <div class="card-body p-4 p-md-5">
+                        
+                        <section class="claim-section">
+                            <h5 class="section-title">1. Patient & Insured Information</h5>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Patient Name</label>
+                                    <input type="text" class="form-control" value="<%= invoice.username %>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Patient Email</label>
+                                    <input type="text" class="form-control" value="<%= invoice.email %>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Insurance Provider</label>
+                                    <input type="text" class="form-control" value="<%= invoice.insurance_provider || 'N/A' %>" readonly>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Policy / Member ID</label>
+                                    <input type="text" class="form-control" value="<%= invoice.policy_number || 'N/A' %>" readonly>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="claim-section mt-5">
+                            <h5 class="section-title">2. Service & Charge Details</h5>
+                            <p class="text-muted">From Invoice #<%= invoice.invoice_id %> | Date: <%= new Date(invoice.invoice_date).toLocaleDateString() %></p>
+                            
+                            <table class="table table-bordered table-sm">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Service Name</th>
+                                        <th class="text-center">Qty</th>
+                                        <th class="text-end">Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <% items.forEach(item => { %>
+                                    <tr>
+                                        <td><%= item.service_name %></td>
+                                        <td class="text-center"><%= item.quantity %></td>
+                                        <td class="text-end">$<%= (item.cost_per_unit * item.quantity).toFixed(2) %></td>
+                                    </tr>
+                                    <% }); %>
+                                </tbody>
+                                <tfoot class="fw-bold">
+                                    <tr>
+                                        <td colspan="2" class="text-end">Total Charges:</td>
+                                        <td class="text-end">$<%= invoice.total_amount.toFixed(2) %></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </section>
+
+                        <div class="form-actions mt-5">
+                            <a href="/invoices" class="btn btn-light">Back to Invoices</a>
+                            <button type="button" class="btn btn-primary btn-lg" onclick="alert('Mock Submission: Claim #<%= invoice.invoice_id %> has been sent to the clearinghouse.')">
+                                <i class="fas fa-paper-plane me-2"></i> Submit Claim (Mock)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
