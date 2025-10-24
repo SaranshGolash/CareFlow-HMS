@@ -622,7 +622,6 @@ app.post('/settings/update', isAuthenticated, async (req, res) => {
     }
 
     try {
-        // UPDATED: Query now includes insurance fields
         const query = `
             UPDATE users 
             SET username = $1, email = $2, insurance_provider = $3, policy_number = $4 
