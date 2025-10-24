@@ -26,6 +26,22 @@
                                 <label for="email" class="form-label">Email</label>
                                 <input id="email" name="email" type="email" class="form-control" value="<%= user.email %>" required>
                             </div>
+
+                            <div class="col-12 mt-4">
+                                <h5 class="section-title">Insurance Details</h5>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="insurance_provider" class="form-label">Insurance Provider</label>
+                                <input id="insurance_provider" name="insurance_provider" type="text" class="form-control" 
+                                    value="<%= user.insurance_provider || '' %>" placeholder="e.g., United Healthcare">
+                            </div>
+
+                            <div class="col-md-6">
+                            <label for="policy_number" class="form-label">Policy / Member ID</label>
+                            <input id="policy_number" name="policy_number" type="text" class="form-control" 
+                                value="<%= user.policy_number || '' %>" placeholder="e.g., XZ123456789">
+                            </div>
                             
                             <!-- Password Change Section -->
                             <div class="col-12 mt-5">
