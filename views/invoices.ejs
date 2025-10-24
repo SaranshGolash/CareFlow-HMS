@@ -18,13 +18,18 @@
                     <thead>
                         <tr>
                             <th>Invoice #</th>
-                            <% if (isAdmin) { %><th>Patient ID</th><% } %>
+                            <% if (isAdmin) { %>
+                                <th>Patient ID</th>
+                            <% } %>
                             <th>Date / Due Date</th>
                             <th class="text-end">Total</th>
                             <th class="text-end">Paid</th>
                             <th class="text-end">Balance</th>
                             <th>Status</th>
                             <th>Action</th>
+                            <% if (isAdmin) { %>
+                                <th class="text-center">Claim</th>
+                            <% } %>
                         </tr>
                     </thead>
                     <tbody>
@@ -45,6 +50,13 @@
                                     <!-- FIX: Link to the new detailed payment page -->
                                     <a href="/invoices/<%= invoice.invoice_id %>" class="btn btn-sm btn-primary">Pay / View</a>
                                 </td>
+                                <% if (isAdmin) { %>
+                                    <td class="text-center">
+                                        <a href="/claim/<%= invoice.invoice_id %>" class="btn btn-sm btn-outline-secondary" title="Generate Claim Form">
+                                            <i class="fas fa-file-invoice"></i>
+                                        </a>
+                                    </td>
+                                <% } %>
                             </tr>
                         <% }); %>
                     </tbody>
