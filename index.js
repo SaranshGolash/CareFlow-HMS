@@ -613,17 +613,22 @@ app.get('/settings', isAuthenticated, (req, res) => {
 });
 
 app.post('/settings/update', isAuthenticated, async (req, res) => {
-    const { username, email, user_id } = req.body;
+    const { username, email, user_id, insurance_provider, policy_number } = req.body;
+    const userId = req.session.user.id;
 
-    // Simplistic check to ensure user is only updating their own data
-    if (parseInt(user_id) !== req.session.user.id) {
+    if (parseInt(user_id) !== userId) {
         req.flash('error_msg', 'Authorization failed.');
         return res.redirect('/settings');
     }
 
     try {
-        const query = 'UPDATE users SET username = $1, email = $2 WHERE id = $3';
-        await db.query(query, [username, email, user_id]);
+        // UPDATED: Query now includes insurance fields
+        const query = `
+            UPDATE users 
+            SET username = $1, email = $2, insurance_provider = $3, policy_number = $4 
+            WHERE id = $5
+        `;
+        await db.query(query, [username, email, insurance_provider, policy_number, userId]);
 
         // Update session data
         req.session.user.username = username;
@@ -633,7 +638,7 @@ app.post('/settings/update', isAuthenticated, async (req, res) => {
         res.redirect('/settings');
     } catch (err) {
         console.error('Profile update error:', err);
-        if (err.code === '23505') { // Unique constraint violation
+        if (err.code === '23505') {
             req.flash('error_msg', 'Email or username already taken.');
         } else {
             req.flash('error_msg', 'An error occurred during profile update.');
