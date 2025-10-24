@@ -1,49 +1,37 @@
 <%- include('initials/header.ejs', { title: 'CareFlow - Sign Up' }) %>
 
 <link rel="stylesheet" href="/styles/signup.css">
-
+<section class="vanta-waves-bg">
 <main class="signup-page">
     <div class="signup-wrap">
-        <section class="signup-left" aria-hidden="true">
+        
+        <section class="signup-left animate-on-scroll animate-slide-up" style="transition-delay: 0.1s;" aria-hidden="true">
             <div class="brand">
                 <h1>CareFlow</h1>
                 <p class="tag">Patient-first healthcare management</p>
             </div>
 
             <div class="hero-illustration" role="img" aria-labelledby="signupIllustrationTitle">
-                <svg id="signupIllustration" width="320" height="220" viewBox="0 0 320 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <defs>
-                        <linearGradient id="g" x1="0" x2="1">
-                            <stop offset="0" stop-color="#6f42c1" stop-opacity="0.9"/>
-                            <stop offset="1" stop-color="#0d6efd" stop-opacity="0.9"/>
-                        </linearGradient>
-                    </defs>
-                    <rect rx="18" width="320" height="220" fill="url(#g)"></rect>
-                    <g transform="translate(28,30)" fill="#fff" opacity="0.18">
-                        <circle cx="40" cy="40" r="40"></circle>
-                        <rect x="100" y="10" width="160" height="8" rx="4"></rect>
-                        <rect x="100" y="36" width="120" height="8" rx="4"></rect>
-                        <rect x="100" y="62" width="80" height="8" rx="4"></rect>
-                    </g>
-                </svg>
-            </div>
+                </div>
             <p class="left-note">Join CareFlow to manage appointments, track patients, and streamline clinic workflows.</p>
         </section>
 
-        <aside class="signup-right" aria-label="Create account form area">
+        <aside class="signup-right animate-on-scroll animate-slide-up" style="transition-delay: 0s;" aria-label="Create account form area">
             
             <div class="card" role="region" aria-labelledby="createAccountTitle">
                 <div class="card-body">
-                    <h2 id="createAccountTitle" class="card-title">Create an account</h2>
-                    <form action="/signup" method="POST" id="signupForm" novalidate>
+                    
+                    <h2 id="createAccountTitle" class="card-title animate-load-slide-up" style="animation-delay: 0.2s;">Create an account</h2>
+                    
+                    <form action="/signup" method="POST" id="signupForm" novalidate class="animate-load-slide-up" style="animation-delay: 0.3s;">
                         <div class="form-row">
-                            <label for="username" class="form-label">Full name</label>
+                            <label for="signupUsername" class="form-label">Full name</label>
                             <input id="signupUsername" name="username" type="text" class="form-control" placeholder="Jane Doe" required autocomplete="name" aria-required="true">
                         </div>
 
                         <div class="form-row two-col">
                             <div>
-                                <label for="email" class="form-label">Email</label>
+                                <label for="signupEmail" class="form-label">Email</label>
                                 <input id="signupEmail" name="email" type="email" class="form-control" placeholder="you@email.com" required autocomplete="email" aria-required="true">
                             </div>
                             <div>
@@ -59,9 +47,7 @@
                                 <div class="input-with-icon">
                                     <input id="password" name="password" type="password" class="form-control" minlength="6" required autocomplete="new-password" aria-required="true" aria-describedby="pwHelp" placeholder="Enter password">
                                     <button type="button" class="pw-toggle-icon" data-target="password" aria-pressed="false" aria-label="Show password">
-                                        <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
-                                        <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.1 20.1 0 015-5m3-1.1A9 9 0 0112 5c7 0 11 7 11 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </button>
+                                        </button>
                                 </div>
                             </div>
                             <div>
@@ -69,9 +55,7 @@
                                 <div class="input-with-icon">
                                     <input id="confirmPassword" name="confirm_password" type="password" class="form-control" minlength="6" required autocomplete="new-password" aria-required="true" placeholder="Confirm password">
                                     <button type="button" class="pw-toggle-icon" data-target="confirmPassword" aria-pressed="false" aria-label="Show confirm password">
-                                        <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
-                                        <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.1 20.1 0 015-5m3-1.1A9 9 0 0112 5c7 0 11 7 11 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </button>
+                                        </button>
                                 </div>
                             </div>
                         </div>
@@ -92,7 +76,7 @@
                         <p class="small muted">By creating an account you agree to our <a href="/terms" class="muted-link">Terms</a> and <a href="/privacy" class="muted-link">Privacy Policy</a>.</p>
                     </form>
 
-                    <div class="alt">
+                    <div class="alt animate-load-slide-up" style="animation-delay: 0.4s;">
                         <p>Already have an account? <a href="/login" class="link-primary">Log in</a></p>
                     </div>
                 </div>
@@ -100,151 +84,5 @@
         </aside>
     </div>
 </main>
-
-<!-- 1. Load the EmailJS library from the CDN -->
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
-<!-- 2. All Custom Logic with Extra Safety Checks -->
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("Inline script on signup.ejs is running.");
-
-        // --- Initialize EmailJS ---
-        try {
-            emailjs.init({
-                publicKey: "yCJKnmiujlOeKNAtD", // Replace with your Public Key
-            });
-            console.log("EmailJS Initialized.");
-        } catch(e) {
-            console.error("Failed to initialize EmailJS:", e);
-        }
-
-        // --- Get All Form Elements ---
-        const signupForm = document.getElementById('signupForm');
-        const signupBtn = document.getElementById('signupBtn');
-        const signupUsername = document.getElementById('signupUsername');
-        const signupEmail = document.getElementById('signupEmail');
-        const passwordInput = document.getElementById('password');
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-        const pwNote = document.getElementById('pwNote');
-        const strengthBar = document.getElementById('pwStrength');
-
-        if (!signupForm || !passwordInput || !confirmPasswordInput || !signupBtn) {
-            console.error("A critical form element (form, password, or button) is missing!");
-            return;
-        }
-
-        // --- Password Scoring Logic ---
-        function scorePassword(s) {
-            let score = 0;
-            if (!s) return score;
-            if (s.length >= 6) score += 1;
-            if (s.length >= 10) score += 1;
-            if (/[A-Z]/.test(s)) score += 1;
-            if (/[0-9]/.test(s)) score += 1;
-            if (/[^A-Za-z0-9]/.test(s)) score += 1;
-            return score;
-        }
-
-        // --- Validation & UI Update Logic ---
-        function updateValidation() {
-            const password = passwordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-            const score = scorePassword(password);
-
-            // FIX: Safely update strength bar
-            if (strengthBar) {
-                const pct = Math.round((score / 5) * 100);
-                strengthBar.style.width = pct + '%';
-                if (score <= 1) strengthBar.style.background = '#dc3545';
-                else if (score <= 3) strengthBar.style.background = '#ffc107';
-                else strengthBar.style.background = '#198754';
-            }
-
-            let noteText = '';
-            let btnDisabled = true;
-
-            if (password.length > 0 && password.length < 6) {
-                noteText = 'Password must be at least 6 characters.';
-            } else if (confirmPassword.length > 0 && password !== confirmPassword) {
-                noteText = 'Passwords do not match.';
-            } else if (password.length >= 6 && password === confirmPassword) {
-                noteText = 'Passwords match.';
-                btnDisabled = false;
-            } else if (password.length >= 6) {
-                 noteText = 'Please confirm your password.';
-            }
-
-            // FIX: Safely update the note text
-            if (pwNote) {
-                pwNote.textContent = noteText;
-            }
-            signupBtn.disabled = btnDisabled;
-        }
-
-        passwordInput.addEventListener('input', updateValidation);
-        confirmPasswordInput.addEventListener('input', updateValidation);
-        
-        // --- Password Visibility Toggle Logic ---
-        function initToggleButtons() {
-            const toggles = document.querySelectorAll('.pw-toggle-icon');
-            toggles.forEach(t => {
-                const targetId = t.getAttribute('data-target');
-                const input = document.getElementById(targetId);
-                if (input) {
-                    t.addEventListener('click', function () {
-                        const isHidden = input.type === 'password';
-                        input.type = isHidden ? 'text' : 'password';
-                        t.classList.toggle('showing', isHidden);
-                    });
-                }
-            });
-        }
-        initToggleButtons();
-
-        function sendWelcomeEmail() {
-            // CRITICAL: Replace placeholders with your actual EmailJS IDs
-            const serviceID = 'service_p617k5f';   
-            const templateID = 'template_fr6wcec'; 
-
-            // Get the current values from the form fields
-            const templateParams = {
-                username: signupUsername.value, // Assumes signupUsername element is defined above
-                email: signupEmail.value,       // Assumes signupEmail element is defined above
-            };
-
-            // Check if emailjs object exists before sending
-            if (typeof emailjs !== 'undefined') {
-                console.log("Attempting to send email via EmailJS..."); // Debug log
-                emailjs.send(serviceID, templateID, templateParams)
-                    .then(function(response) {
-                       console.log('EmailJS SUCCESS!', response.status, response.text);
-                    }, function(error) {
-                       console.error('EmailJS FAILED...', error);
-                    });
-            } else {
-                console.error("EmailJS library is not loaded or initialized. Cannot send email.");
-            }
-        }
-
-        // --- Form Submission Handler ---
-        signupForm.addEventListener('submit', function (e) {
-            // First, check if the button is disabled. If so, stop.
-            if (signupBtn.disabled) {
-                e.preventDefault();
-                return;
-            }
-
-            // CRITICAL: Call the email function right here!
-            sendWelcomeEmail();
-
-            // Then, disable the button to prevent multiple submissions.
-            signupBtn.disabled = true;
-            document.getElementById('signupBtnText').textContent = 'Creating…';
-        });
-
-        updateValidation(); // Initial check on page load
-    });
-</script>
-
+</section>
 <%- include('initials/footer.ejs') %>
