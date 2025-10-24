@@ -227,3 +227,7 @@ CREATE TABLE chat_history (
     ai_response TEXT,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE users
+ADD COLUMN insurance_provider VARCHAR(100),
+ADD COLUMN policy_number VARCHAR(100);
