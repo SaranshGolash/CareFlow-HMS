@@ -1,0 +1,58 @@
+:root {
+    --primary: #0d6efd;
+    --accent: #6f42c1;
+    --card: #ffffff;
+    --bg: #f8f9fa;
+    --radius: 12px;
+    --shadow-md: 0 10px 28px rgba(15, 23, 42, 0.08);
+}
+
+body {
+    background-color: var(--bg);
+}
+
+.claim-card {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+    font-size: 0.9rem; /* Forms are often dense */
+}
+
+.claim-card .card-header {
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+}
+
+.section-title {
+    font-weight: 700;
+    color: var(--primary);
+    border-bottom: 2px solid #eee;
+    padding-bottom: 8px;
+    margin-bottom: 1.5rem;
+}
+
+/* Style readonly inputs to look like data fields */
+.form-control[readonly] {
+    background-color: #e9ecef;
+    opacity: 1;
+    border: 1px solid #ced4da;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #555;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #eee;
+    padding-top: 1.5rem;
+}
+
+.btn-primary {
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    border: none;
+}
