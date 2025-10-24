@@ -1267,6 +1267,41 @@ app.post('/api/chat', isAuthenticated, async (req, res) => {
 
 // ADMIN MANAGEMENT ROUTES
 
+// GET: Mock Insurance Claim Page (Admin Only)
+app.get('/claim/:invoice_id', isAuthenticated, isAdmin, async (req, res) => {
+    const { invoice_id } = req.params;
+    const client = await db.connect();
+
+    try {
+        const invoiceQuery = `
+            SELECT i.*, u.username, u.email, u.insurance_provider, u.policy_number 
+            FROM invoices i
+            JOIN users u ON i.user_id = u.id
+            WHERE i.invoice_id = $1
+        `;
+        const invoiceResult = await client.query(invoiceQuery, [invoice_id]);
+
+        if (invoiceResult.rows.length === 0) {
+            req.flash('error_msg', 'Invoice not found.');
+            return res.redirect('/invoices');
+        }
+
+        const itemsResult = await client.query('SELECT * FROM invoice_items WHERE invoice_id = $1', [invoice_id]);
+
+        res.render('claim_form', {
+            invoice: invoiceResult.rows[0],
+            items: itemsResult.rows
+        });
+
+    } catch (err) {
+        console.error('Error generating claim form:', err);
+        req.flash('error_msg', 'Failed to load claim data.');
+        res.redirect('/invoices');
+    } finally {
+        client.release();
+    }
+});
+
 // --- Email Reminders API ---
 
 // GET: Fetches all reminders that are due, including appointment details.
