@@ -1,14 +1,16 @@
 <%- include('initials/header.ejs', { title: 'CareFlow - Login' }) %>
 
-<script src="/functionality/login.js" defer></script>
+<script src="/js/login.js" defer></script>
 <link rel="stylesheet" href="/styles/login.css">
-
+<section class="vanta-waves-bg">
 <main class="login-container">
-    <div class="auth-container">
-        <h2 class="card-title text-center mb-3">Welcome Back</h2>
-        <p class="text-muted text-center mb-4">Sign in to continue to CareFlow</p>
+    
+    <div class="auth-container animate-on-scroll animate-slide-up">
+        
+        <h2 class="card-title text-center mb-3 animate-load-slide-up" style="animation-delay: 0.1s;">Welcome Back</h2>
+        <p class="text-muted text-center mb-4 animate-load-slide-up" style="animation-delay: 0.2s;">Sign in to continue to CareFlow</p>
 
-        <div class="alert alert-info" role="alert">
+        <div class="alert alert-info animate-load-slide-up" role="alert" style="animation-delay: 0.3s;">
             <h5 class="alert-heading"><i class="fas fa-user-shield me-2"></i> Demo Access</h5>
             <p class="mb-1 small">Explore the patient dashboard with these credentials:</p>
             <hr>
@@ -23,7 +25,7 @@
             <p class="mb-0"><strong>Password:</strong> <code>Doctor@10</code></p>
         </div>
 
-        <form action="/login" method="POST" id="loginForm" autocomplete="on" novalidate>
+        <form action="/login" method="POST" id="loginForm" autocomplete="on" novalidate class="animate-load-slide-up" style="animation-delay: 0.4s;">
             <div class="form-row">
                 <label for="email" class="form-label">Email</label>
                 <input id="email" name="email" type="email" class="form-control" required autocomplete="email" placeholder="you@example.com">
@@ -55,5 +57,5 @@
         </form>
     </div>
 </main>
-
+</section>
 <%- include('initials/footer.ejs') %>
