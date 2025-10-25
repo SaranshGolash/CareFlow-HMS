@@ -1104,6 +1104,195 @@ app.get('/doctor/appointment/:id', isAuthenticated, async (req, res) => {
     }
 });
 
+// --- API ROUTES (Chatbot) ---
+
+// --- API ROUTES (Chatbot using OpenAI) ---
+
+app.post('/api/chat', isAuthenticated, async (req, res) => {
+    const userMessage = req.body.message;
+    const userId = req.session.user.id; 
+
+    if (!userMessage) {
+        return res.status(400).json({ error: 'Message content is required.' });
+    }
+
+    const client = await db.connect(); 
+    try {
+        await client.query('BEGIN');
+
+        let aiResponseText = "Sorry, I couldn't process that request at the moment."; 
+        try {
+            console.log("Attempting to get completion from OpenAI...");
+            
+            // --- Call OpenAI API ---
+            const completion = await openai.chat.completions.create({
+                model: "gpt-3.5-turbo", // Or another model like "gpt-4" if you have access
+                messages: [
+                    { role: "system", content: "You are a helpful assistant for CareFlow HMS. Answer concisely." },
+                    { role: "user", content: userMessage }
+                ],
+            });
+            // -----------------------
+
+            aiResponseText = completion.choices[0]?.message?.content?.trim() || aiResponseText;
+            console.log("OpenAI Response:", aiResponseText); 
+
+        } catch (aiError) {
+             console.error("!!! OpenAI API CRASH:", aiError); 
+             if (aiError.status === 401) {
+                 aiResponseText = "OpenAI API authentication failed. Check your API key.";
+             } else if (aiError.status === 429) {
+                 aiResponseText = "OpenAI API rate limit reached or billing issue.";
+             } else {
+                 aiResponseText = "Sorry, the AI service couldn't respond. Please try again later.";
+             }
+        }
+
+        // --- Save chat to database (code remains the same) ---
+        const historyQuery = `
+            INSERT INTO chat_history (user_id, user_message, ai_response)
+            VALUES ($1, $2, $3)
+        `;
+        await client.query(historyQuery, [userId, userMessage, aiResponseText]); 
+        await client.query('COMMIT');
+
+        // --- Send AI response back to frontend (code remains the same) ---
+        res.json({ reply: aiResponseText });
+
+    } catch (dbOrOtherError) { 
+        await client.query('ROLLBACK');
+        console.error('Chat processing or DB error:', dbOrOtherError); 
+        res.status(500).json({ error: 'Failed to process chat message due to a server error.' }); 
+    } finally {
+        client.release();
+    }
+});
+
+// GET: View Invoices List (Admin or Patient-Specific)
+app.get('/invoices', isAuthenticated, async (req, res) => {
+    const userId = req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+    
+    let query = 'SELECT * FROM invoices ';
+    const params = [];
+
+    if (!isAdminUser) {
+        query += 'WHERE user_id = $1 ';
+        params.push(userId);
+    }
+    
+    query += 'ORDER BY invoice_date DESC';
+
+    try {
+        const result = await db.query(query, params);
+        res.render('invoices', { invoices: result.rows, isAdmin: isAdminUser });
+    } catch (err) {
+        console.error('Error fetching invoices:', err);
+        req.flash('error_msg', 'Error fetching invoice data.');
+        res.redirect(isAdminUser ? '/dashboard' : '/');
+    }
+});
+
+// GET: View Single Invoice Detail / Payment Portal
+app.get('/invoices/:id', isAuthenticated, async (req, res) => {
+    const invoiceId = parseInt(req.params.id);
+    const userId = req.session.user.id;
+    const isAdminUser = req.session.user.role === 'admin';
+    
+    try {
+        const invoice = await fetchInvoiceDetails(invoiceId, isAdminUser ? null : userId);
+
+        if (!invoice) {
+            req.flash('error_msg', 'Invoice not found or access denied.');
+            return res.redirect('/invoices');
+        }
+
+        // Fetch the user's current wallet balance from the session
+        const walletBalance = req.session.user.wallet_balance || 0;
+        
+        res.render('pay_invoice', { 
+            invoice: invoice, 
+            items: invoice.items,
+            user: req.session.user,
+            walletBalance: parseFloat(walletBalance) // Pass wallet balance to the view
+        });
+
+    } catch (err) {
+        console.error(`Error loading invoice ${invoiceId}:`, err);
+        req.flash('error_msg', 'Error loading invoice details.');
+        res.redirect('/invoices');
+    }
+});
+
+
+// POST: Process Payment (Mock Transaction)
+app.post('/pay-invoice', isAuthenticated, async (req, res) => {
+    const { invoice_id, payment_amount, outstanding_balance } = req.body;
+    const userId = req.session.user.id;
+    
+    // Convert inputs and ensure validation
+    const amount = parseFloat(payment_amount);
+    const outstanding = parseFloat(outstanding_balance);
+    const invoiceId = parseInt(invoice_id);
+
+    if (isNaN(amount) || amount <= 0 || amount > outstanding) {
+        req.flash('error_msg', 'Invalid payment amount submitted. Amount must be positive and not exceed outstanding balance.');
+        return res.redirect(`/invoices/${invoiceId}`);
+    }
+
+    const client = await db.connect(); // Acquire client from pool
+    try {
+        await client.query('BEGIN');
+        
+        // 1. Lock the invoice row for update and retrieve current data
+        const checkQuery = 'SELECT total_amount, amount_paid, user_id FROM invoices WHERE invoice_id = $1 AND user_id = $2 FOR UPDATE';
+        const checkResult = await client.query(checkQuery, [invoiceId, userId]);
+        const invoice = checkResult.rows[0];
+
+        if (!invoice) {
+            throw new Error('Invoice not found or unauthorized access.');
+        }
+
+        // 2. Calculate new payment status
+        const newPaidAmount = parseFloat(invoice.amount_paid) + amount;
+        
+        // Status logic: Check if the new paid amount matches the total amount (allowing for slight floating point error)
+        let newStatus = 'Partial';
+        if (newPaidAmount >= parseFloat(invoice.total_amount) - 0.005) { 
+            newStatus = 'Paid';
+        }
+        
+        // 3. Update the Invoice record
+        const updateQuery = `
+            UPDATE invoices 
+            SET amount_paid = $1, status = $2 
+            WHERE invoice_id = $3
+        `;
+        await client.query(updateQuery, [newPaidAmount.toFixed(2), newStatus, invoiceId]);
+
+        // 4. Log the transaction (Optional for the current bug, but good practice)
+        const transactionQuery = `
+            INSERT INTO wallet_transactions (user_id, amount, transaction_type, reference_id, description)
+            VALUES ($1, $2, 'Payment', $3, $4)
+        `;
+        await client.query(transactionQuery, [userId, amount, String(invoiceId), `Payment submitted via portal.`]);
+
+
+        await client.query('COMMIT');
+
+        req.flash('success_msg', `Payment of $${amount.toFixed(2)} processed successfully! Status: ${newStatus}.`);
+        res.redirect(`/invoices/${invoiceId}`);
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Payment processing error:', err);
+        req.flash('error_msg', `Payment failed: ${err.message}`);
+        res.redirect(`/invoices/${invoiceId}`);
+    } finally {
+        client.release();
+    }
+});
+
 // GET: Doctor views a specific patient's list of medical records
 app.get('/doctor/patient/:userId/records', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     const patientId = req.params.userId;
@@ -1226,70 +1415,6 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
         console.error(`Error fetching record ID ${recordId} for doctor:`, err);
         req.flash('error_msg', 'An error occurred while retrieving the record.');
         res.redirect('/doctor/dashboard');
-    }
-});
-
-// --- API ROUTES (Chatbot) ---
-
-// --- API ROUTES (Chatbot using OpenAI) ---
-
-app.post('/api/chat', isAuthenticated, async (req, res) => {
-    const userMessage = req.body.message;
-    const userId = req.session.user.id; 
-
-    if (!userMessage) {
-        return res.status(400).json({ error: 'Message content is required.' });
-    }
-
-    const client = await db.connect(); 
-    try {
-        await client.query('BEGIN');
-
-        let aiResponseText = "Sorry, I couldn't process that request at the moment."; 
-        try {
-            console.log("Attempting to get completion from OpenAI...");
-            
-            // --- Call OpenAI API ---
-            const completion = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo", // Or another model like "gpt-4" if you have access
-                messages: [
-                    { role: "system", content: "You are a helpful assistant for CareFlow HMS. Answer concisely." },
-                    { role: "user", content: userMessage }
-                ],
-            });
-            // -----------------------
-
-            aiResponseText = completion.choices[0]?.message?.content?.trim() || aiResponseText;
-            console.log("OpenAI Response:", aiResponseText); 
-
-        } catch (aiError) {
-             console.error("!!! OpenAI API CRASH:", aiError); 
-             if (aiError.status === 401) {
-                 aiResponseText = "OpenAI API authentication failed. Check your API key.";
-             } else if (aiError.status === 429) {
-                 aiResponseText = "OpenAI API rate limit reached or billing issue.";
-             } else {
-                 aiResponseText = "Sorry, the AI service couldn't respond. Please try again later.";
-             }
-        }
-
-        // --- Save chat to database (code remains the same) ---
-        const historyQuery = `
-            INSERT INTO chat_history (user_id, user_message, ai_response)
-            VALUES ($1, $2, $3)
-        `;
-        await client.query(historyQuery, [userId, userMessage, aiResponseText]); 
-        await client.query('COMMIT');
-
-        // --- Send AI response back to frontend (code remains the same) ---
-        res.json({ reply: aiResponseText });
-
-    } catch (dbOrOtherError) { 
-        await client.query('ROLLBACK');
-        console.error('Chat processing or DB error:', dbOrOtherError); 
-        res.status(500).json({ error: 'Failed to process chat message due to a server error.' }); 
-    } finally {
-        client.release();
     }
 });
 
@@ -1775,128 +1900,6 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
         res.redirect('/new-invoice');
     } finally {
         client.release(); // Release the client back to the pool
-    }
-});
-
-
-// GET: View Invoices List (Admin or Patient-Specific)
-app.get('/invoices', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
-    const isAdminUser = req.session.user.role === 'admin';
-    
-    let query = 'SELECT * FROM invoices ';
-    const params = [];
-
-    if (!isAdminUser) {
-        query += 'WHERE user_id = $1 ';
-        params.push(userId);
-    }
-    
-    query += 'ORDER BY invoice_date DESC';
-
-    try {
-        const result = await db.query(query, params);
-        res.render('invoices', { invoices: result.rows, isAdmin: isAdminUser });
-    } catch (err) {
-        console.error('Error fetching invoices:', err);
-        req.flash('error_msg', 'Error fetching invoice data.');
-        res.redirect(isAdminUser ? '/dashboard' : '/');
-    }
-});
-
-// GET: View Single Invoice Detail / Payment Portal
-app.get('/invoices/:id', isAuthenticated, async (req, res) => {
-    const invoiceId = parseInt(req.params.id);
-    const userId = req.session.user.id;
-    const isAdminUser = req.session.user.role === 'admin';
-    
-    try {
-        // Fetch invoice details and items, enforcing user security unless admin
-        const invoice = await fetchInvoiceDetails(invoiceId, isAdminUser ? null : userId);
-
-        if (!invoice) {
-            req.flash('error_msg', 'Invoice not found or access denied.');
-            return res.redirect('/invoices');
-        }
-        
-        res.render('pay_invoice', { 
-            invoice: invoice, 
-            items: invoice.items 
-        });
-
-    } catch (err) {
-        console.error(`Error loading invoice ${invoiceId}:`, err);
-        req.flash('error_msg', 'Error loading invoice details.');
-        res.redirect('/invoices');
-    }
-});
-
-
-// POST: Process Payment (Mock Transaction)
-app.post('/pay-invoice', isAuthenticated, async (req, res) => {
-    const { invoice_id, payment_amount, outstanding_balance } = req.body;
-    const userId = req.session.user.id;
-    
-    // Convert inputs and ensure validation
-    const amount = parseFloat(payment_amount);
-    const outstanding = parseFloat(outstanding_balance);
-    const invoiceId = parseInt(invoice_id);
-
-    if (isNaN(amount) || amount <= 0 || amount > outstanding) {
-        req.flash('error_msg', 'Invalid payment amount submitted. Amount must be positive and not exceed outstanding balance.');
-        return res.redirect(`/invoices/${invoiceId}`);
-    }
-
-    const client = await db.connect(); // Acquire client from pool
-    try {
-        await client.query('BEGIN');
-        
-        // 1. Lock the invoice row for update and retrieve current data
-        const checkQuery = 'SELECT total_amount, amount_paid, user_id FROM invoices WHERE invoice_id = $1 AND user_id = $2 FOR UPDATE';
-        const checkResult = await client.query(checkQuery, [invoiceId, userId]);
-        const invoice = checkResult.rows[0];
-
-        if (!invoice) {
-            throw new Error('Invoice not found or unauthorized access.');
-        }
-
-        // 2. Calculate new payment status
-        const newPaidAmount = parseFloat(invoice.amount_paid) + amount;
-        
-        // Status logic: Check if the new paid amount matches the total amount (allowing for slight floating point error)
-        let newStatus = 'Partial';
-        if (newPaidAmount >= parseFloat(invoice.total_amount) - 0.005) { 
-            newStatus = 'Paid';
-        }
-        
-        // 3. Update the Invoice record
-        const updateQuery = `
-            UPDATE invoices 
-            SET amount_paid = $1, status = $2 
-            WHERE invoice_id = $3
-        `;
-        await client.query(updateQuery, [newPaidAmount.toFixed(2), newStatus, invoiceId]);
-
-        // 4. Log the transaction (Optional for the current bug, but good practice)
-        const transactionQuery = `
-            INSERT INTO wallet_transactions (user_id, amount, transaction_type, reference_id, description)
-            VALUES ($1, $2, 'Payment', $3, $4)
-        `;
-        await client.query(transactionQuery, [userId, amount, String(invoiceId), `Payment submitted via portal.`]);
-
-
-        await client.query('COMMIT');
-
-        req.flash('success_msg', `Payment of $${amount.toFixed(2)} processed successfully! Status: ${newStatus}.`);
-        res.redirect(`/invoices/${invoiceId}`);
-
-    } catch (err) {
-        await client.query('ROLLBACK');
-        console.error('Payment processing error:', err);
-        req.flash('error_msg', `Payment failed: ${err.message}`);
-        res.redirect(`/invoices/${invoiceId}`);
-    } finally {
-        client.release();
     }
 });
 
