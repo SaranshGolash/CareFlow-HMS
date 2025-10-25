@@ -87,8 +87,9 @@
 
                             <div class="divider"><span>or</span></div>
 
-                            <div class="gateway-payment-section mt-4">
-                                <h5 class="mb-3 text-primary">2. Pay with Card (via Stripe)</h5>
+                            <div class="gateway-payment-section mt-4 animate-on-scroll animate-slide-up">
+                                
+                                <h5 class="mb-3 text-primary">2. Pay with Card</h5>
                                 
                                 <div class="nav flex-column nav-pills me-3 payment-tabs" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                                     <button class="nav-link active" id="v-pills-card-tab" data-bs-toggle="pill" data-bs-target="#v-pills-card" type="button" role="tab">
@@ -98,9 +99,42 @@
                                 
                                 <div class="tab-content mt-3" id="v-pills-tabContent">
                                     <div class="tab-pane fade show active" id="v-pills-card" role="tabpanel">
-                                        <h6 class="text-muted mb-3">Secure Payment powered by Stripe Checkout.</h6>
-                                        <form id="payment-form" class="row g-3">
-                                            </form>
+                                        
+                                        <h6 class="text-muted mb-3">Enter card details (Mock Form)</h6>
+                                        
+                                        <form action="/pay-invoice" method="POST" class="row g-3">
+                                            <input type="hidden" name="invoice_id" value="<%= invoice.invoice_id %>">
+                                            <input type="hidden" name="outstanding_balance" value="<%= outstanding %>">
+
+                                            <div class="col-12 animate-load-slide-up" style="animation-delay: 0.1s;">
+                                                <label for="payment_amount_card" class="form-label">Amount to Pay</label>
+                                                <div class="input-group">
+                                                    <span class="input-group-text">$</span>
+                                                    <input type="number" id="payment_amount_card" name="payment_amount" class="form-control" 
+                                                           value="<%= outstanding %>" min="0.01" max="<%= outstanding %>" step="0.01" required>
+                                                </div>
+                                            </div>
+
+                                            <div class="col-12 animate-load-slide-up" style="animation-delay: 0.2s;">
+                                                <label for="card_number" class="form-label">Card Number</label>
+                                                <input type="text" id="card_number" class="form-control" placeholder="4242 4242 4242 4242" required>
+                                            </div>
+                                            
+                                            <div class="col-md-6 animate-load-slide-up" style="animation-delay: 0.3s;">
+                                                <label for="card_expiry" class="form-label">Expiry (MM/YY)</label>
+                                                <input type="text" id="card_expiry" class="form-control" placeholder="12/28" required>
+                                            </div>
+                                            <div class="col-md-6 animate-load-slide-up" style="animation-delay: 0.4s;">
+                                                <label for="card_cvv" class="form-label">CVV</label>
+                                                <input type="text" id="card_cvv" class="form-control" placeholder="123" required>
+                                            </div>
+
+                                            <div class="col-12 mt-4 animate-load-slide-up" style="animation-delay: 0.5s;">
+                                                <button type="submit" class="btn btn-primary w-100 btn-lg">
+                                                    <i class="fas fa-lock me-2"></i> Pay $<%= outstanding %>
+                                                </button>
+                                            </div>
+                                        </form>
                                     </div>
                                     </div>
                             </div>
