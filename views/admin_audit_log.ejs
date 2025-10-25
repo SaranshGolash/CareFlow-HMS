@@ -1,0 +1,42 @@
+<%- include('initials/header.ejs', { title: 'Audit Log' }) %>
+<link rel="stylesheet" href="/styles/admin_audit_log.css">
+    <div class="container py-5">
+        <h2 class="mb-4 text-primary"><i class="fas fa-history me-3"></i> System Audit Log</h2>
+        <p class="text-muted lead">Showing the 100 most recent critical events in the system.</p>
+        
+        <div class="table-responsive log-table-container shadow-md animate-on-scroll animate-slide-up">
+            <table class="table table-hover table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>User (Role)</th>
+                        <th>Action</th>
+                        <th>Target ID</th>
+                        <th>IP Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (logs.length > 0) { %>
+                        <% logs.forEach(log => { %>
+                            <tr>
+                                <td><%= new Date(log.timestamp).toLocaleString() %></td>
+                                <td class="fw-bold">
+                                    <%= log.user_username || `(ID: ${log.user_id || 'N/A'})` %>
+                                    (<%= log.user_role || 'System' %>)
+                                </td>
+                                <td><span class="badge bg-secondary"><%= log.action_type %></span></td>
+                                <td class="text-center"><%= log.target_id || '-' %></td>
+                                <td><%= log.ip_address %></td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="5" class="text-center p-4">No audit logs found.</td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+        
+    </div>
+<%- include('initials/footer.ejs') %>
