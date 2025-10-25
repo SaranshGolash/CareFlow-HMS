@@ -1293,6 +1293,68 @@ app.post('/pay-invoice', isAuthenticated, async (req, res) => {
     }
 });
 
+// POST: Pay an Invoice using the internal Wallet (Patient-only)
+app.post('/invoices/:id/pay-with-wallet', isAuthenticated, async (req, res) => {
+    const invoiceId = parseInt(req.params.id);
+    const userId = req.session.user.id;
+    const outstandingBalance = parseFloat(req.body.outstanding_balance); // Get amount from form
+
+    // Make sure user isn't an admin
+    if (req.session.user.role === 'admin') {
+        req.flash('error_msg', 'Admins cannot pay invoices.');
+        return res.redirect(`/invoices/${invoiceId}`);
+    }
+
+    const client = await db.connect(); // Get a client from the pool for a transaction
+    try {
+        await client.query('BEGIN');
+
+        // 1. Lock and check user's wallet balance
+        const userResult = await client.query('SELECT wallet_balance FROM users WHERE id = $1 FOR UPDATE', [userId]);
+        const walletBalance = parseFloat(userResult.rows[0].wallet_balance);
+
+        // 2. Check for sufficient funds
+        if (walletBalance < outstandingBalance) {
+            await client.query('ROLLBACK');
+            req.flash('error_msg', 'Insufficient funds in your wallet. Please deposit more money first.');
+            return res.redirect(`/invoices/${invoiceId}`);
+        }
+
+        // 3. Subtract from wallet
+        const newWalletBalance = walletBalance - outstandingBalance;
+        await client.query('UPDATE users SET wallet_balance = $1 WHERE id = $2', [newWalletBalance, userId]);
+
+        // 4. Update the invoice (mark as paid)
+        await client.query(
+            "UPDATE invoices SET amount_paid = total_amount, status = 'Paid' WHERE invoice_id = $1 AND user_id = $2",
+            [invoiceId, userId]
+        );
+        
+        // 5. Log the wallet transaction
+        await client.query(
+            'INSERT INTO wallet_transactions (user_id, amount, transaction_type, reference_id, description) VALUES ($1, $2, $3, $4, $5)',
+            [userId, -outstandingBalance, 'Payment', `invoice_${invoiceId}`, `Payment for Invoice #${invoiceId}`]
+        );
+
+        // 6. Commit the transaction
+        await client.query('COMMIT');
+
+        // 7. Update the session balance
+        req.session.user.wallet_balance = newWalletBalance;
+
+        req.flash('success_msg', `Payment of $${outstandingBalance.toFixed(2)} successful! Your invoice is now paid.`);
+        res.redirect(`/invoices/${invoiceId}`);
+
+    } catch (err) {
+        await client.query('ROLLBACK');
+        console.error('Wallet payment processing error:', err);
+        req.flash('error_msg', 'Payment failed due to a server error.');
+        res.redirect(`/invoices/${invoiceId}`);
+    } finally {
+        client.release();
+    }
+});
+
 // GET: Doctor views a specific patient's list of medical records
 app.get('/doctor/patient/:userId/records', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     const patientId = req.params.userId;
