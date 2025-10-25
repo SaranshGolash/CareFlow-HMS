@@ -1,129 +1,128 @@
 ## 🏥 CareFlow HMS (Hospital Management System)
-CareFlow HMS is a modern, full-stack Hospital Management System designed to streamline patient care workflows, manage appointments, and provide comprehensive health monitoring with secure, role-based access control.
+CareFlow HMS is a comprehensive, full-stack web application designed to simulate a modern, all-in-one management solution for medical clinics and hospitals. It streamlines clinical workflows, automates administrative tasks, and empowers patients with secure access to their health information.
 
-This application was built using a traditional <b>HTML, CSS</b> and <b>EJS</b> <b>Node.js/Express</b> for backend and <b>PostgreSQL</b> for persistence, making it robust, scalable, and production-ready.
+This project is built with Node.js/Express, PostgreSQL, and EJS, focusing on security, role-based access, and a clean, responsive user interface.
 
 ## ✨ Key Features
-<b><i>Secure Authentication</i></b>: User registration and login using bcrypt for password hashing and secure session management.
+A brief overview of the core functionalities, categorized by user role:
 
-<b><i>Role-Based Access Control</i> (RBAC)</b>: Users are classified as user (Patient) or admin (Staff/Doctor), restricting access to sensitive functions.
+## 👤 Patient Features
+<b>Secure Authentication</b>: Secure signup (with email verification) and login.
 
-<b><i>Appointments Management</i></b>: Users can view their scheduled appointments, and staff can manage the overall schedule.
+<b>Patient Dashboard</b>: A personalized hub to view upcoming appointments, outstanding balances, wallet funds, and recent prescriptions.
 
-<b><i>Patient Records</i></b>: Secure access for patients to view their medical history and diagnoses.
+Appointment Management: Book new appointments, view upcoming/past schedules, and confirm attendance.
 
-<b><i>Health Monitoring</i></b>: Dashboard displaying latest vital signs (HR, BP, Glucose, SpO2) and historical trend data.
+Medical Records: View a complete history of all medical records and prescriptions, including doctor's notes and diagnoses.
 
-<b><i>Admin Data Entry</i></b>: Staff can access dedicated interfaces to manually add new Medical Records and Health Vitals for patients.
+Health Monitoring: A visual dashboard (Chart.js) to track personal health vitals (Heart Rate, BP, Glucose, etc.).
 
-<b><i>User Settings</i></b>: Logged-in users can update their username/email and securely change their password.
+Billing & Wallet: View itemized invoices, manage a personal wallet (add/withdraw funds), and pay outstanding bills via a mock payment portal (Stripe-ready).
 
-## ⚙️ Tech Stack
-<strong><strong>Backend & Database</strong></strong>:
+Secure Inbox: Send and receive secure messages from the administrative staff/doctors.
 
-<b><i>Node.js / Express</i></b>: Core server framework.
+## 🩺 Doctor Features
+Doctor Dashboard: A unique dashboard that shows only the doctor's scheduled appointments, grouped by "Today" and "Upcoming".
 
-<b><i>PostgreSQL</i></b>: Primary database for persistence.
+Patient History View: Securely access the complete medical and vital history for any patient with whom they have an appointment.
 
-<b><i>bcrypt</i></b>: Secure password hashing.
+E-Prescribing (Mock): Issue new prescriptions directly from a patient's medical record.
 
-<b><i>express-session / connect-flash</i></b>: Session management and messaging.
+Teleconsultation (Mock): A "Start Call" button on appointments that leads to a mock video call interface.
 
-## Frontend:
+## ⚙️ Admin Features
+Admin Analytics: A high-level analytics dashboard showing KPIs (Key Performance Indicators) like total revenue, outstanding balances, and patient/appointment counts.
 
-<b><i>EJS (Embedded JavaScript Templating)</i></b>: Dynamic HTML rendering.
+Invoice & Billing Management: Generate detailed, itemized invoices for patients using a predefined Service Catalog.
 
-<b><i>Bootstrap 5</i></b>: Fully responsive styling and UI components.
+Service Catalog: Full CRUD (Create, Read, Update, Delete) for managing clinic service prices.
 
-<b><i>Custom CSS</i></b>: Maintaining a clean, blue/purple gradient color palette across the application.
+Inventory Management: Track clinic supplies (e.g., "Paracetamol," "Syringes"), with Low Stock Alerts on the dashboard.
 
-## 🚀 Setup and Installation (Local Development)
-Follow these steps to get CareFlow HMS running on your local machine.
+User Management: View all patients and staff, and promote users to "Admin" or "Doctor" roles.
 
-Prerequisites
-Node.js (v18+)
+Automated Reminders (Mock): A "Process Reminders" button that simulates sending queued appointment reminder emails.
 
-PostgreSQL installed and running locally.
+Audit Log: A secure, read-only log that tracks critical actions (e.g., "USER_LOGIN," "VIEWED_RECORD," "ADMIN_WALLET_ADJUSTMENT") for compliance.
 
-1. <b>Clone the Repository & Install Dependencies</b>
-git clone <repository_url> careflow-hms
-cd careflow-hms
+## 🤖 System-Wide Features
+AI Chatbot: A floating chatbot integrated with the Gemini/OpenAI API to answer user queries.
+
+Automated Emails: Uses EmailJS (or Nodemailer) to send a welcome email on signup and appointment reminders.
+
+Dynamic UI: Polished, responsive design with 3D background animations (Vanta.js) and scroll-triggered animations (AOS).
+
+## 🛠️ Technology Stack
+Backend: Node.js, Express.js
+
+Database: PostgreSQL
+
+Frontend: EJS (Embedded JavaScript), Bootstrap 5, Chart.js, Vanta.js
+
+Core Libraries:
+
+pg (node-postgres) for database connection pooling.
+
+bcrypt for secure password hashing.
+
+express-session & connect-flash for user sessions and messaging.
+
+method-override for PUT/DELETE from forms.
+
+APIs & Services:
+
+Email: EmailJS
+
+AI: Google Gemini / OpenAI
+
+Payments: Stripe (for mock checkout)
+
+## 🚀 Setup & Installation
+Clone the repository:
+
+Bash
+
+git clone https://github.com/SaranshGolash/CareFlow-HMS.git
+cd CareFlow-HMS
+Install dependencies:
+
+Bash
+
 npm install
+Set up Database:
 
-2. <b>Configure Environment Variables</b>
-Create a file named .env in the root directory and fill it with your local PostgreSQL credentials:
+Create a PostgreSQL database.
 
-# Server Configuration
-PORT=3000
-SESSION_SECRET="your-long-secret-key-for-sessions"
+Run all the CREATE TABLE and ALTER TABLE SQL scripts from the project documentation to build the schema.
 
-# Local PostgreSQL Credentials (MUST MATCH your local setup)
-DB_USER=postgres
-DB_HOST=localhost
-DB_NAME=careflow_db
-DB_PASSWORD=your_local_password
-DB_PORT=5432
+Configure Environment Variables:
 
-3. <b>Initialize Database Schema</b>
-Access your local PostgreSQL client (pgAdmin, DBeaver, or psql) and run the following schema creation scripts to build all necessary tables:
+Create a .env file in the root directory.
 
--- 1. <b><i>Create the USERS table</i></b>
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    role VARCHAR(10) NOT NULL DEFAULT 'user',
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
+Add all required variables (Database URL, Session Secret, EmailJS keys, Gemini/OpenAI API Key).
 
--- 2. <b><i>Create the APPOINTMENTS table></i></b>
-CREATE TABLE appointments (
-    id SERIAL PRIMARY KEY,
-    patient_name VARCHAR(255) NOT NULL,
-    gender VARCHAR(10),
-    phone VARCHAR(20),
-    doctor_name VARCHAR(255),
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE
-);
+Run the server:
 
--- 3. <b><i>Create the MEDICAL_RECORDS table</i></b>
-CREATE TABLE medical_records (
-    record_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-    record_date DATE DEFAULT CURRENT_DATE,
-    diagnosis TEXT NOT NULL,
-    treatment_plan TEXT,
-    doctor_notes TEXT,
-    blood_pressure VARCHAR(20),
-    allergies TEXT
-);
+Bash
 
--- 4. <b><i>Create the HEALTH_VITALS table</i></b>
-CREATE TABLE health_vitals (
-    vital_id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
-    reading_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    heart_rate INTEGER,
-    temperature DECIMAL(4, 2),
-    spo2 DECIMAL(4, 1),
-    glucose_level DECIMAL(5, 2),
-    systolic_bp INTEGER,
-    diastolic_bp INTEGER
-);
-
-4. <b>Run the Application</b>
 npm start
+The application will be running at http://localhost:3000.
 
-The application will be accessible at http://localhost:3000.
+## 🔑 Demo Credentials
+Patient:
 
-## 🔒 Admin Access
-To test the full system functionality:
+Email: patient@gmail.com
 
-Sign Up a new user on the /signup page (e.g., email: admin@careflow.com).
+Password: Patient@10
 
-Use your SQL client (pgAdmin) to manually update that user's role:
+Doctor:
 
-UPDATE users SET role = 'admin' WHERE email = 'admin@careflow.com';
+Email: doctor@gmail.com
 
-Log in as this user to access admin-only forms.
+Password: Doctor@10
+
+Admin:
+
+Email: admin@gmail.com
+
+Password: Admin@10
