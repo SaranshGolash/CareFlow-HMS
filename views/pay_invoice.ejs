@@ -65,84 +65,52 @@
                     </div>
                     
                     <div class="card-footer bg-light p-4">
+                        <% const outstanding = (invoice.total_amount - invoice.amount_paid).toFixed(2); %>
+    
                         <% if (outstanding > 0) { %>
-                            <h5 class="mb-3 text-primary">Select Payment Method</h5>
-                            
-                            <div class="row g-3">
-                                
-                                <div class="col-md-4">
-                                    <div class="nav flex-column nav-pills me-3 payment-tabs" id="v-pills-tab" role="tablist" aria-orientation="vertical">
-                                        <button class="nav-link active" id="v-pills-card-tab" data-bs-toggle="pill" data-bs-target="#v-pills-card" type="button" role="tab" aria-controls="v-pills-card" aria-selected="true">
-                                            <i class="fas fa-credit-card me-2"></i> Card (Debit/Credit)
+                            <div class="wallet-payment-section mb-4">
+                                <h5 class="mb-3 text-primary">1. Pay with your Wallet</h5>
+                                <% if (walletBalance >= outstanding) { %>
+                                    <form action="/invoices/<%= invoice.invoice_id %>/pay-with-wallet" method="POST">
+                                        <input type="hidden" name="outstanding_balance" value="<%= outstanding %>">
+                                        <p>Your wallet balance: <strong class="text-success">$<%= walletBalance.toFixed(2) %></strong></p>
+                                        <button type="submit" class="btn btn-success btn-lg w-100">
+                                            <i class="fas fa-wallet me-2"></i> Pay $S<%= outstanding %> Instantly from Wallet
                                         </button>
-                                        <button class="nav-link" id="v-pills-upi-tab" data-bs-toggle="pill" data-bs-target="#v-pills-upi" type="button" role="tab" aria-controls="v-pills-upi" aria-selected="false">
-                                            <i class="fas fa-qrcode me-2"></i> UPI / QR Code
-                                        </button>
-                                        <button class="nav-link" id="v-pills-netbanking-tab" data-bs-toggle="pill" data-bs-target="#v-pills-netbanking" type="button" role="tab" aria-controls="v-pills-netbanking" aria-selected="false">
-                                            <i class="fas fa-bank me-2"></i> Net Banking
-                                        </button>
+                                    </form>
+                                <% } else { %>
+                                    <div class="alert alert-warning small">
+                                        <p class="fw-bold mb-1">Insufficient Wallet Funds</p>
+                                        <p class="mb-0">Your balance is $<%= walletBalance.toFixed(2) %>, but $<%= outstanding %> is required.</p>
+                                        <a href="/wallet" class="alert-link">Add funds to your wallet?</a>
                                     </div>
+                                <% } %>
+                            </div>
+
+                            <div class="divider"><span>or</span></div>
+
+                            <div class="gateway-payment-section mt-4">
+                                <h5 class="mb-3 text-primary">2. Pay with Card (via Stripe)</h5>
+            
+                                <div class="nav flex-column nav-pills me-3 payment-tabs" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                                    <button class="nav-link active" id="v-pills-card-tab" data-bs-toggle="pill" data-bs-target="#v-pills-card" type="button" role="tab">
+                                        <i class="fas fa-credit-card me-2"></i> Card (Debit/Credit)
+                                    </button>
                                 </div>
-
-                                <div class="col-md-8">
-                                    <div class="tab-content" id="v-pills-tabContent">
-                                        
-                                        <div class="tab-pane fade show active" id="v-pills-card" role="tabpanel" aria-labelledby="v-pills-card-tab">
-                                            <h6 class="text-muted mb-3">Secure Card Transaction (Mock Gateway)</h6>
-                                            <form action="/pay-invoice" method="POST" class="row g-3">
-                                                <input type="hidden" name="invoice_id" value="<%= invoice.invoice_id %>">
-                                                <input type="hidden" name="outstanding_balance" value="<%= outstanding %>">
-
-                                                <div class="col-12">
-                                                    <label for="payment_amount_card" class="form-label">Amount ($)</label>
-                                                    <input type="number" id="payment_amount_card" name="payment_amount" class="form-control" 
-                                                           value="<%= outstanding %>" min="0.01" max="<%= outstanding %>" step="0.01" required>
-                                                    <div class="form-text">Enter amount (e.g., $<%= outstanding %> for full payment)</div>
-                                                </div>
-                                                
-                                                <div class="col-12"><input type="text" class="form-control" placeholder="Card Number (Mock)" required></div>
-                                                <div class="col-md-6"><input type="text" class="form-control" placeholder="Expiry Date (MM/YY)" required></div>
-                                                <div class="col-md-6"><input type="text" class="form-control" placeholder="CVV" required></div>
-
-                                                <div class="col-12 mt-4">
-                                                    <button type="submit" class="btn btn-primary btn-lg w-100">
-                                                        <i class="fas fa-lock me-2"></i> Process Card Payment
-                                                    </button>
-                                                </div>
-                                            </form>
-                                        </div>
-
-                                        <div class="tab-pane fade" id="v-pills-upi" role="tabpanel" aria-labelledby="v-pills-upi-tab">
-                                            <h6 class="text-muted mb-3">Scan to Pay using your preferred UPI app.</h6>
-                                            <div class="text-center p-3 bg-white border rounded">
-                                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=MockPaymentID_<%= invoice.invoice_id %>" alt="QR Code" class="img-fluid mb-3">
-                                                <p class="small text-muted">UPI ID: careflow@bank</p>
-                                            </div>
-                                            
-                                            <form action="/pay-invoice" method="POST" class="mt-3">
-                                                <input type="hidden" name="invoice_id" value="<%= invoice.invoice_id %>">
-                                                <input type="hidden" name="outstanding_balance" value="<%= outstanding %>">
-                                                <input type="hidden" name="payment_amount" value="<%= outstanding %>"> <button type="submit" class="btn btn-success w-100">
-                                                    <i class="fas fa-check me-2"></i> Confirm UPI Payment (Mock Success)
-                                                </button>
-                                            </form>
-                                        </div>
-
-                                        <div class="tab-pane fade" id="v-pills-netbanking" role="tabpanel" aria-labelledby="v-pills-netbanking-tab">
-                                            <div class="alert alert-warning mb-0">
-                                                <i class="fas fa-bank me-2"></i> Net Banking is currently undergoing maintenance. Please use the Card or UPI option.
-                                            </div>
-                                        </div>
-
+            
+                                <div class="tab-content mt-3" id="v-pills-tabContent">
+                                    <div class="tab-pane fade show active" id="v-pills-card" role="tabpanel">
+                                        <h6 class="text-muted mb-3">Secure Payment powered by Stripe Checkout.</h6>
+                                        <form id="payment-form" class="row g-3"></form>
                                     </div>
                                 </div>
                             </div>
 
-                        <% } else { %>
-                            <div class="alert alert-success text-center mb-0">
-                                <i class="fas fa-check-circle me-2"></i> This invoice is fully paid. Thank you!
-                            </div>
-                        <% } %>
+                            <% } else { %>
+                                <div class="alert alert-success text-center mb-0">
+                                    <i class="fas fa-check-circle me-2"></i> This invoice is fully paid. Thank you!
+                                </div>
+                            <% } %>
                     </div>
                 </div>
                 
