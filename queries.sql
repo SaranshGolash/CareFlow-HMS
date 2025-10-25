@@ -231,3 +231,12 @@ CREATE TABLE chat_history (
 ALTER TABLE users
 ADD COLUMN insurance_provider VARCHAR(100),
 ADD COLUMN policy_number VARCHAR(100);
+
+CREATE TABLE audit_log (
+    log_id SERIAL PRIMARY KEY,
+    user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, -- Who did it
+    ip_address VARCHAR(50), -- Where they did it from
+    action_type VARCHAR(50) NOT NULL, -- What they did (e.g., 'USER_LOGIN', 'VIEWED_RECORD')
+    target_id INTEGER, -- Which specific item they accessed (e.g., record_id)
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
