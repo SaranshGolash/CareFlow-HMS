@@ -100,6 +100,20 @@ const isAdmin = (req, res, next) => {
     res.redirect('/');
 };
 
+// --- HELPER FUNCTIONS ---
+
+// Reusable Audit Log function
+const logAudit = (userId, actionType, targetId, req) => {
+    // Use req.ip to get the user's IP address
+    const ip = req.ip;
+    db.query(
+        'INSERT INTO audit_log (user_id, ip_address, action_type, target_id) VALUES ($1, $2, $3, $4)',
+        [userId, ip, actionType, targetId]
+    ).catch(err => {
+        console.error('Audit Log Write Failed:', err);
+    });
+};
+
 // Middleware to check if user is a doctor or an admin
 const isDoctorOrAdmin = (req, res, next) => {
     if (req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'doctor')) {
