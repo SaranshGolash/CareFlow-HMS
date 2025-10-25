@@ -445,13 +445,14 @@ app.post('/login', async (req, res) => {
                     role: user.role,
                     wallet_balance: parseFloat(user.wallet_balance)
                 };
+                logAudit(user.id, 'USER_LOGIN_SUCCESS', user.id, req);
                 req.flash('success_msg', 'Login successful! Welcome back.');
-
                 if (user.role === 'doctor') {
                     return res.redirect('/doctor/dashboard');
                 }
                 return res.redirect('/'); // Default redirect for patient/admin
             } else {
+                if(user) logAudit(user.id, 'USER_LOGIN_FAILED', user.id, req);
                 req.flash('error_msg', 'Invalid password. Please try again.'); 
                 res.redirect('/login');
             }
