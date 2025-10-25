@@ -367,6 +367,7 @@ app.get('/records/:id', isAuthenticated, async (req, res) => {
             req.flash('error_msg', 'Medical record not found or access denied.');
             return res.redirect('/records');
         }
+        logAudit(userId, 'VIEWED_OWN_RECORD', record.record_id, req);
         res.render('view_record', { record: record });
 
     } catch (err) {
@@ -1213,6 +1214,8 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
         `;
         const result = await db.query(query, [recordId]);
 
+        logAudit(doctorId, 'DOCTOR_VIEWED_RECORD', record.record_id, req);
+
         // 4. REUSE view_record.ejs for the view
         res.render('view_record', { record: result.rows[0] });
 
@@ -1456,6 +1459,8 @@ app.post('/admin/wallet/adjust', isAuthenticated, isAdmin, async (req, res) => {
         await client.query(transactionQuery, [patientId, finalAmount, req.session.user.username, `Admin Action (${adjustment_reason})`]);
 
         await client.query('COMMIT');
+
+        logAudit(req.session.user.id, 'ADMIN_WALLET_ADJUSTMENT', patientId, req);
 
         req.flash('success_msg', `Balance for User ID ${patientId} adjusted by $${finalAmount.toFixed(2)}.`);
         res.redirect('/wallet');
