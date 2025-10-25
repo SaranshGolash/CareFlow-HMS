@@ -1225,27 +1225,27 @@ app.get('/invoices/:id', isAuthenticated, async (req, res) => {
 });
 
 
-// POST: Process Payment (Mock Transaction)
+// POST: Process Payment (Mock Transaction for Card/Wallet)
 app.post('/pay-invoice', isAuthenticated, async (req, res) => {
     const { invoice_id, payment_amount, outstanding_balance } = req.body;
     const userId = req.session.user.id;
     
-    // Convert inputs and ensure validation
     const amount = parseFloat(payment_amount);
     const outstanding = parseFloat(outstanding_balance);
     const invoiceId = parseInt(invoice_id);
 
+    // Security check: Ensure the payment amount is valid
     if (isNaN(amount) || amount <= 0 || amount > outstanding) {
         req.flash('error_msg', 'Invalid payment amount submitted. Amount must be positive and not exceed outstanding balance.');
         return res.redirect(`/invoices/${invoiceId}`);
     }
 
-    const client = await db.connect(); // Acquire client from pool
+    const client = await db.connect();
     try {
         await client.query('BEGIN');
         
-        // 1. Lock the invoice row for update and retrieve current data
-        const checkQuery = 'SELECT total_amount, amount_paid, user_id FROM invoices WHERE invoice_id = $1 AND user_id = $2 FOR UPDATE';
+        // 1. Lock the invoice row and check ownership
+        const checkQuery = 'SELECT total_amount, amount_paid FROM invoices WHERE invoice_id = $1 AND user_id = $2 FOR UPDATE';
         const checkResult = await client.query(checkQuery, [invoiceId, userId]);
         const invoice = checkResult.rows[0];
 
@@ -1255,10 +1255,8 @@ app.post('/pay-invoice', isAuthenticated, async (req, res) => {
 
         // 2. Calculate new payment status
         const newPaidAmount = parseFloat(invoice.amount_paid) + amount;
-        
-        // Status logic: Check if the new paid amount matches the total amount (allowing for slight floating point error)
         let newStatus = 'Partial';
-        if (newPaidAmount >= parseFloat(invoice.total_amount) - 0.005) { 
+        if (newPaidAmount >= parseFloat(invoice.total_amount) - 0.005) { // Floating point safety
             newStatus = 'Paid';
         }
         
@@ -1270,13 +1268,13 @@ app.post('/pay-invoice', isAuthenticated, async (req, res) => {
         `;
         await client.query(updateQuery, [newPaidAmount.toFixed(2), newStatus, invoiceId]);
 
-        // 4. Log the transaction (Optional for the current bug, but good practice)
+        // 4. Log the transaction
         const transactionQuery = `
             INSERT INTO wallet_transactions (user_id, amount, transaction_type, reference_id, description)
             VALUES ($1, $2, 'Payment', $3, $4)
         `;
-        await client.query(transactionQuery, [userId, amount, String(invoiceId), `Payment submitted via portal.`]);
-
+        // We log the payment amount as a negative value against the user's account
+        await client.query(transactionQuery, [userId, -amount, 'Payment', `invoice_${invoiceId}`, `Card payment for Invoice #${invoiceId}`]);
 
         await client.query('COMMIT');
 

@@ -65,8 +65,6 @@
                     </div>
                     
                     <div class="card-footer bg-light p-4">
-                        <% const outstanding = (invoice.total_amount - invoice.amount_paid).toFixed(2); %>
-    
                         <% if (outstanding > 0) { %>
                             <div class="wallet-payment-section mb-4">
                                 <h5 class="mb-3 text-primary">1. Pay with your Wallet</h5>
@@ -75,7 +73,7 @@
                                         <input type="hidden" name="outstanding_balance" value="<%= outstanding %>">
                                         <p>Your wallet balance: <strong class="text-success">$<%= walletBalance.toFixed(2) %></strong></p>
                                         <button type="submit" class="btn btn-success btn-lg w-100">
-                                            <i class="fas fa-wallet me-2"></i> Pay $S<%= outstanding %> Instantly from Wallet
+                                            <i class="fas fa-wallet me-2"></i> Pay $<%= outstanding %> Instantly from Wallet
                                         </button>
                                     </form>
                                 <% } else { %>
@@ -91,33 +89,28 @@
 
                             <div class="gateway-payment-section mt-4">
                                 <h5 class="mb-3 text-primary">2. Pay with Card (via Stripe)</h5>
-            
+                                
                                 <div class="nav flex-column nav-pills me-3 payment-tabs" id="v-pills-tab" role="tablist" aria-orientation="vertical">
                                     <button class="nav-link active" id="v-pills-card-tab" data-bs-toggle="pill" data-bs-target="#v-pills-card" type="button" role="tab">
                                         <i class="fas fa-credit-card me-2"></i> Card (Debit/Credit)
                                     </button>
-                                </div>
-            
+                                    </div>
+                                
                                 <div class="tab-content mt-3" id="v-pills-tabContent">
                                     <div class="tab-pane fade show active" id="v-pills-card" role="tabpanel">
                                         <h6 class="text-muted mb-3">Secure Payment powered by Stripe Checkout.</h6>
-                                        <form id="payment-form" class="row g-3"></form>
+                                        <form id="payment-form" class="row g-3">
+                                            </form>
                                     </div>
-                                </div>
+                                    </div>
                             </div>
 
-                            <% } else { %>
-                                <div class="alert alert-success text-center mb-0">
-                                    <i class="fas fa-check-circle me-2"></i> This invoice is fully paid. Thank you!
-                                </div>
-                            <% } %>
+                        <% } else { %>
+                            <div class="alert alert-success text-center mb-0">
+                                <i class="fas fa-check-circle me-2"></i> This invoice is fully paid. Thank you!
+                            </div>
+                        <% } %>
                     </div>
-                </div>
-                
-                <div class="mt-4 text-center">
-                    <a href="/invoices" class="btn btn-outline-secondary">
-                        <i class="fas fa-arrow-left me-2"></i> Back to Invoice List
-                    </a>
                 </div>
             </div>
         </div>
