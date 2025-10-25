@@ -1295,6 +1295,28 @@ app.post('/api/chat', isAuthenticated, async (req, res) => {
 
 // ADMIN MANAGEMENT ROUTES
 
+// GET: Admin Audit Log Viewer
+app.get('/admin/audit-log', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                al.log_id, al.action_type, al.target_id, al.ip_address, al.timestamp,
+                u.username AS user_username, 
+                u.role AS user_role
+            FROM audit_log al
+            LEFT JOIN users u ON al.user_id = u.id
+            ORDER BY al.timestamp DESC
+            LIMIT 100 -- Limit to 100 most recent logs for performance
+        `;
+        const result = await db.query(query);
+        res.render('admin_audit_log', { logs: result.rows });
+    } catch (err) {
+        console.error('Error fetching audit log:', err);
+        req.flash('error_msg', 'Failed to load audit log.');
+        res.redirect('/dashboard');
+    }
+});
+
 // GET: Mock Insurance Claim Page (Admin Only)
 app.get('/claim/:invoice_id', isAuthenticated, isAdmin, async (req, res) => {
     const { invoice_id } = req.params;
