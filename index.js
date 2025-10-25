@@ -648,12 +648,13 @@ app.post('/settings/update', isAuthenticated, async (req, res) => {
         `;
         await db.query(query, [username, email, insurance_provider, policy_number, userId]);
 
-        // --- 3. CRITICAL FIX: Update the session object with ALL new data ---
+        logAudit(userId, 'UPDATED_PROFILE', userId, req);
+
+        // 3. Update the session object with ALL new data ---
         req.session.user.username = username;
         req.session.user.email = email;
         req.session.user.insurance_provider = insurance_provider;
         req.session.user.policy_number = policy_number;
-        // -----------------------------------------------------------------
 
         req.flash('success_msg', 'Profile updated successfully!');
         res.redirect('/settings');
@@ -697,6 +698,8 @@ app.post('/settings/password', isAuthenticated, async (req, res) => {
         // 4. Update the database
         const query = 'UPDATE users SET password_hash = $1 WHERE id = $2';
         await db.query(query, [new_password_hash, user_id]);
+
+        logAudit(userId, 'UPDATED_PASSWORD', userId, req);
 
         req.flash('success_msg', 'Password updated successfully.');
         res.redirect('/settings');
