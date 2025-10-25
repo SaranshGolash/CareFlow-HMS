@@ -76,7 +76,7 @@ method-override for PUT/DELETE from forms.
 <b>AI</b>: OpenAI
 
 ## 🚀 Setup & Installation
-Clone the repository:
+<b>Clone the repository</b>:
 
 Bash
 
@@ -107,19 +107,19 @@ npm start
 The application will be running at http://localhost:3000.
 
 ## 🔑 Demo Credentials
-Patient:
+<b>Patient</b>:
 
 Email: patient@gmail.com
 
 Password: Patient@10
 
-Doctor:
+<b>Doctor</b>:
 
 Email: doctor@gmail.com
 
 Password: Doctor@10
 
-Admin:
+<b>Admin</b>:
 
 Email: admin@gmail.com
 
