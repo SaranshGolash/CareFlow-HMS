@@ -11,55 +11,55 @@ A brief overview of the core functionalities, categorized by user role:
 
 <b>Patient Dashboard</b>: A personalized hub to view upcoming appointments, outstanding balances, wallet funds, and recent prescriptions.
 
-Appointment Management: Book new appointments, view upcoming/past schedules, and confirm attendance.
+<b>Appointment Management</b>: Book new appointments, view upcoming/past schedules, and confirm attendance.
 
-Medical Records: View a complete history of all medical records and prescriptions, including doctor's notes and diagnoses.
+<b>Medical Records</b>: View a complete history of all medical records and prescriptions, including doctor's notes and diagnoses.
 
-Health Monitoring: A visual dashboard (Chart.js) to track personal health vitals (Heart Rate, BP, Glucose, etc.).
+<b>Health Monitoring</b>: A visual dashboard (Chart.js) to track personal health vitals (Heart Rate, BP, Glucose, etc.).
 
-Billing & Wallet: View itemized invoices, manage a personal wallet (add/withdraw funds), and pay outstanding bills via a mock payment portal (Stripe-ready).
+<b>Billing & Wallet</b>: View itemized invoices, manage a personal wallet (add/withdraw funds), and pay outstanding bills via a mock payment portal.
 
-Secure Inbox: Send and receive secure messages from the administrative staff/doctors.
+<b>Secure Inbox</b>: Send and receive secure messages from the administrative staff/doctors.
 
 ## 🩺 Doctor Features
-Doctor Dashboard: A unique dashboard that shows only the doctor's scheduled appointments, grouped by "Today" and "Upcoming".
+<b>Doctor Dashboard</b>: A unique dashboard that shows only the doctor's scheduled appointments, grouped by "Today" and "Upcoming".
 
-Patient History View: Securely access the complete medical and vital history for any patient with whom they have an appointment.
+<b>Patient History View</b>: Securely access the complete medical and vital history for any patient with whom they have an appointment.
 
-E-Prescribing (Mock): Issue new prescriptions directly from a patient's medical record.
+<b>E-Prescribing (Mock)</b>: Issue new prescriptions directly from a patient's medical record.
 
-Teleconsultation (Mock): A "Start Call" button on appointments that leads to a mock video call interface.
+<b>Teleconsultation (Mock)</b>: A "Start Call" button on appointments that leads to a mock video call interface.
 
 ## ⚙️ Admin Features
-Admin Analytics: A high-level analytics dashboard showing KPIs (Key Performance Indicators) like total revenue, outstanding balances, and patient/appointment counts.
+<b>Admin Analytics</b>: A high-level analytics dashboard showing KPIs (Key Performance Indicators) like total revenue, outstanding balances, and patient/appointment counts.
 
-Invoice & Billing Management: Generate detailed, itemized invoices for patients using a predefined Service Catalog.
+<b>Invoice & Billing Management</b>: Generate detailed, itemized invoices for patients using a predefined Service Catalog.
 
-Service Catalog: Full CRUD (Create, Read, Update, Delete) for managing clinic service prices.
+<b>Service Catalog</b>: Full CRUD (Create, Read, Update, Delete) for managing clinic service prices.
 
-Inventory Management: Track clinic supplies (e.g., "Paracetamol," "Syringes"), with Low Stock Alerts on the dashboard.
+<b>Inventory Management</b>: Track clinic supplies (e.g., "Paracetamol," "Syringes"), with Low Stock Alerts on the dashboard.
 
-User Management: View all patients and staff, and promote users to "Admin" or "Doctor" roles.
+<b>User Management</b>: View all patients and staff, and promote users to "Admin" or "Doctor" roles.
 
-Automated Reminders (Mock): A "Process Reminders" button that simulates sending queued appointment reminder emails.
+<b>Automated Reminders (Mock)</b>: A "Process Reminders" button that simulates sending queued appointment reminder emails.
 
-Audit Log: A secure, read-only log that tracks critical actions (e.g., "USER_LOGIN," "VIEWED_RECORD," "ADMIN_WALLET_ADJUSTMENT") for compliance.
+<b>Audit Log</b>: A secure, read-only log that tracks critical actions (e.g., "USER_LOGIN," "VIEWED_RECORD," "ADMIN_WALLET_ADJUSTMENT") for compliance.
 
 ## 🤖 System-Wide Features
-AI Chatbot: A floating chatbot integrated with the Gemini/OpenAI API to answer user queries.
+<b>AI Chatbot</b>: A floating chatbot integrated with the Gemini/OpenAI API to answer user queries.
 
-Automated Emails: Uses EmailJS (or Nodemailer) to send a welcome email on signup and appointment reminders.
+<b>Automated Emails</b>: Uses EmailJS (or Nodemailer) to send a welcome email on signup and appointment reminders.
 
-Dynamic UI: Polished, responsive design with 3D background animations (Vanta.js) and scroll-triggered animations (AOS).
+<b>Dynamic UI</b>: Polished, responsive design with 3D background animations (Vanta.js) and scroll-triggered animations (AOS).
 
 ## 🛠️ Technology Stack
-Backend: Node.js, Express.js
+<b>Backend</b>: Node.js, Express.js
 
-Database: PostgreSQL
+<b>Database</b>: PostgreSQL
 
-Frontend: EJS (Embedded JavaScript), Bootstrap 5, Chart.js, Vanta.js
+<b>Frontend</b>: EJS (Embedded JavaScript), Bootstrap 5, Chart.js, Vanta.js
 
-Core Libraries:
+<b>Core Libraries</b>:
 
 pg (node-postgres) for database connection pooling.
 
@@ -69,13 +69,11 @@ express-session & connect-flash for user sessions and messaging.
 
 method-override for PUT/DELETE from forms.
 
-APIs & Services:
+<b>APIs & Services</b>:
 
-Email: EmailJS
+<b>Email</b>: EmailJS
 
-AI: Google Gemini / OpenAI
-
-Payments: Stripe (for mock checkout)
+<b>AI</b>: OpenAI
 
 ## 🚀 Setup & Installation
 Clone the repository:
