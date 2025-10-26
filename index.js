@@ -1523,6 +1523,103 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
 
 // ADMIN MANAGEMENT ROUTES
 
+// --- ADMIN MANAGEMENT ROUTES (Staff & Schedule) ---
+
+// GET: Display the Staff Management Page (List all users)
+app.get('/admin/staff', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+        const result = await db.query('SELECT id, username, email, role FROM users ORDER BY id ASC');
+        res.render('admin_staff', { users: result.rows });
+    } catch (err) {
+        console.error('Error fetching staff list:', err);
+        req.flash('error_msg', 'Failed to load staff list.');
+        res.redirect('/dashboard');
+    }
+});
+
+// POST: Update a User's Role (Admin action)
+app.post('/admin/staff/update-role', isAuthenticated, isAdmin, async (req, res) => {
+    const { user_id, new_role } = req.body;
+
+    // Prevent admin from accidentally demoting themselves (optional check)
+    if (parseInt(user_id) === req.session.user.id) {
+        req.flash('error_msg', 'You cannot change your own role.');
+        return res.redirect('/admin/staff');
+    }
+
+    try {
+        await db.query('UPDATE users SET role = $1 WHERE id = $2', [new_role, user_id]);
+        req.flash('success_msg', 'User role updated successfully.');
+        res.redirect('/admin/staff');
+    } catch (err) {
+        console.error('Error updating user role:', err);
+        req.flash('error_msg', 'Failed to update role.');
+        res.redirect('/admin/staff');
+    }
+});
+
+// GET: Page to Manage a Specific Doctor's Schedule
+app.get('/admin/schedule/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const doctorId = req.params.id;
+    try {
+        const userResult = await db.query('SELECT id, username FROM users WHERE id = $1 AND role = $2', [doctorId, 'doctor']);
+        if (userResult.rows.length === 0) {
+            req.flash('error_msg', 'Doctor not found.');
+            return res.redirect('/admin/staff');
+        }
+        
+        const scheduleResult = await db.query('SELECT * FROM doctor_schedules WHERE doctor_id = $1 ORDER BY day_of_week', [doctorId]);
+        
+        res.render('admin_schedule', {
+            doctor: userResult.rows[0],
+            schedule: scheduleResult.rows
+        });
+    } catch (err) {
+        console.error('Error fetching schedule:', err);
+        req.flash('error_msg', 'Failed to load schedule.');
+        res.redirect('/admin/staff');
+    }
+});
+
+// POST: Add a new weekly schedule entry for a doctor
+app.post('/admin/schedule', isAuthenticated, isAdmin, async (req, res) => {
+    const { doctor_id, day_of_week, start_time, end_time } = req.body;
+
+    try {
+        await db.query(
+            'INSERT INTO doctor_schedules (doctor_id, day_of_week, start_time, end_time) VALUES ($1, $2, $3, $4)',
+            [doctor_id, day_of_week, start_time, end_time]
+        );
+        req.flash('success_msg', 'Schedule entry added.');
+        res.redirect(`/admin/schedule/${doctor_id}`);
+    } catch (err) {
+        if (err.code === '23505') { // Unique constraint violation
+            req.flash('error_msg', 'An entry for this day already exists. Please delete the old one first.');
+        } else {
+            console.error('Error adding schedule:', err);
+            req.flash('error_msg', 'Failed to add schedule entry.');
+        }
+        res.redirect(`/admin/schedule/${doctor_id}`);
+    }
+});
+
+// DELETE: Remove a schedule entry
+app.delete('/admin/schedule/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const scheduleId = req.params.id;
+    // We need the doctorId to redirect back to the correct page
+    const doctorId = req.body.doctor_id; 
+    
+    try {
+        await db.query('DELETE FROM doctor_schedules WHERE schedule_id = $1', [scheduleId]);
+        req.flash('success_msg', 'Schedule entry removed.');
+        res.redirect(`/admin/schedule/${doctorId}`);
+    } catch (err) {
+        console.error('Error deleting schedule:', err);
+        req.flash('error_msg', 'Failed to remove schedule entry.');
+        res.redirect(`/admin/schedule/${doctorId}`);
+    }
+});
+
 // GET: Admin Audit Log Viewer
 app.get('/admin/audit-log', isAuthenticated, isAdmin, async (req, res) => {
     try {
