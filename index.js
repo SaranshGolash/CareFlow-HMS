@@ -226,7 +226,7 @@ app.get('/newappointments', isAuthenticated, async (req, res) => {
     }
 });
 
-// POST: Handle new appointment creation and automatically queue a reminder
+// POST: Handle new appointment creation and queue a reminder
 app.post('/newappointments', isAuthenticated, async (req, res) => {
     const { patient_name, gender, phone, doctor_id, doctor_name, appointment_date, appointment_time } = req.body;
     const userId = req.session.user.id;
@@ -235,44 +235,69 @@ app.post('/newappointments', isAuthenticated, async (req, res) => {
     const client = await db.connect();
     
     try {
-        // Start the transaction
         await client.query('BEGIN');
+        // 1. Get the day of the week (0=Sunday, 1=Monday, etc.) from the submitted date
+        const selectedDate = new Date(appointment_date + "T00:00:00");
+        const dayOfWeek = selectedDate.getDay();
 
-        // 1. Insert the new appointment into the 'appointments' table
+        // 2. Check the doctor's schedule for that day
+        const scheduleQuery = `
+            SELECT start_time, end_time FROM doctor_schedules 
+            WHERE doctor_id = $1 AND day_of_week = $2
+        `;
+        const scheduleResult = await client.query(scheduleQuery, [doctor_id, dayOfWeek]);
+
+        if (scheduleResult.rows.length === 0) {
+            // If no rows are returned, the doctor does not work on this day.
+            throw new Error("Validation Failed: The selected doctor is not available on this day.");
+        }
+
+        // 3. Check if the submitted time is within the doctor's schedule
+        const slot = scheduleResult.rows[0];
+        if (appointment_time < slot.start_time || appointment_time > slot.end_time) {
+            // If the time is outside the slot, throw an error.
+            throw new Error(`Validation Failed: The selected time is outside the doctor's available hours (${new Date('1970-01-01T' + slot.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date('1970-01-01T' + slot.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}).`);
+        }
+        // --- END OF VALIDATION ---
+
+        // 4. Insert the new appointment (if validation passed)
         const appointmentQuery = `
             INSERT INTO appointments (patient_name, gender, phone, doctor_id, doctor_name, user_id, status, appointment_date, appointment_time) 
             VALUES ($1, $2, $3, $4, $5, $6, 'Pending', $7, $8)
         `;
         await client.query(appointmentQuery, [patient_name, gender, phone, doctor_id, doctor_name, userId, appointment_date, appointment_time]);
         
-        // 2. Calculate the reminder time (24 hours before the appointment)
-        // Combine date and time strings into a single Date object
+        // 5. Calculate reminder time and queue the reminder
         const appointmentDateTime = new Date(`${appointment_date}T${appointment_time}`);
-        
-        // Subtract 24 hours (24 hours * 60 minutes * 60 seconds * 1000 milliseconds)
         const reminderTimestamp = new Date(appointmentDateTime.getTime() - (24 * 60 * 60 * 1000));
 
-        // 3. Insert the "Queued" reminder into the 'notifications' table
         const notificationQuery = `
             INSERT INTO notifications (user_id, type, status, send_at)
             VALUES ($1, 'Appointment Reminder', 'Queued', $2)
         `;
         await client.query(notificationQuery, [userId, reminderTimestamp]);
 
-        // If both queries succeed, commit the transaction
+        // If everything succeeds, commit the transaction
         await client.query('COMMIT');
         
         req.flash('success_msg', 'Appointment scheduled successfully. A reminder has been set for 24 hours prior.');
         res.redirect('/appointments');
 
     } catch (err) {
-        // If any query fails, roll back the entire transaction
+        // If any query (including our validation) fails, roll back
         await client.query('ROLLBACK');
-        console.error('Error in new appointment transaction:', err);
-        req.flash('error_msg', 'Error scheduling appointment. The operation was canceled.');
+        
+        // Pass the specific validation error message back to the user
+        if (err.message.startsWith("Validation Failed:")) {
+            req.flash('error_msg', err.message);
+        } else {
+            // For all other errors
+            console.error('Error in new appointment transaction:', err);
+            req.flash('error_msg', 'Error scheduling appointment. The operation was canceled.');
+        }
         res.redirect('/newappointments');
     } finally {
-        // VERY IMPORTANT: Release the client back to the pool
+        // ALWAYS release the client back to the pool
         client.release();
     }
 });
