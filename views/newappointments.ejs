@@ -55,9 +55,11 @@
                 </div>
 
                 <div class="col-md-6">
-                    <label for="appointment_time" class="form-label">Time*</label>
-                    <input id="appointment_time" name="appointment_time" type="time" class="form-control" required disabled>
-                    <div class="form-text">Please select a doctor and date first.</div>
+                    <label for="appointment_time" class="form-label">Time<span class="required-asterisk">*</span></label>
+                    <select id="appointment_time" name="appointment_time" class="form-select" required disabled>
+                        <option value="" selected>Select a doctor and date first</option>
+                    </select>
+                    <div id="timeHelp" class="form-text">Only available slots are shown.</div>
                 </div>
 
                             <div class="col-12 text-end">
