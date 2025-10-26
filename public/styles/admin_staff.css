@@ -1,0 +1,24 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --border-radius: 12px;
+    --shadow-md: 0 4px 16px rgba(13,110,253,0.08);
+}
+.container.py-5 h2 {
+    color: var(--primary);
+    font-weight: 700;
+}
+.table-responsive {
+    background: #fff;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+}
+.table thead th {
+    background-color: var(--primary-light);
+    border-bottom: 2px solid var(--primary);
+    font-weight: 600;
+}
+.badge {
+    font-weight: 600;
+}
