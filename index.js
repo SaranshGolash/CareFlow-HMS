@@ -1104,9 +1104,23 @@ app.get('/doctor/appointment/:id', isAuthenticated, async (req, res) => {
     }
 });
 
-// --- API ROUTES (Chatbot) ---
+// --- API ROUTES ---
 
-// --- API ROUTES (Chatbot using OpenAI) ---
+// GET: Fetches a specific doctor's weekly schedule for the appointment form
+app.get('/api/doctor-availability/:id', isAuthenticated, async (req, res) => {
+    const doctorId = req.params.id;
+    try {
+        const result = await db.query(
+            'SELECT day_of_week, start_time, end_time FROM doctor_schedules WHERE doctor_id = $1',
+            [doctorId]
+        );
+        // Send the schedule as JSON
+        res.json(result.rows);
+    } catch (err) {
+        console.error('API Error fetching doctor schedule:', err);
+        res.status(500).json({ error: 'Failed to fetch schedule' });
+    }
+});
 
 // --- API ROUTES (Chatbot using OpenAI) ---
 
