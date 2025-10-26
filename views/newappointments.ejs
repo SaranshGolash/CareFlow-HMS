@@ -37,28 +37,28 @@
                             </div>
 
                             <div class="col-md-6">
-                                <label for="doctor_id" class="form-label">Doctor Name<span class="required-asterisk">*</span></label>
-                                <select id="doctor_id" name="doctor_id" class="form-select" required onchange="this.form.doctor_name.value=this.options[this.selectedIndex].text">
-                                <option value="" disabled selected>Select doctor</option>
-                                    <% if (doctors && doctors.length > 0) { %>
-                                        <% doctors.forEach(doctor => { %>
-                                            <option value="<%= doctor.id %>"><%= doctor.username %></option>
-                                        <% }); %>
-                                    <% } %>
-                                </select>
-                                <input type="hidden" name="doctor_name" value="">
-                            </div>
+                    <label for="doctor_id" class="form-label">Doctor Name*</label>
+                    <select id="doctor_id" name="doctor_id" class="form-select" required onchange="this.form.doctor_name.value=this.options[this.selectedIndex].text">
+                        <option value="" disabled selected>Select doctor</option>
+                        <% if (doctors && doctors.length > 0) { %>
+                            <% doctors.forEach(doctor => { %>
+                                <option value="<%= doctor.id %>"><%= doctor.username %></option>
+                            <% }); %>
+                        <% } %>
+                    </select>
+                    <input type="hidden" name="doctor_name" value="">
+                </div>
 
+                <div class="col-md-6">
+                    <label for="appointment_date" class="form-label">Date*</label>
+                    <input id="appointment_date" name="appointment_date" type="date" class="form-control" required>
+                </div>
 
-                            <div class="col-md-6">
-                                <label for="appointment_date" class="form-label">Date<span class="required-asterisk">*</span>:</label>
-                                <input id="appointment_date" name="appointment_date" type="date" class="form-control" required>
-                            </div>
-
-                            <div class="col-md-6">
-                                <label for="appointment_time" class="form-label">Time<span class="required-asterisk">*</span>:</label>
-                                <input id="appointment_time" name="appointment_time" type="time" class="form-control" required>
-                            </div>
+                <div class="col-md-6">
+                    <label for="appointment_time" class="form-label">Time*</label>
+                    <input id="appointment_time" name="appointment_time" type="time" class="form-control" required disabled>
+                    <div class="form-text">Please select a doctor and date first.</div>
+                </div>
 
                             <div class="col-12 text-end">
                                 <button type="submit" class="btn btn-primary">Request Appointment</button>
@@ -71,4 +71,5 @@
             </div>
         </div>
     </div>
+<script src="/js/appointment_scheduler.js" defer></script>
 <%- include('initials/footer.ejs') %>
