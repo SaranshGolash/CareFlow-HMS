@@ -331,56 +331,6 @@ app.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
     }
 });
 
-// --- API ROUTES ---
-
-// GET: Fetches a specific doctor's AVAILABLE appointment slots for a specific DATE
-app.get('/api/doctor-slots/:doctorId/:date', isAuthenticated, async (req, res) => {
-    const { doctorId, date } = req.params;
-
-    try {
-        // (UPDATED) This query now lets PostgreSQL calculate the day of the week.
-        const query = `
-            WITH schedule AS (
-                SELECT start_time, end_time 
-                FROM doctor_schedules
-                WHERE doctor_id = $1 
-                  AND day_of_week = EXTRACT(DOW FROM $2::DATE) -- $2 is the date string
-            ),
-            
-            all_slots AS (
-                SELECT generate_series(
-                    (SELECT start_time FROM schedule),
-                    (SELECT end_time FROM schedule) - INTERVAL '30 minutes',
-                    '30 minutes'::interval
-                )::TIME AS slot_time
-            ),
-            
-            booked_slots AS (
-                SELECT appointment_time 
-                FROM appointments
-                WHERE doctor_id = $1 AND appointment_date = $2 -- $2 is the date string
-            )
-            
-            SELECT slot_time 
-            FROM all_slots
-            WHERE slot_time NOT IN (SELECT appointment_time FROM booked_slots)
-            ORDER BY slot_time;
-        `;
-        
-        // (UPDATED) The parameters are now [doctorId, date]
-        //    PostgreSQL will use the 'date' string for both the DOW calculation and the 'booked_slots' check.
-        const result = await db.query(query, [doctorId, date]);
-        
-        res.json(result.rows.map(row => row.slot_time));
-
-    } catch (err) {
-        // This catch block is what's sending the error to your frontend.
-        // Check your server logs for the detailed SQL error here.
-        console.error('API Error fetching doctor slots:', err);
-        res.status(500).json({ error: 'Failed to fetch available slots' });
-    }
-});
-
 // Records of patients view route
 app.get('/records', isAuthenticated, async (req, res) => {
     try {
@@ -1181,19 +1131,56 @@ app.get('/doctor/appointment/:id', isAuthenticated, async (req, res) => {
 
 // --- API ROUTES ---
 
-// GET: Fetches a specific doctor's weekly schedule for the appointment form
-app.get('/api/doctor-availability/:id', isAuthenticated, async (req, res) => {
-    const doctorId = req.params.id;
+// GET: Fetches a specific doctor's AVAILABLE appointment slots for a specific DATE
+app.get('/api/doctor-slots/:doctorId/:date', isAuthenticated, async (req, res) => {
+    const { doctorId, date } = req.params;
+    
     try {
-        const result = await db.query(
-            'SELECT day_of_week, start_time, end_time FROM doctor_schedules WHERE doctor_id = $1',
-            [doctorId]
-        );
-        // Send the schedule as JSON
-        res.json(result.rows);
+        // This query now correctly casts TIME to TIMESTAMP before using generate_series
+        const query = `
+            WITH schedule AS (
+                -- 1. Find the schedule for the given doctor and day
+                SELECT start_time, end_time 
+                FROM doctor_schedules
+                WHERE doctor_id = $1 
+                  AND day_of_week = EXTRACT(DOW FROM $2::DATE)
+            ),
+            
+            all_slots AS (
+                -- 2. CRITICAL FIX: Combine the provided DATE ($2) with the TIME
+                --    to create a valid TIMESTAMP for generate_series.
+                SELECT generate_series(
+                    ($2::DATE + s.start_time),
+                    ($2::DATE + s.end_time) - INTERVAL '30 minutes',
+                    '30 minutes'::interval
+                ) AS slot_timestamp -- This is now a full timestamp
+                FROM schedule s
+                WHERE s.start_time IS NOT NULL AND s.start_time < s.end_time 
+            ),
+            
+            booked_slots AS (
+                -- 3. Find all appointments already booked for that doctor on that day
+                SELECT appointment_time 
+                FROM appointments
+                WHERE doctor_id = $1 AND appointment_date = $2
+            )
+            
+            -- 4. Select only the TIME part of the available slots
+            SELECT slot_timestamp::TIME AS slot_time
+            FROM all_slots
+            WHERE slot_timestamp::TIME NOT IN (SELECT appointment_time FROM booked_slots)
+            ORDER BY slot_time;
+        `;
+        
+        const result = await db.query(query, [doctorId, date]);
+        
+        // This will now correctly return [] if the schedule was empty or all slots were booked
+        res.json(result.rows.map(row => row.slot_time));
+
     } catch (err) {
-        console.error('API Error fetching doctor schedule:', err);
-        res.status(500).json({ error: 'Failed to fetch schedule' });
+        // This catch block is what's sending the 500 error
+        console.error('API Error fetching doctor slots:', err);
+        res.status(500).json({ error: 'Failed to fetch available slots' });
     }
 });
 
