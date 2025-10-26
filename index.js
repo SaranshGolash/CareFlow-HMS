@@ -1108,6 +1108,8 @@ app.get('/doctor/appointment/:id', isAuthenticated, async (req, res) => {
 
 // --- API ROUTES (Chatbot using OpenAI) ---
 
+// --- API ROUTES (Chatbot using OpenAI) ---
+
 app.post('/api/chat', isAuthenticated, async (req, res) => {
     const userMessage = req.body.message;
     const userId = req.session.user.id; 
@@ -1118,22 +1120,64 @@ app.post('/api/chat', isAuthenticated, async (req, res) => {
 
     const client = await db.connect(); 
     try {
-        await client.query('BEGIN');
+        // --- 1. BUILD CONTEXT (Fetch data in parallel) ---
+        
+        // Query 1: Get User Info
+        const userPromise = client.query("SELECT username, role FROM users WHERE id = $1", [userId]);
+        
+        // Query 2: Get Financial Info (Outstanding Balance)
+        const balancePromise = client.query(
+            "SELECT SUM(total_amount - amount_paid) AS outstanding_balance FROM invoices WHERE user_id = $1 AND status != 'Paid'",
+            [userId]
+        );
 
+        // Query 3: Get Next Appointment
+        const apptPromise = client.query(
+            `SELECT doctor_name, appointment_date, appointment_time 
+             FROM appointments 
+             WHERE user_id = $1 AND appointment_date >= CURRENT_DATE 
+             ORDER BY appointment_date ASC, appointment_time ASC 
+             LIMIT 1`,
+            [userId]
+        );
+
+        // Wait for all queries to finish
+        const [userResult, balanceResult, apptResult] = await Promise.all([userPromise, balancePromise, apptPromise]);
+
+        // --- 2. ASSEMBLE THE CONTEXT PROMPT ---
+        const user = userResult.rows[0];
+        const outstandingBalance = balanceResult.rows[0].outstanding_balance ? parseFloat(balanceResult.rows[0].outstanding_balance).toFixed(2) : '0.00';
+        const nextAppointment = apptResult.rows[0];
+
+        // Create the detailed system prompt
+        let systemPrompt = `You are a helpful AI assistant for CareFlow HMS.
+You are speaking to a user named ${user.username} (User ID: ${userId}). Their role is '${user.role}'.
+Their current outstanding balance is $${outstandingBalance}.`;
+        
+        if (nextAppointment) {
+            const apptDate = new Date(nextAppointment.appointment_date).toLocaleDateString();
+            const apptTime = new Date('1970-01-01T' + nextAppointment.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            systemPrompt += ` They have an upcoming appointment with Dr. ${nextAppointment.doctor_name} on ${apptDate} at ${apptTime}.`;
+        } else {
+            systemPrompt += " They have no upcoming appointments scheduled.";
+        }
+        
+        systemPrompt += ` Answer the user's query based on this context. Today's date is ${new Date().toLocaleDateString()}.`;
+
+        // --- 3. Call OpenAI with Context ---
+        await client.query('BEGIN');
         let aiResponseText = "Sorry, I couldn't process that request at the moment."; 
         try {
-            console.log("Attempting to get completion from OpenAI...");
+            console.log("Sending context-aware prompt to OpenAI...");
             
-            // --- Call OpenAI API ---
             const completion = await openai.chat.completions.create({
-                model: "gpt-3.5-turbo", // Or another model like "gpt-4" if you have access
+                model: "gpt-3.5-turbo",
                 messages: [
-                    { role: "system", content: "You are a helpful assistant for CareFlow HMS. Answer concisely." },
-                    { role: "user", content: userMessage }
+                    { role: "system", content: systemPrompt }, // The new context-aware prompt
+                    { role: "user", content: userMessage }     // The user's actual question
                 ],
             });
-            // -----------------------
-
+            
             aiResponseText = completion.choices[0]?.message?.content?.trim() || aiResponseText;
             console.log("OpenAI Response:", aiResponseText); 
 
@@ -1148,7 +1192,7 @@ app.post('/api/chat', isAuthenticated, async (req, res) => {
              }
         }
 
-        // --- Save chat to database (code remains the same) ---
+        // --- 4. Save and Respond ---
         const historyQuery = `
             INSERT INTO chat_history (user_id, user_message, ai_response)
             VALUES ($1, $2, $3)
@@ -1156,7 +1200,6 @@ app.post('/api/chat', isAuthenticated, async (req, res) => {
         await client.query(historyQuery, [userId, userMessage, aiResponseText]); 
         await client.query('COMMIT');
 
-        // --- Send AI response back to frontend (code remains the same) ---
         res.json({ reply: aiResponseText });
 
     } catch (dbOrOtherError) { 
