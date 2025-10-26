@@ -240,3 +240,6 @@ CREATE TABLE audit_log (
     target_id INTEGER, -- Which specific item they accessed (e.g., record_id)
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+ALTER TABLE services
+ADD COLUMN linked_inventory_item_id INTEGER REFERENCES inventory(item_id) ON DELETE SET NULL;
