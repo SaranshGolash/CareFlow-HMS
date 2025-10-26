@@ -1822,11 +1822,10 @@ app.get('/services', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
-// 2. POST: Route to handle adding a new service from the form
+// POST: Add a New Service (Admin Only)
 app.post('/services', isAuthenticated, isAdmin, async (req, res) => {
-    const { service_name, category, cost, description } = req.body;
+    const { service_name, category, cost, description, linked_inventory_item_id } = req.body;
     
-    // Basic validation...
     if (!service_name || !category || !cost || isNaN(cost)) {
         req.flash('error_msg', 'Service Name, Category, and a valid Cost are required.');
         return res.redirect('/services');
@@ -1834,10 +1833,10 @@ app.post('/services', isAuthenticated, isAdmin, async (req, res) => {
 
     try {
         const query = `
-            INSERT INTO services (service_name, category, cost, description)
-            VALUES ($1, $2, $3, $4)
+            INSERT INTO services (service_name, category, cost, description, linked_inventory_item_id)
+            VALUES ($1, $2, $3, $4, $5)
         `;
-        await db.query(query, [service_name, category, cost, description]);
+        await db.query(query, [service_name, category, cost, description, linked_inventory_item_id || null]);
 
         req.flash('success_msg', `Service "${service_name}" added successfully.`);
         res.redirect('/services');
