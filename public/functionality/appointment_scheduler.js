@@ -1,95 +1,78 @@
 document.addEventListener('DOMContentLoaded', () => {
     const doctorSelect = document.getElementById('doctor_id');
     const dateInput = document.getElementById('appointment_date');
-    const timeInput = document.getElementById('appointment_time');
+    const timeSelect = document.getElementById('appointment_time');
 
-    if (!doctorSelect || !dateInput || !timeInput) {
-        console.error("Scheduler script: Missing one or more form elements (doctor, date, or time).");
+    if (!doctorSelect || !dateInput || !timeSelect) {
+        console.error("Scheduler script: Missing form elements.");
         return;
     }
 
-    let doctorSchedule = {}; // Stores the fetched schedule
-
-    // --- Resets and validates the time input ---
-    function validateDateTime() {
-        timeInput.value = ""; // Clear any previous time
-        
-        // 1. Get selected day
-        if (!dateInput.value || !doctorSelect.value) {
-            timeInput.disabled = true; 
-            return;
-        }
-        
-        const selectedDate = new Date(dateInput.value + "T00:00:00");
-        const dayOfWeek = selectedDate.getDay(); // 0=Sunday, 1=Monday...
-
-        // 2. Find the schedule slot for that day
-        const slot = doctorSchedule[dayOfWeek];
-
-        if (slot) {
-            // 3. Enable time input and set min/max
-            timeInput.disabled = false;
-            timeInput.min = slot.start_time;
-            timeInput.max = slot.end_time;
-            
-            // Clear previous errors
-            dateInput.setCustomValidity("");
-            timeInput.setCustomValidity("");
-            console.log(`Schedule for ${dayOfWeek}: Available ${slot.start_time} to ${slot.end_time}`);
-
-        } else {
-            // 4. Disable time input and set date error
-            timeInput.disabled = true;
-            dateInput.setCustomValidity("The selected doctor is not available on this day. Please pick another day.");
-            dateInput.reportValidity(); // Show the error on the date field
-        }
-    }
-
-    // --- Fetches schedule when doctor changes ---
-    doctorSelect.addEventListener('change', async () => {
+    // --- This function is called when either the doctor or date changes ---
+    async function fetchAvailableSlots() {
         const doctorId = doctorSelect.value;
-        if (!doctorId) {
-            doctorSchedule = {};
-            validateDateTime(); // Re-run validation (will disable time)
+        const selectedDate = dateInput.value;
+
+        // Reset the time select and disable it
+        timeSelect.innerHTML = '<option value="" selected>Select a time</option>';
+        timeSelect.disabled = true;
+
+        // Stop if we don't have both values
+        if (!doctorId || !selectedDate) {
+            if (doctorId && !selectedDate) {
+                timeSelect.options[0].textContent = 'Please select a date';
+            } else if (!doctorId && selectedDate) {
+                timeSelect.options[0].textContent = 'Please select a doctor';
+            } else {
+                 timeSelect.options[0].textContent = 'Select doctor & date';
+            }
             return;
         }
+        
+        // Show a loading state
+        timeSelect.options[0].textContent = 'Loading slots...';
 
         try {
-            const response = await fetch(`/api/doctor-availability/${doctorId}`);
-            if (!response.ok) throw new Error('Failed to fetch schedule');
+            // 1. Call the new API route
+            const response = await fetch(`/api/doctor-slots/${doctorId}/${selectedDate}`);
             
-            const schedule = await response.json();
+            if (!response.ok) {
+                throw new Error('Network error while fetching slots.');
+            }
+
+            const availableSlots = await response.json(); // e.g., ["09:00:00", "09:30:00"]
             
-            // Re-format schedule into an easy-to-use object {1: {start, end}, 2: {start, end}}
-            doctorSchedule = schedule.reduce((acc, slot) => {
-                acc[slot.day_of_week] = { start: slot.start_time, end: slot.end_time };
-                return acc;
-            }, {});
-            
-            // Re-validate the date, which will in turn validate the time
-            validateDateTime();
+            // 2. Clear the loading message
+            timeSelect.innerHTML = ''; 
+
+            // 3. Populate the dropdown with available slots
+            if (availableSlots.length > 0) {
+                timeSelect.disabled = false;
+                timeSelect.innerHTML = '<option value="" disabled selected>Select an available time</option>'; // Add default first
+                
+                availableSlots.forEach(slot => {
+                    // Format the time (e.g., 09:00:00) into a user-friendly format (e.g., 9:00 AM)
+                    const displayTime = new Date(`1970-01-01T${slot}`).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    
+                    const option = document.createElement('option');
+                    option.value = slot; // The value sent to the backend is the raw '09:00:00'
+                    option.textContent = displayTime; // The text the user sees is '9:00 AM'
+                    timeSelect.appendChild(option);
+                });
+            } else {
+                // No slots are available
+                timeSelect.disabled = true;
+                timeSelect.innerHTML = '<option value="" disabled selected>No available slots on this day</option>';
+            }
 
         } catch (err) {
             console.error(err);
-            doctorSchedule = {};
-            validateDateTime();
+            timeSelect.disabled = true;
+            timeSelect.innerHTML = '<option value="" disabled selected>Error loading slots</option>';
         }
-    });
+    }
 
-    // --- Validate time when date changes ---
-    dateInput.addEventListener('change', validateDateTime);
-    
-    // --- Final check on the time input itself for a clearer message ---
-    timeInput.addEventListener('input', () => {
-        if (!timeInput.value) return;
-
-        if (timeInput.validity.rangeUnderflow) {
-            timeInput.setCustomValidity(`The earliest available time on this day is ${new Date('1970-01-01T' + timeInput.min).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`);
-        } else if (timeInput.validity.rangeOverflow) {
-            timeInput.setCustomValidity(`The latest available time on this day is ${new Date('1970-01-01T' + timeInput.max).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}.`);
-        } else {
-            timeInput.setCustomValidity("");
-        }
-        timeInput.reportValidity();
-    });
+    // --- Add the event listeners ---
+    doctorSelect.addEventListener('change', fetchAvailableSlots);
+    dateInput.addEventListener('change', fetchAvailableSlots);
 });
