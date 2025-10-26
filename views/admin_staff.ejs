@@ -1,0 +1,55 @@
+<%- include('initials/header.ejs', { title: 'Staff Management' }) %>
+<link rel="stylesheet" href="/styles/admin_staff.css">
+    <div class="container py-5">
+        <h2 class="mb-4 text-primary"><i class="fas fa-users-cog me-3"></i> Staff & User Management</h2>
+        
+        <div class="table-responsive shadow-md">
+            <table class="table table-hover table-striped mb-0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Current Role</th>
+                        <th style="width: 250px;">Change Role</th>
+                        <th class="text-center">Schedule</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (users.length > 0) { %>
+                        <% users.forEach(u => { %>
+                            <tr>
+                                <td><%= u.id %></td>
+                                <td><%= u.username %></td>
+                                <td><%= u.email %></td>
+                                <td><span class="badge bg-<%= u.role === 'admin' ? 'danger' : (u.role === 'doctor' ? 'primary' : 'secondary') %>"><%= u.role %></span></td>
+                                <td>
+                                    <form action="/admin/staff/update-role" method="POST" class="d-flex gap-2">
+                                        <input type="hidden" name="user_id" value="<%= u.id %>">
+                                        <select name="new_role" class="form-select form-select-sm" <%= (user.id === u.id) ? 'disabled' : '' %>>
+                                            <option value="user" <%= u.role === 'user' ? 'selected' : '' %>>Patient</option>
+                                            <option value="doctor" <%= u.role === 'doctor' ? 'selected' : '' %>>Doctor</option>
+                                            <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>Admin</option>
+                                        </select>
+                                        <button type="submit" class="btn btn-primary btn-sm" <%= (user.id === u.id) ? 'disabled' : '' %>>Set</button>
+                                    </form>
+                                </td>
+                                <td class="text-center">
+                                    <% if (u.role === 'doctor') { %>
+                                        <a href="/admin/schedule/<%= u.id %>" class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-calendar-alt me-1"></i> Manage
+                                        </a>
+                                    <% } else { %>
+                                        <span class="text-muted small">N/A</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr><td colspan="6" class="text-center">No users found.</td></tr>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+<%- include('initials/footer.ejs') %>
