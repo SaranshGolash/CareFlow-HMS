@@ -243,3 +243,15 @@ CREATE TABLE audit_log (
 
 ALTER TABLE services
 ADD COLUMN linked_inventory_item_id INTEGER REFERENCES inventory(item_id) ON DELETE SET NULL;
+
+-- Create a table for doctors' weekly schedules
+CREATE TABLE doctor_schedules (
+    schedule_id SERIAL PRIMARY KEY,
+    doctor_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    -- Day of the week: 0=Sunday, 1=Monday, ..., 6=Saturday (matches JavaScript's getDay())
+    day_of_week INTEGER NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    -- Ensure a doctor can't have duplicate entries for the same day
+    UNIQUE(doctor_id, day_of_week)
+);
