@@ -36,10 +36,23 @@
                                 <label for="cost" class="form-label">Cost (<i class="fas fa-dollar-sign    "></i>)*</label>
                                 <input type="number" id="cost" name="cost" class="form-control" step="0.01" min="0.01" required placeholder="e.g., 50.00">
                             </div>
-
+    
                             <div class="col-12">
                                 <label for="description" class="form-label">Description (Optional)</label>
                                 <textarea id="description" name="description" class="form-control" rows="2" placeholder="Brief description of the service"></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <label for="linked_inventory_item_id" class="form-label">Link Inventory Item (Optional)</label>
+                                <select id="linked_inventory_item_id" name="linked_inventory_item_id" class="form-select form-control">
+                                <option value="" selected>-- None --</option>
+                                <% if (inventory && inventory.length > 0) { %>
+                                    <% inventory.forEach(item => { %>
+                                        <option value="<%= item.item_id %>"><%= item.item_name %></option>
+                                    <% }); %>
+                                <% } %>
+                                </select>
+                                <div class="form-text">If selected, this item's stock will be auto-decremented when this service is billed.</div>
                             </div>
 
                             <div class="col-12 pt-2">
