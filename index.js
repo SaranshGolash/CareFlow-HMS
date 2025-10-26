@@ -331,6 +331,59 @@ app.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
     }
 });
 
+// --- API ROUTES ---
+
+// GET: Fetches a specific doctor's AVAILABLE appointment slots for a specific DATE
+app.get('/api/doctor-slots/:doctorId/:date', isAuthenticated, async (req, res) => {
+    const { doctorId, date } = req.params;
+    
+    // Get the day of the week (0-6) from the selected date
+    const selectedDate = new Date(date + "T00:00:00");
+    const dayOfWeek = selectedDate.getDay();
+
+    try {
+        // This single, powerful query does all the work:
+        // 1. Gets the doctor's schedule (start_time, end_time) for the selected day.
+        // 2. Generates a series of all 30-minute slots within that schedule.
+        // 3. Excludes slots that are already present in the 'appointments' table.
+        const query = `
+            WITH schedule AS (
+                SELECT start_time, end_time 
+                FROM doctor_schedules
+                WHERE doctor_id = $1 AND day_of_week = $2
+            ),
+            
+            all_slots AS (
+                SELECT generate_series(
+                    (SELECT start_time FROM schedule),
+                    (SELECT end_time FROM schedule) - INTERVAL '30 minutes',
+                    '30 minutes'::interval
+                )::TIME AS slot_time
+            ),
+            
+            booked_slots AS (
+                SELECT appointment_time 
+                FROM appointments
+                WHERE doctor_id = $1 AND appointment_date = $3
+            )
+            
+            SELECT slot_time 
+            FROM all_slots
+            WHERE slot_time NOT IN (SELECT appointment_time FROM booked_slots)
+            ORDER BY slot_time;
+        `;
+        
+        const result = await db.query(query, [doctorId, dayOfWeek, date]);
+        
+        // Send the list of available time slots as JSON
+        res.json(result.rows.map(row => row.slot_time));
+
+    } catch (err) {
+        console.error('API Error fetching doctor slots:', err);
+        res.status(500).json({ error: 'Failed to fetch available slots' });
+    }
+});
+
 // Records of patients view route
 app.get('/records', isAuthenticated, async (req, res) => {
     try {
