@@ -39,9 +39,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -2038,6 +2038,36 @@ app.post('/inventory', isAuthenticated, isAdmin, async (req, res) => {
             console.error('Error adding new inventory item:', err);
             req.flash('error_msg', 'An error occurred while adding the item.');
         }
+        res.redirect('/inventory');
+    }
+});
+
+// POST: Update an existing inventory item's stock (SET new value)
+app.post('/inventory/update/:id', isAuthenticated, isAdmin, async (req, res) => {
+    const itemId = req.params.id;
+    // We use a dynamic name 'new_stock_value' to avoid conflicts
+    const newStock = parseInt(req.body.new_stock_value);
+
+    if (isNaN(newStock) || newStock < 0) {
+        req.flash('error_msg', 'Invalid stock quantity. Must be a positive number.');
+        return res.redirect('/inventory');
+    }
+
+    try {
+        const result = await db.query(
+            'UPDATE inventory SET current_stock = $1, last_updated = CURRENT_TIMESTAMP WHERE item_id = $2 RETURNING item_name',
+            [newStock, itemId]
+        );
+
+        if (result.rowCount > 0) {
+            req.flash('success_msg', `Stock for "${result.rows[0].item_name}" has been set to ${newStock}.`);
+        } else {
+            req.flash('error_msg', 'Item not found.');
+        }
+        res.redirect('/inventory');
+    } catch (err) {
+        console.error('Error updating stock:', err);
+        req.flash('error_msg', 'An error occurred while updating stock.');
         res.redirect('/inventory');
     }
 });
