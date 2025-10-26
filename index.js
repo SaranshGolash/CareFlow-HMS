@@ -336,21 +336,15 @@ app.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
 // GET: Fetches a specific doctor's AVAILABLE appointment slots for a specific DATE
 app.get('/api/doctor-slots/:doctorId/:date', isAuthenticated, async (req, res) => {
     const { doctorId, date } = req.params;
-    
-    // Get the day of the week (0-6) from the selected date
-    const selectedDate = new Date(date + "T00:00:00");
-    const dayOfWeek = selectedDate.getDay();
 
     try {
-        // This single, powerful query does all the work:
-        // 1. Gets the doctor's schedule (start_time, end_time) for the selected day.
-        // 2. Generates a series of all 30-minute slots within that schedule.
-        // 3. Excludes slots that are already present in the 'appointments' table.
+        // (UPDATED) This query now lets PostgreSQL calculate the day of the week.
         const query = `
             WITH schedule AS (
                 SELECT start_time, end_time 
                 FROM doctor_schedules
-                WHERE doctor_id = $1 AND day_of_week = $2
+                WHERE doctor_id = $1 
+                  AND day_of_week = EXTRACT(DOW FROM $2::DATE) -- $2 is the date string
             ),
             
             all_slots AS (
@@ -364,7 +358,7 @@ app.get('/api/doctor-slots/:doctorId/:date', isAuthenticated, async (req, res) =
             booked_slots AS (
                 SELECT appointment_time 
                 FROM appointments
-                WHERE doctor_id = $1 AND appointment_date = $3
+                WHERE doctor_id = $1 AND appointment_date = $2 -- $2 is the date string
             )
             
             SELECT slot_time 
@@ -373,12 +367,15 @@ app.get('/api/doctor-slots/:doctorId/:date', isAuthenticated, async (req, res) =
             ORDER BY slot_time;
         `;
         
-        const result = await db.query(query, [doctorId, dayOfWeek, date]);
+        // (UPDATED) The parameters are now [doctorId, date]
+        //    PostgreSQL will use the 'date' string for both the DOW calculation and the 'booked_slots' check.
+        const result = await db.query(query, [doctorId, date]);
         
-        // Send the list of available time slots as JSON
         res.json(result.rows.map(row => row.slot_time));
 
     } catch (err) {
+        // This catch block is what's sending the error to your frontend.
+        // Check your server logs for the detailed SQL error here.
         console.error('API Error fetching doctor slots:', err);
         res.status(500).json({ error: 'Failed to fetch available slots' });
     }
