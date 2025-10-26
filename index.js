@@ -1797,18 +1797,28 @@ app.post('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
-// 1. GET: Route to display the Service Catalog page
+// GET: Display the Service Catalog (Admin Only)
 app.get('/services', isAuthenticated, isAdmin, async (req, res) => {
     try {
-        // fetchServices is assumed to fetch all services from the DB pool
-        const services = await fetchServices();
+        // Run queries concurrently for efficiency
+        const servicesPromise = db.query('SELECT * FROM services ORDER BY category, service_name');
+        const inventoryPromise = db.query('SELECT item_id, item_name FROM inventory ORDER BY item_name');
         
-        // Renders the provided EJS file
-        res.render('service_catalog', { services: services });
+        const [servicesResult, inventoryResult] = await Promise.all([servicesPromise, inventoryPromise]);
+
+        const formattedServices = servicesResult.rows.map(s => ({
+            ...s,
+            cost: parseFloat(s.cost).toFixed(2)
+        }));
+
+        res.render('service_catalog', { 
+            services: formattedServices,
+            inventory: inventoryResult.rows
+        });
     } catch (err) {
-        console.error('Error fetching services for admin:', err);
-        req.flash('error_msg', 'Could not load service catalog.');
-        res.redirect('/dashboard');
+        console.error('Error fetching service catalog:', err);
+        req.flash('error_msg', 'Error retrieving service data.');
+        res.render('service_catalog', { services: [], inventory: [] });
     }
 });
 
