@@ -1907,7 +1907,7 @@ app.get('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
     }
 });
 
-// POST: Generate and Save the Invoice (Admin Only)
+// POST: Generate and Save the Invoice (Transaction + Inventory Fix)
 app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
     const { patient_id, record_id, due_date, service_ids, quantities } = req.body;
 
@@ -1915,60 +1915,87 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
         req.flash('error_msg', 'Patient, Due Date, and at least one Service are required.');
         return res.redirect('/new-invoice');
     }
-    
-    // Use the Pool instance (db) to acquire a dedicated client for transaction
+
     const client = await db.connect();
     try {
         await client.query('BEGIN');
         
-        const serviceDetailsResult = await client.query('SELECT service_id, service_name, cost FROM services WHERE service_id = ANY($1)', [service_ids]);
+        // Fetch service details, including the inventory link
+        const serviceDetailsResult = await client.query(
+            'SELECT service_id, service_name, cost, linked_inventory_item_id FROM services WHERE service_id = ANY($1)', 
+            [service_ids]
+        );
         const serviceDetails = serviceDetailsResult.rows;
 
         let totalAmount = 0;
         
+        // Insert Invoice
         const invoiceQuery = `
             INSERT INTO invoices (user_id, record_id, due_date, total_amount) 
             VALUES ($1, $2, $3, $4) RETURNING invoice_id
         `;
-        // Insert with placeholder 0.00 total for now
-        const invoiceResult = await client.query(invoiceQuery, [patient_id, record_id || null, due_date, 0.00]); 
+        const invoiceResult = await client.query(invoiceQuery, [patient_id, record_id || null, due_date, 0.00]);
         const invoiceId = invoiceResult.rows[0].invoice_id;
 
-        // Insert Invoice Items and calculate final total
+        // Loop through items, insert them, AND update inventory
         for (let i = 0; i < service_ids.length; i++) {
             const serviceId = parseInt(service_ids[i]);
             const quantity = parseInt(quantities[i]) || 1;
             const detail = serviceDetails.find(s => s.service_id === serviceId);
 
             if (detail) {
+                // Add item to invoice
                 const cost = parseFloat(detail.cost);
-                const itemTotal = cost * quantity;
-                totalAmount += itemTotal;
+                totalAmount += cost * quantity;
+                await client.query(
+                    'INSERT INTO invoice_items (invoice_id, service_name, cost_per_unit, quantity) VALUES ($1, $2, $3, $4)',
+                    [invoiceId, detail.service_name, cost, quantity]
+                );
 
-                const itemQuery = `
-                    INSERT INTO invoice_items (invoice_id, service_name, cost_per_unit, quantity)
-                    VALUES ($1, $2, $3, $4)
-                `;
-                await client.query(itemQuery, [invoiceId, detail.service_name, cost, quantity]);
+                // Check if this service is linked to an inventory item
+                if (detail.linked_inventory_item_id) {
+                    const inventoryId = detail.linked_inventory_item_id;
+                    
+                    // Check stock and lock the row to prevent race conditions
+                    const stockCheck = await client.query(
+                        'SELECT current_stock FROM inventory WHERE item_id = $1 FOR UPDATE', 
+                        [inventoryId]
+                    );
+
+                    if (stockCheck.rows.length === 0) {
+                        throw new Error(`Linked inventory item (ID: ${inventoryId}) not found.`);
+                    }
+
+                    const currentStock = stockCheck.rows[0].current_stock;
+                    
+                    // Check if stock is sufficient
+                    if (currentStock < quantity) {
+                        throw new Error(`Insufficient stock for "${detail.service_name}". Only ${currentStock} units left, but ${quantity} were requested.`);
+                    }
+
+                    // Decrement the stock
+                    await client.query(
+                        'UPDATE inventory SET current_stock = current_stock - $1, last_updated = CURRENT_TIMESTAMP WHERE item_id = $2',
+                        [quantity, inventoryId]
+                    );
+                }
             }
         }
 
-        // Update the Invoice with the final total amount
-        const updateInvoiceQuery = 'UPDATE invoices SET total_amount = $1 WHERE invoice_id = $2';
-        await client.query(updateInvoiceQuery, [totalAmount.toFixed(2), invoiceId]);
+        // 4. Update the Invoice with the final total amount
+        await client.query('UPDATE invoices SET total_amount = $1 WHERE invoice_id = $2', [totalAmount.toFixed(2), invoiceId]);
 
         await client.query('COMMIT');
-
-        req.flash('success_msg', `Invoice #${invoiceId} generated successfully for Patient ID ${patient_id}. Total: $${totalAmount.toFixed(2)}`);
-        res.redirect('/dashboard'); 
+        req.flash('success_msg', `Invoice #${invoiceId} generated and inventory updated.`);
+        res.redirect('/invoices');
 
     } catch (err) {
         await client.query('ROLLBACK');
-        console.error('Error generating invoice (Transaction rolled back):', err);
-        req.flash('error_msg', 'Error generating invoice. Please check the services and amounts.');
+        console.error('Error in new invoice transaction:', err);
+        req.flash('error_msg', `Error: ${err.message}`);
         res.redirect('/new-invoice');
     } finally {
-        client.release(); // Release the client back to the pool
+        client.release();
     }
 });
 
