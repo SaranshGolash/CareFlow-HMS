@@ -142,30 +142,43 @@ passport.use(new GoogleStrategy({
   }
 ));
 
-// Global variables
+// --- Global variables ---
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
     res.locals.error = req.flash('error');
-    res.locals.user = req.user || req.session.user || null;
+    // FIX: Only check req.user
+    res.locals.user = req.user || null;
     next();
 });
 
-// Middleware to check if user is logged in
+// --- Middleware to check if user is logged in ---
 const isAuthenticated = (req, res, next) => {
-    if (req.session.user) {
+    // FIX: Use Passport's built-in req.isAuthenticated()
+    if (req.isAuthenticated()) {
         return next();
     }
     req.flash('error_msg', 'Please log in to view that resource');
     res.redirect('/login');
 };
 
-// Middleware to check if user is an Admin
+// --- Middleware to check if user is an Admin ---
 const isAdmin = (req, res, next) => {
-    if (req.session.user && req.session.user.role === 'admin') {
+    // FIX: Check req.user
+    if (req.user && req.user.role === 'admin') {
         return next();
     }
     req.flash('error_msg', 'Access denied. You must be an administrator.');
+    res.redirect('/');
+};
+
+// --- Middleware to check for Doctor or Admin roles ---
+const isDoctorOrAdmin = (req, res, next) => {
+    // FIX: Check req.user
+    if (req.user && (req.user.role === 'admin' || req.user.role === 'doctor')) {
+        return next();
+    }
+    req.flash('error_msg', 'Access denied. You must be a doctor or administrator.');
     res.redirect('/');
 };
 
@@ -181,15 +194,6 @@ const logAudit = (userId, actionType, targetId, req) => {
     ).catch(err => {
         console.error('Audit Log Write Failed:', err);
     });
-};
-
-// Middleware to check if user is a doctor or an admin
-const isDoctorOrAdmin = (req, res, next) => {
-    if (req.session.user && (req.session.user.role === 'admin' || req.session.user.role === 'doctor')) {
-        return next();
-    }
-    req.flash('error_msg', 'Access denied. You must be a doctor or administrator.');
-    res.redirect('/');
 };
 
 // --- Reusable Functions ---
@@ -245,8 +249,8 @@ app.get('/', async (req, res) => {
 
 // Appointments
 app.get('/appointments', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
-    const isAdminUser = req.session.user.role === 'admin';
+    const userId = req.user.id;
+    const isAdminUser = req.user.role === 'admin';
     
     let query = 'SELECT * FROM appointments ';
     const params = [];
@@ -298,7 +302,7 @@ app.get('/newappointments', isAuthenticated, async (req, res) => {
 // POST: Handle new appointment creation and queue a reminder
 app.post('/newappointments', isAuthenticated, async (req, res) => {
     const { patient_name, gender, phone, doctor_id, doctor_name, appointment_date, appointment_time } = req.body;
-    const userId = req.session.user.id;
+    const userId = req.user.id;
     
     // Acquire a client from the connection pool for the transaction
     const client = await db.connect();
@@ -374,7 +378,7 @@ app.post('/newappointments', isAuthenticated, async (req, res) => {
 // Handle Appointment Confirmation (Patient Action)
 app.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
     const appointmentId = req.params.id;
-    const userId = req.session.user.id; // Patient ID
+    const userId = req.user.id; // Patient ID
 
     try {
         // Ensure the appointment belongs to the user AND the status is not already Paid/Canceled
@@ -403,7 +407,7 @@ app.post('/appointments/:id/confirm', isAuthenticated, async (req, res) => {
 // Records of patients view route
 app.get('/records', isAuthenticated, async (req, res) => {
     try {
-        const userId = req.session.user.id;
+        const userId = req.user.id;
         
         // --- UPDATED QUERY: LEFT JOIN with appointments to get doctor_name ---
         const query = `
@@ -425,7 +429,7 @@ app.get('/records', isAuthenticated, async (req, res) => {
 
         res.render('records', { 
             records: records,
-            username: req.session.user.username 
+            username: req.user.username 
         });
     } catch (err) {
         console.error('Error fetching medical records:', err);
@@ -436,7 +440,7 @@ app.get('/records', isAuthenticated, async (req, res) => {
 
 app.get('/records/:id', isAuthenticated, async (req, res) => {
     const recordId = req.params.id;
-    const userId = req.session.user.id; 
+    const userId = req.user.id; 
 
     try {
         // --- UPDATED QUERY: JOIN with users AND LEFT JOIN with appointments ---
@@ -474,7 +478,7 @@ app.get('/records/:id', isAuthenticated, async (req, res) => {
 // Monitoring
 app.get('/monitoring', isAuthenticated, async (req, res) => {
     try {
-        const userId = req.session.user.id; 
+        const userId = req.user.id; 
 
         const result = await db.query(
             `SELECT 
@@ -506,7 +510,7 @@ app.get('/monitoring', isAuthenticated, async (req, res) => {
             vitals: rawVitals.slice(-10).reverse(),
             latest: latestVitals,
             chartData: chartData,
-            username: req.session.user.username 
+            username: req.user.username 
         });
 
     } catch (err) {
@@ -656,7 +660,7 @@ app.post('/logout', async (req, res) => {
 // --- USER MANAGEMENT ROUTES ---
 
 app.get('/dashboard', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
+    const userId = req.user.id;
     let lowStockCount = 0; // Initialize lowStockCount for all users
 
     try {
@@ -689,7 +693,7 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
                                    '0.00';
 
         let recentPrescriptions = [];
-        if (req.session.user.role === 'user') {
+        if (req.user.role === 'user') {
             const prescriptionsPromise = db.query(`
                 SELECT p.*, u.username as doctor_name 
                 FROM prescriptions p
@@ -702,7 +706,7 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
         }
 
         // --- 2. Fetch Low Stock Count (Admin Only Logic) ---
-        if (req.session.user.role === 'admin') {
+        if (req.user.role === 'admin') {
             const lowStockResult = await db.query(
                 'SELECT COUNT(*) AS count FROM inventory WHERE current_stock <= low_stock_threshold'
             );
@@ -712,7 +716,7 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
         // ---------------------------------------------------
         
         // Update Session with Fresh Wallet Balance (Good UX)
-        req.session.user.wallet_balance = parseFloat(walletBalance);
+        req.user.wallet_balance = parseFloat(walletBalance);
 
 
         // --- 3. FINAL Render Call ---
@@ -754,7 +758,7 @@ app.get('/settings', isAuthenticated, (req, res) => {
 app.post('/settings/update', isAuthenticated, async (req, res) => {
     // 1. Get all data from the form
     const { username, email, user_id, insurance_provider, policy_number } = req.body;
-    const userId = req.session.user.id;
+    const userId = req.user.id;
 
     if (parseInt(user_id) !== userId) {
         req.flash('error_msg', 'Authorization failed.');
@@ -773,10 +777,10 @@ app.post('/settings/update', isAuthenticated, async (req, res) => {
         logAudit(userId, 'UPDATED_PROFILE', userId, req);
 
         // 3. Update the session object with ALL new data ---
-        req.session.user.username = username;
-        req.session.user.email = email;
-        req.session.user.insurance_provider = insurance_provider;
-        req.session.user.policy_number = policy_number;
+        req.user.username = username;
+        req.user.email = email;
+        req.user.insurance_provider = insurance_provider;
+        req.user.policy_number = policy_number;
 
         req.flash('success_msg', 'Profile updated successfully!');
         res.redirect('/settings');
@@ -795,7 +799,7 @@ app.post('/settings/update', isAuthenticated, async (req, res) => {
 app.post('/settings/password', isAuthenticated, async (req, res) => {
     const { current_password, new_password, user_id } = req.body;
 
-    if (parseInt(user_id) !== req.session.user.id) {
+    if (parseInt(user_id) !== req.user.id) {
         req.flash('error_msg', 'Authorization failed.');
         return res.redirect('/settings');
     }
@@ -835,8 +839,8 @@ app.post('/settings/password', isAuthenticated, async (req, res) => {
 
 // GET: Display User's Inbox (Patient and Admin View)
 app.get('/inbox', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
-    const isAdminUser = req.session.user.role === 'admin';
+    const userId = req.user.id;
+    const isAdminUser = req.user.role === 'admin';
     
     let query = `
         SELECT 
@@ -879,10 +883,10 @@ app.get('/new-message', isAuthenticated, (req, res) => {
 
 // POST: Handle Sending New Message
 app.post('/new-message', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
-    const senderRole = req.session.user.role;
+    const userId = req.user.id;
+    const senderRole = req.user.role;
     // Get the username from the session (must be available upon login)
-    const senderUsername = req.session.user.username; 
+    const senderUsername = req.user.username; 
     
     const { subject, message_body } = req.body;
 
@@ -918,12 +922,12 @@ app.get('/consultation-end', isAuthenticated, (req, res) => {
 // GET: Teleconsultation Mock (Updated to pass user_id for feedback form)
 app.get('/teleconsultation/:id', isAuthenticated, async (req, res) => {
     const appointmentId = req.params.id;
-    const userId = req.session.user.id;
+    const userId = req.user.id;
     
     try {
         const result = await db.query('SELECT * FROM appointments WHERE id = $1 AND user_id = $2', [appointmentId, userId]);
         
-        if (result.rowCount === 0 && req.session.user.role !== 'admin') {
+        if (result.rowCount === 0 && req.user.role !== 'admin') {
             req.flash('error_msg', 'Access denied to this appointment call.');
             return res.redirect('/appointments');
         }
@@ -941,13 +945,13 @@ app.get('/teleconsultation/:id', isAuthenticated, async (req, res) => {
 // GET: Consultation End/Feedback Page (Renders the form)
 app.get('/consultation-end', isAuthenticated, (req, res) => {
     // Pass the user ID to securely link feedback
-    res.render('consultation_end', { userId: req.session.user.id });
+    res.render('consultation_end', { userId: req.user.id });
 });
 
 // POST: Submit Feedback and store in DB
 app.post('/submit-feedback', isAuthenticated, async (req, res) => {
     const { user_id, rating, feedback_effectiveness, comments } = req.body;
-    const currentUserId = req.session.user.id;
+    const currentUserId = req.user.id;
 
     // Security Check: Ensure the user is submitting feedback for themselves
     if (parseInt(user_id) !== currentUserId) {
@@ -976,8 +980,8 @@ app.post('/submit-feedback', isAuthenticated, async (req, res) => {
 
 // GET: Display the Patient's Wallet/Deposit Page
 app.get('/wallet', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
-    const isAdminUser = req.session.user.role === 'admin';
+    const userId = req.user.id;
+    const isAdminUser = req.user.role === 'admin';
 
     let query = 'SELECT id, username, wallet_balance, email FROM users ';
     const params = [];
@@ -1013,7 +1017,7 @@ app.get('/wallet', isAuthenticated, async (req, res) => {
 
 // POST: Handles Patient Deposit (Mock Transaction)
 app.post('/wallet/deposit', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
+    const userId = req.user.id;
     const { deposit_amount } = req.body;
     const amount = parseFloat(deposit_amount);
 
@@ -1040,7 +1044,7 @@ app.post('/wallet/deposit', isAuthenticated, async (req, res) => {
         await client.query('COMMIT');
         
         // Update the session balance for immediate display (Optional but good UX)
-        req.session.user.wallet_balance = parseFloat(userUpdate.rows[0].wallet_balance);
+        req.user.wallet_balance = parseFloat(userUpdate.rows[0].wallet_balance);
 
         req.flash('success_msg', `$${amount.toFixed(2)} added to your wallet!`);
         res.redirect('/wallet');
@@ -1058,7 +1062,7 @@ app.post('/wallet/deposit', isAuthenticated, async (req, res) => {
 // POST: Handles Patient Withdrawal (Mock Transaction)
 // Placement: Place this in the "NEW WALLET ROUTES" section of your index.js.
 app.post('/wallet/withdraw', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
+    const userId = req.user.id;
     const { withdraw_amount } = req.body;
     const amount = parseFloat(withdraw_amount);
 
@@ -1097,7 +1101,7 @@ app.post('/wallet/withdraw', isAuthenticated, async (req, res) => {
         await client.query('COMMIT');
         
         // 5. Update the session balance
-        req.session.user.wallet_balance = parseFloat(userUpdate.rows[0].wallet_balance);
+        req.user.wallet_balance = parseFloat(userUpdate.rows[0].wallet_balance);
 
         req.flash('success_msg', `$${amount.toFixed(2)} successfully withdrawn.`);
         res.redirect('/wallet');
@@ -1117,13 +1121,13 @@ app.post('/wallet/withdraw', isAuthenticated, async (req, res) => {
 // GET: Doctor's Dashboard (Shows upcoming AND past appointments)
 app.get('/doctor/dashboard', isAuthenticated, async (req, res) => {
     // Security check: ensure only doctors can access this page
-    if (req.session.user.role !== 'doctor') {
+    if (req.user.role !== 'doctor') {
         req.flash('error_msg', 'Access denied.');
         return res.redirect('/');
     }
     
-    const doctorId = req.session.user.id;
-    const doctorName = req.session.user.username;
+    const doctorId = req.user.id;
+    const doctorName = req.user.username;
 
     try {
         // UPDATED QUERY: Fetch ALL appointments for the logged-in doctor, sorted by most recent first.
@@ -1170,13 +1174,13 @@ app.get('/doctor/dashboard', isAuthenticated, async (req, res) => {
 // GET: Consolidated view of a single appointment (Record + Vitals)
 app.get('/doctor/appointment/:id', isAuthenticated, async (req, res) => {
     // Security check: ensure only doctors can access this page
-    if (req.session.user.role !== 'doctor') {
+    if (req.user.role !== 'doctor') {
         req.flash('error_msg', 'Access denied.');
         return res.redirect('/');
     }
     
     const appointmentId = req.params.id;
-    const doctorId = req.session.user.id;
+    const doctorId = req.user.id;
 
     try {
         // --- 1. Fetch Core Appointment & Patient Details ---
@@ -1285,7 +1289,7 @@ app.get('/api/doctor-slots/:doctorId/:date', isAuthenticated, async (req, res) =
 
 app.post('/api/chat', isAuthenticated, async (req, res) => {
     const userMessage = req.body.message;
-    const userId = req.session.user.id; 
+    const userId = req.user.id; 
 
     if (!userMessage) {
         return res.status(400).json({ error: 'Message content is required.' });
@@ -1386,8 +1390,8 @@ Their current outstanding balance is $${outstandingBalance}.`;
 
 // GET: View Invoices List (Admin or Patient-Specific)
 app.get('/invoices', isAuthenticated, async (req, res) => {
-    const userId = req.session.user.id;
-    const isAdminUser = req.session.user.role === 'admin';
+    const userId = req.user.id;
+    const isAdminUser = req.user.role === 'admin';
     
     let query = 'SELECT * FROM invoices ';
     const params = [];
@@ -1412,8 +1416,8 @@ app.get('/invoices', isAuthenticated, async (req, res) => {
 // GET: View Single Invoice Detail / Payment Portal
 app.get('/invoices/:id', isAuthenticated, async (req, res) => {
     const invoiceId = parseInt(req.params.id);
-    const userId = req.session.user.id;
-    const isAdminUser = req.session.user.role === 'admin';
+    const userId = req.user.id;
+    const isAdminUser = req.user.role === 'admin';
     
     try {
         const invoice = await fetchInvoiceDetails(invoiceId, isAdminUser ? null : userId);
@@ -1424,12 +1428,12 @@ app.get('/invoices/:id', isAuthenticated, async (req, res) => {
         }
 
         // Fetch the user's current wallet balance from the session
-        const walletBalance = req.session.user.wallet_balance || 0;
+        const walletBalance = req.user.wallet_balance || 0;
         
         res.render('pay_invoice', { 
             invoice: invoice, 
             items: invoice.items,
-            user: req.session.user,
+            user: req.user,
             walletBalance: parseFloat(walletBalance) // Pass wallet balance to the view
         });
 
@@ -1444,7 +1448,7 @@ app.get('/invoices/:id', isAuthenticated, async (req, res) => {
 // POST: Process Payment (Mock Transaction for Card/Wallet)
 app.post('/pay-invoice', isAuthenticated, async (req, res) => {
     const { invoice_id, payment_amount, outstanding_balance } = req.body;
-    const userId = req.session.user.id;
+    const userId = req.user.id;
     
     const amount = parseFloat(payment_amount);
     const outstanding = parseFloat(outstanding_balance);
@@ -1510,11 +1514,11 @@ app.post('/pay-invoice', isAuthenticated, async (req, res) => {
 // POST: Pay an Invoice using the internal Wallet (Patient-only)
 app.post('/invoices/:id/pay-with-wallet', isAuthenticated, async (req, res) => {
     const invoiceId = parseInt(req.params.id);
-    const userId = req.session.user.id;
+    const userId = req.user.id;
     const outstandingBalance = parseFloat(req.body.outstanding_balance); // Get amount from form
 
     // Make sure user isn't an admin
-    if (req.session.user.role === 'admin') {
+    if (req.user.role === 'admin') {
         req.flash('error_msg', 'Admins cannot pay invoices.');
         return res.redirect(`/invoices/${invoiceId}`);
     }
@@ -1554,7 +1558,7 @@ app.post('/invoices/:id/pay-with-wallet', isAuthenticated, async (req, res) => {
         await client.query('COMMIT');
 
         // 7. Update the session balance
-        req.session.user.wallet_balance = newWalletBalance;
+        req.user.wallet_balance = newWalletBalance;
 
         req.flash('success_msg', `Payment of $${outstandingBalance.toFixed(2)} successful! Your invoice is now paid.`);
         res.redirect(`/invoices/${invoiceId}`);
@@ -1572,7 +1576,7 @@ app.post('/invoices/:id/pay-with-wallet', isAuthenticated, async (req, res) => {
 // GET: Doctor views a specific patient's list of medical records
 app.get('/doctor/patient/:userId/records', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     const patientId = req.params.userId;
-    const doctorId = req.session.user.id;
+    const doctorId = req.user.id;
 
     try {
         // 1. SECURITY CHECK: Verify the doctor has an appointment history with this patient.
@@ -1603,7 +1607,7 @@ app.get('/doctor/patient/:userId/records', isAuthenticated, isDoctorOrAdmin, asy
 // GET: Doctor views a specific patient's health monitoring/vitals
 app.get('/doctor/patient/:userId/monitoring', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     const patientId = req.params.userId;
-    const doctorId = req.session.user.id;
+    const doctorId = req.user.id;
     
     try {
         // 1. SECURITY CHECK (Remains the same)
@@ -1652,7 +1656,7 @@ app.get('/doctor/patient/:userId/monitoring', isAuthenticated, isDoctorOrAdmin, 
 // GET: Doctor views a specific medical record detail page
 app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     const recordId = req.params.id;
-    const doctorId = req.session.user.id;
+    const doctorId = req.user.id;
 
     try {
         // 1. Fetch the record first to get the patient's user_id
@@ -1714,7 +1718,7 @@ app.post('/admin/staff/update-role', isAuthenticated, isAdmin, async (req, res) 
     const { user_id, new_role } = req.body;
 
     // Prevent admin from accidentally demoting themselves (optional check)
-    if (parseInt(user_id) === req.session.user.id) {
+    if (parseInt(user_id) === req.user.id) {
         req.flash('error_msg', 'You cannot change your own role.');
         return res.redirect('/admin/staff');
     }
@@ -1936,7 +1940,7 @@ app.get('/prescribe/:record_id', isAuthenticated, isDoctorOrAdmin, async (req, r
 app.post('/prescribe', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     // 1. Get data from the form
     const { record_id, user_id, inventory_selection, dosage, frequency, duration, notes } = req.body;
-    const doctorId = req.session.user.id;
+    const doctorId = req.user.id;
 
     // 2. Validate input
     if (!record_id || !user_id || !inventory_selection || !dosage || !frequency) {
@@ -2035,11 +2039,11 @@ app.post('/admin/wallet/adjust', isAuthenticated, isAdmin, async (req, res) => {
             INSERT INTO wallet_transactions (user_id, amount, transaction_type, reference_id, description)
             VALUES ($1, $2, 'Adjustment', $3, $4)
         `;
-        await client.query(transactionQuery, [patientId, finalAmount, req.session.user.username, `Admin Action (${adjustment_reason})`]);
+        await client.query(transactionQuery, [patientId, finalAmount, req.user.username, `Admin Action (${adjustment_reason})`]);
 
         await client.query('COMMIT');
 
-        logAudit(req.session.user.id, 'ADMIN_WALLET_ADJUSTMENT', patientId, req);
+        logAudit(req.user.id, 'ADMIN_WALLET_ADJUSTMENT', patientId, req);
 
         req.flash('success_msg', `Balance for User ID ${patientId} adjusted by $${finalAmount.toFixed(2)}.`);
         res.redirect('/wallet');
@@ -2077,7 +2081,7 @@ app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
     res.render('newrecord', { 
         patients: patients, 
         appointments: appointments, // GUARANTEED to be an array (fetched or empty)
-        doctor_name: req.session.user.username 
+        doctor_name: req.user.username 
     });
 });
 
@@ -2120,7 +2124,7 @@ app.get('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
 
         res.render('add_vitals', { 
             patients: patients,
-            admin_username: req.session.user.username 
+            admin_username: req.user.username 
         });
 
     } catch (err) {
