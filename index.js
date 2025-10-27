@@ -75,6 +75,73 @@ app.use(session({
 // Flash messages
 app.use(flash());
 
+// --- PASSPORT (Google OAuth) CONFIGURATION ---
+app.use(passport.initialize());
+app.use(passport.session());
+
+// Passport serialization: determines what user data to store in the session
+passport.serializeUser((user, done) => {
+    done(null, user.id); // Store only the user's database ID in the session
+});
+
+// Passport deserialization: fetches the user data from the DB using the session ID
+passport.deserializeUser(async (id, done) => {
+    try {
+        const result = await db.query('SELECT * FROM users WHERE id = $1', [id]);
+        const user = result.rows[0];
+        done(null, user); // Attach the full user object to req.user
+    } catch (err) {
+        done(err);
+    }
+});
+
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: "/auth/google/callback" // This must match the URL in your Google Console
+  },
+  async (accessToken, refreshToken, profile, done) => {
+    // This is the core "findOrCreate" logic
+    const googleId = profile.id;
+    const email = profile.emails[0].value;
+    const username = profile.displayName;
+
+    try {
+        // 1. Check if user already exists via Google ID
+        let userResult = await db.query('SELECT * FROM users WHERE google_id = $1', [googleId]);
+        let user = userResult.rows[0];
+
+        if (user) {
+            // User found, log them in
+            return done(null, user);
+        }
+
+        // 2. Not found? Check if they have a local account with the same email
+        userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
+        user = userResult.rows[0];
+
+        if (user) {
+            // Email found! Link the account by adding their Google ID
+            const linkQuery = 'UPDATE users SET google_id = $1 WHERE email = $2 RETURNING *';
+            const linkedUserResult = await db.query(linkQuery, [googleId, email]);
+            return done(null, linkedUserResult.rows[0]);
+        }
+        
+        // 3. Not found at all? Create a new user
+        const createQuery = `
+            INSERT INTO users (username, email, google_id, role) 
+            VALUES ($1, $2, $3, 'user') 
+            RETURNING *
+        `;
+        const newUserResult = await db.query(createQuery, [username, email, googleId]);
+        return done(null, newUserResult.rows[0]);
+
+    } catch (err) {
+        return done(err);
+    }
+  }
+));
+
 // Global variables
 app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');
