@@ -263,3 +263,7 @@ ALTER COLUMN password_hash DROP NOT NULL;
 -- 2. Add a column to store the user's unique Google ID
 ALTER TABLE users
 ADD COLUMN google_id VARCHAR(255) UNIQUE;
+
+-- Adds the new column to link a prescription to a specific inventory item
+ALTER TABLE prescriptions
+ADD COLUMN linked_inventory_item_id INTEGER REFERENCES inventory(item_id) ON DELETE SET NULL;
