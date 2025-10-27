@@ -1899,24 +1899,33 @@ app.post('/api/update-reminder-status', isAuthenticated, isAdmin, async (req, re
     }
 });
 
-// GET: Display the E-Prescribing Form
+// GET: Display the E-Prescribing Form (with inventory)
 app.get('/prescribe/:record_id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     const recordId = req.params.record_id;
     try {
-        // Fetch the medical record and join with users to get patient name
-        const query = `
+        // Fetch both the record and the inventory in parallel
+        const recordPromise = db.query(`
             SELECT mr.record_id, mr.user_id, u.username as patient_name
             FROM medical_records mr
             JOIN users u ON mr.user_id = u.id
             WHERE mr.record_id = $1
-        `;
-        const result = await db.query(query, [recordId]);
+        `, [recordId]);
+        
+        const inventoryPromise = db.query(
+            "SELECT item_id, item_name, current_stock FROM inventory WHERE current_stock > 0 ORDER BY item_name"
+        );
 
-        if (result.rows.length === 0) {
+        const [recordResult, inventoryResult] = await Promise.all([recordPromise, inventoryPromise]);
+
+        if (recordResult.rows.length === 0) {
             req.flash('error_msg', 'Medical record not found.');
-            return res.redirect('/dashboard'); // Or doctor's dashboard
+            return res.redirect('/dashboard');
         }
-        res.render('new_prescription', { record: result.rows[0] });
+        
+        res.render('new_prescription', { 
+            record: recordResult.rows[0],
+            inventoryItems: inventoryResult.rows // Pass inventory items to the form
+        });
     } catch (err) {
         console.error('Error fetching record for prescription:', err);
         req.flash('error_msg', 'Failed to load prescription form.');
