@@ -147,7 +147,7 @@ app.use((req, res, next) => {
     res.locals.success_msg = req.flash('success_msg');
     res.locals.error_msg = req.flash('error_msg');
     res.locals.error = req.flash('error');
-    res.locals.user = req.session.user || null;
+    res.locals.user = req.user || req.session.user || null;
     next();
 });
 
@@ -533,7 +533,7 @@ app.get('/auth/google/callback',
   passport.authenticate('google', { failureRedirect: '/login' }), // If login fails, redirect to /login
   (req, res) => {
     // Successful authentication, redirect to the correct dashboard.
-    req.flash('success_msg', 'You are now logged in via Google.');
+    req.flash('success_msg', 'Login successful! Welcome back.');
     if (req.user.role === 'doctor') {
         res.redirect('/doctor/dashboard');
     } else {
