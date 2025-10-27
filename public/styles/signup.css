@@ -269,6 +269,73 @@ body{
     fill: currentColor; 
 }
 
+/* --- Divider (or) --- */
+.divider {
+    text-align: center;
+    margin: 1.5rem 0; /* Vertical spacing */
+    color: #ccc; /* Light grey color for the line */
+    position: relative;
+}
+
+/* This creates the horizontal lines on either side of the "or" text */
+.divider::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    width: 100%;
+    height: 1px;
+    background: #eee; /* Very light line color */
+    z-index: 0;
+}
+
+/* This styles the "or" text itself */
+.divider span {
+    background: var(--card, #ffffff); /* Use the card background color */
+    padding: 0 10px;
+    position: relative;
+    z-index: 1;
+    color: var(--muted, #6c757d);
+    font-weight: 500;
+}
+
+/* --- Social Login Buttons --- */
+.socials {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Space between buttons if you add more */
+}
+
+.btn-social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 600;
+    border: 1px solid #ddd;
+    background-color: var(--card, #ffffff);
+    color: #333;
+    text-decoration: none; /* In case you use <a> tags */
+    transition: all 0.2s ease;
+}
+
+.btn-social:hover {
+    background-color: #f8f9fa; /* Slight hover effect */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.btn-social i {
+    font-size: 1.1rem;
+}
+
+/* Specific Google Button (optional, but good for branding) */
+.btn-google:hover {
+    border-color: #4285F4; /* Google's blue */
+    color: #4285F4;
+}
+
 /* small tweak for mobile */
 @media (max-width: 480px) {
     .input-with-icon .form-control { 
