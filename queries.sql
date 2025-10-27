@@ -267,3 +267,6 @@ ADD COLUMN google_id VARCHAR(255) UNIQUE;
 -- Adds the new column to link a prescription to a specific inventory item
 ALTER TABLE prescriptions
 ADD COLUMN linked_inventory_item_id INTEGER REFERENCES inventory(item_id) ON DELETE SET NULL;
+
+ALTER TABLE services
+ADD COLUMN linked_inventory_item_id INTEGER REFERENCES inventory(item_id) ON DELETE SET NULL;
