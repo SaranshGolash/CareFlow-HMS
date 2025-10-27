@@ -546,41 +546,41 @@ app.get('/login', async (req, res) => {
     res.render('login');
 });
 
-app.post('/login', async (req, res) => {
+// Placement: In index.js, replace the existing POST /login route
+
+app.post('/login', async (req, res, next) => {
+    // We add 'next' to the parameters for passport
     const { email, password } = req.body;
     try {
         const userResult = await db.query('SELECT * FROM users WHERE email = $1', [email]);
         const user = userResult.rows[0];
 
-        if (user) {
-            // Check if user has a password. If not, they must use Google.
-            if (!user.password_hash) {
-                req.flash('error_msg', 'That email is registered with Google. Please "Sign in with Google" instead.');
-                return res.redirect('/login');
-            }
-            const isMatch = await bcrypt.compare(password, user.password_hash);
-            if (isMatch) {
-                // Set session data
-                req.session.user = { 
-                    id: user.id, 
-                    username: user.username,
-                    email: user.email,
-                    role: user.role,
-                    wallet_balance: parseFloat(user.wallet_balance)
-                };
-                logAudit(user.id, 'USER_LOGIN_SUCCESS', user.id, req);
+        if (!user) {
+            req.flash('error_msg', 'User not found with that email address.');
+            return res.redirect('/login');
+        }
+
+        if (!user.password_hash) {
+            req.flash('error_msg', 'That email is registered with Google. Please "Sign in with Google" instead.');
+            return res.redirect('/login');
+        }
+        
+        const isMatch = await bcrypt.compare(password, user.password_hash);
+        
+        if (isMatch) {
+            // --- CRITICAL FIX: Use req.login() instead of req.session.user ---
+            req.login(user, (err) => {
+                if (err) { return next(err); }
+
                 req.flash('success_msg', 'Login successful! Welcome back.');
+                // Redirect based on role
                 if (user.role === 'doctor') {
                     return res.redirect('/doctor/dashboard');
                 }
-                return res.redirect('/'); // Default redirect for patient/admin
-            } else {
-                if(user) logAudit(user.id, 'USER_LOGIN_FAILED', user.id, req);
-                req.flash('error_msg', 'Invalid password. Please try again.'); 
-                res.redirect('/login');
-            }
+                return res.redirect('/');
+            });
         } else {
-            req.flash('error_msg', 'User not found with that email address.'); 
+            req.flash('error_msg', 'Invalid password. Please try again.');
             res.redirect('/login');
         }
     } catch (err) {
