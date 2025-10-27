@@ -519,6 +519,29 @@ app.get('/monitoring', isAuthenticated, async (req, res) => {
 
 // --- AUTHENTICATION ROUTES ---
 
+// GET /auth/google
+// This route starts the authentication process.
+app.get('/auth/google',
+  passport.authenticate('google', { 
+    scope: ['profile', 'email'] // Ask Google for the user's profile info and email
+  })
+);
+
+// GET /auth/google/callback
+// This is the URL Google redirects back to after authentication.
+app.get('/auth/google/callback', 
+  passport.authenticate('google', { failureRedirect: '/login' }), // If login fails, redirect to /login
+  (req, res) => {
+    // Successful authentication, redirect to the correct dashboard.
+    req.flash('success_msg', 'You are now logged in via Google.');
+    if (req.user.role === 'doctor') {
+        res.redirect('/doctor/dashboard');
+    } else {
+        res.redirect('/');
+    }
+  }
+);
+
 app.get('/login', async (req, res) => {
     res.render('login');
 });
@@ -530,6 +553,11 @@ app.post('/login', async (req, res) => {
         const user = userResult.rows[0];
 
         if (user) {
+            // Check if user has a password. If not, they must use Google.
+            if (!user.password_hash) {
+                req.flash('error_msg', 'That email is registered with Google. Please "Sign in with Google" instead.');
+                return res.redirect('/login');
+            }
             const isMatch = await bcrypt.compare(password, user.password_hash);
             if (isMatch) {
                 // Set session data
