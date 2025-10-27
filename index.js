@@ -1616,8 +1616,6 @@ app.get('/doctor/patient/:userId/monitoring', isAuthenticated, isDoctorOrAdmin, 
         // 2. Fetch data (Remains the same)
         const patientResult = await db.query('SELECT username FROM users WHERE id = $1', [patientId]);
         const vitalsResult = await db.query('SELECT * FROM health_vitals WHERE user_id = $1 ORDER BY reading_timestamp ASC', [patientId]);
-        
-        // --- START OF CRITICAL FIX ---
         // 3. Process data for Chart.js (This was missing)
         const rawVitals = vitalsResult.rows.map(vital => ({
             ...vital,
@@ -1633,7 +1631,6 @@ app.get('/doctor/patient/:userId/monitoring', isAuthenticated, isDoctorOrAdmin, 
             diastolicBP: rawVitals.map(v => v.diastolic_bp),
             glucose: rawVitals.map(v => v.glucose_level)
         };
-        // --- END OF CRITICAL FIX ---
 
         const latestVitals = rawVitals.length > 0 ? rawVitals[rawVitals.length - 1] : null;
         
@@ -1666,7 +1663,7 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
         }
         const patientId = recordResult.rows[0].user_id;
 
-        // 2. SECURITY CHECK
+        // 2. SECURITY CHECK: Verify the doctor has a relationship with this patient
         const hasRelationship = await checkDoctorPatientRelationship(doctorId, patientId);
         if (!hasRelationship) {
             req.flash('error_msg', 'Access Denied: You are not authorized to view this patient\'s record.');
@@ -1675,17 +1672,19 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
         
         // 3. Fetch full record details if authorized
         const query = `
-            SELECT mr.*, u.username, a.doctor_name FROM medical_records mr
+            SELECT mr.*, u.username, a.doctor_name 
+            FROM medical_records mr
             JOIN users u ON mr.user_id = u.id
             LEFT JOIN appointments a ON mr.appointment_id = a.id
             WHERE mr.record_id = $1
         `;
         const result = await db.query(query, [recordId]);
-
-        logAudit(doctorId, 'DOCTOR_VIEWED_RECORD', record.record_id, req);
-
-        // 4. REUSE view_record.ejs for the view
-        res.render('view_record', { record: result.rows[0] });
+        
+        // 4. Pass the fetched data (as a property named 'record') to the view
+        res.render('view_record', { 
+            record: result.rows[0] 
+            // Do NOT add any 'backUrl' logic here
+        });
 
     } catch (err) {
         console.error(`Error fetching record ID ${recordId} for doctor:`, err);
