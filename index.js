@@ -1933,30 +1933,78 @@ app.get('/prescribe/:record_id', isAuthenticated, isDoctorOrAdmin, async (req, r
     }
 });
 
-// POST: Save the New Prescription
+// POST: Save the New Prescription (with inventory logic)
 app.post('/prescribe', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
-    const { record_id, user_id, medication_name, dosage, frequency, duration, notes } = req.body;
-    const doctorId = req.session.user.id; // The logged-in doctor/admin is the prescriber
+    // 1. Get data from the form
+    const { record_id, user_id, inventory_selection, dosage, frequency, duration, notes } = req.body;
+    const doctorId = req.session.user.id;
 
-    if (!record_id || !user_id || !medication_name || !dosage || !frequency) {
+    // 2. Validate input
+    if (!record_id || !user_id || !inventory_selection || !dosage || !frequency) {
         req.flash('error_msg', 'All required fields (Medication, Dosage, Frequency) must be filled.');
         return res.redirect(`/prescribe/${record_id}`);
     }
 
-    try {
-        const query = `
-            INSERT INTO prescriptions 
-            (record_id, user_id, doctor_id, medication_name, dosage, frequency, duration, notes)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        `;
-        await db.query(query, [record_id, user_id, doctorId, medication_name, dosage, frequency, duration, notes]);
+    // 3. Split the compound value from the dropdown
+    // e.g., "12|Paracetamol 500mg" -> [12, "Paracetamol 500mg"]
+    const [itemId, itemName] = req.body.inventory_selection.split('|');
+    const linkedInventoryItemId = parseInt(itemId);
+    const medicationName = itemName;
 
-        req.flash('success_msg', 'Prescription issued successfully.');
-        res.redirect(`/records/${record_id}`); // Redirect back to the patient's record detail page
+    const client = await db.connect(); // Get a client from the pool for the transaction
+
+    try {
+        // 4. START TRANSACTION
+        await client.query('BEGIN');
+
+        // 5. Check stock and lock the inventory row to prevent race conditions
+        const stockCheck = await client.query(
+            'SELECT current_stock FROM inventory WHERE item_id = $1 FOR UPDATE',
+            [linkedInventoryItemId]
+        );
+
+        if (stockCheck.rows.length === 0) {
+            throw new Error("Selected inventory item not found.");
+        }
+        
+        const currentStock = stockCheck.rows[0].current_stock;
+        if (currentStock < 1) {
+            // This check is for safety, though the form shouldn't show out-of-stock items
+            throw new Error(`Insufficient stock for "${medicationName}".`);
+        }
+
+        // 6. Decrement the stock in the 'inventory' table
+        await client.query(
+            'UPDATE inventory SET current_stock = current_stock - 1, last_updated = CURRENT_TIMESTAMP WHERE item_id = $1',
+            [linkedInventoryItemId]
+        );
+
+        // 7. Save the prescription to the 'prescriptions' table
+        const prescriptionQuery = `
+            INSERT INTO prescriptions 
+            (record_id, user_id, doctor_id, medication_name, dosage, frequency, duration, notes, linked_inventory_item_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `;
+        await client.query(prescriptionQuery, [
+            record_id, user_id, doctorId, medicationName, dosage, frequency, duration, notes, linkedInventoryItemId
+        ]);
+
+        // 8. COMMIT TRANSACTION
+        await client.query('COMMIT');
+
+        req.flash('success_msg', `Prescription for "${medicationName}" issued successfully. Inventory updated.`);
+        res.redirect(`/doctor/record/${record_id}`); // Redirect back to the doctor's record view
+
     } catch (err) {
-        console.error('Error issuing prescription:', err);
-        req.flash('error_msg', 'Failed to issue prescription due to a server error.');
+        // 9. If anything fails, ROLLBACK
+        await client.query('ROLLBACK');
+        console.error('Error issuing prescription transaction:', err);
+        // Send the specific database error message (e.g., "Insufficient stock")
+        req.flash('error_msg', `Failed to issue prescription: ${err.message}`);
         res.redirect(`/prescribe/${record_id}`);
+    } finally {
+        // 10. ALWAYS release the client
+        client.release();
     }
 });
 
