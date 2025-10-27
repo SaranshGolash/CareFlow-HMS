@@ -2291,9 +2291,9 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
 
     const client = await db.connect();
     try {
-        await client.query('BEGIN');
+        await client.query('BEGIN'); // Start transaction
         
-        // Fetch service details, including the inventory link
+        // 1. Fetch service details, NOW including the inventory link
         const serviceDetailsResult = await client.query(
             'SELECT service_id, service_name, cost, linked_inventory_item_id FROM services WHERE service_id = ANY($1)', 
             [service_ids]
@@ -2302,7 +2302,7 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
 
         let totalAmount = 0;
         
-        // Insert Invoice
+        // 2. Insert Invoice
         const invoiceQuery = `
             INSERT INTO invoices (user_id, record_id, due_date, total_amount) 
             VALUES ($1, $2, $3, $4) RETURNING invoice_id
@@ -2310,7 +2310,7 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
         const invoiceResult = await client.query(invoiceQuery, [patient_id, record_id || null, due_date, 0.00]);
         const invoiceId = invoiceResult.rows[0].invoice_id;
 
-        // Loop through items, insert them, AND update inventory
+        // 3. Loop through items, insert them, AND update inventory
         for (let i = 0; i < service_ids.length; i++) {
             const serviceId = parseInt(service_ids[i]);
             const quantity = parseInt(quantities[i]) || 1;
@@ -2324,7 +2324,6 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
                     'INSERT INTO invoice_items (invoice_id, service_name, cost_per_unit, quantity) VALUES ($1, $2, $3, $4)',
                     [invoiceId, detail.service_name, cost, quantity]
                 );
-
                 // Check if this service is linked to an inventory item
                 if (detail.linked_inventory_item_id) {
                     const inventoryId = detail.linked_inventory_item_id;
@@ -2358,17 +2357,18 @@ app.post('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
         // 4. Update the Invoice with the final total amount
         await client.query('UPDATE invoices SET total_amount = $1 WHERE invoice_id = $2', [totalAmount.toFixed(2), invoiceId]);
 
-        await client.query('COMMIT');
+        await client.query('COMMIT'); // Commit transaction
         req.flash('success_msg', `Invoice #${invoiceId} generated and inventory updated.`);
         res.redirect('/invoices');
 
     } catch (err) {
-        await client.query('ROLLBACK');
+        await client.query('ROLLBACK'); // Rollback on any error
         console.error('Error in new invoice transaction:', err);
+        // Pass the specific error message (e.g., "Insufficient stock...") to the user
         req.flash('error_msg', `Error: ${err.message}`);
         res.redirect('/new-invoice');
     } finally {
-        client.release();
+        client.release(); // Release client back to pool
     }
 });
 
