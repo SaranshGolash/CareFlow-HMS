@@ -31,6 +31,8 @@
     "method-override": "^3.0.0",
     "nodemailer": "^7.0.9",
     "openai": "^6.5.0",
+    "passport": "^0.7.0",
+    "passport-google-oauth20": "^2.0.0",
     "pg": "^8.16.3",
     "sequelize": "^6.37.7",
     "stripe": "^19.1.0"

@@ -255,3 +255,11 @@ CREATE TABLE doctor_schedules (
     -- Ensure a doctor can't have duplicate entries for the same day
     UNIQUE(doctor_id, day_of_week)
 );
+
+-- 1. Make the password column optional (for Google-only users)
+ALTER TABLE users
+ALTER COLUMN password_hash DROP NOT NULL;
+
+-- 2. Add a column to store the user's unique Google ID
+ALTER TABLE users
+ADD COLUMN google_id VARCHAR(255) UNIQUE;
