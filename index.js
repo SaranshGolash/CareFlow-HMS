@@ -7,6 +7,8 @@ const path = require('path');
 const bcrypt = require('bcrypt');
 const OpenAI = require('openai');
 const nodemailer = require('nodemailer');
+const passport = require('passport');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 require('dotenv').config();
 
 // FIX: Automatically convert Postgres NUMERIC (type code 1700) to JavaScript float
