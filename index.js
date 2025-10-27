@@ -41,9 +41,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -1699,7 +1699,63 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
 
 // ADMIN MANAGEMENT ROUTES
 
-// --- ADMIN MANAGEMENT ROUTES (Staff & Schedule) ---
+// GET: Display the Financial Reports Page
+app.get('/admin/reports', isAuthenticated, isAdmin, (req, res) => {
+    // We just render the page. The frontend JS will fetch the data.
+    res.render('admin_reports');
+});
+
+// GET: API endpoint to fetch financial data for a date range
+app.get('/api/financial-report', isAuthenticated, isAdmin, async (req, res) => {
+    const { startDate, endDate } = req.query;
+
+    // Server-side validation
+    if (!startDate || !endDate) {
+        return res.status(400).json({ error: 'Start date and end date are required.' });
+    }
+
+    try {
+        // Query 1: Get Invoicing data
+        const invoiceQuery = `
+            SELECT 
+                SUM(total_amount) AS total_billed, 
+                SUM(amount_paid) AS total_collected
+            FROM invoices
+            WHERE invoice_date BETWEEN $1 AND $2
+        `;
+        const invoicePromise = db.query(invoiceQuery, [startDate, endDate]);
+
+        // Query 2: Get new deposits (Wallet)
+        const depositQuery = `
+            SELECT 
+                SUM(amount) AS total_deposits 
+            FROM wallet_transactions 
+            WHERE transaction_type = 'Deposit' AND created_at::date BETWEEN $1 AND $2
+        `;
+        const depositPromise = db.query(depositQuery, [startDate, endDate]);
+        
+        // Run in parallel for efficiency
+        const [invoiceResult, depositResult] = await Promise.all([invoicePromise, depositPromise]);
+
+        const invoiceData = invoiceResult.rows[0];
+        const depositData = depositResult.rows[0];
+
+        // Format the report
+        const report = {
+            totalBilled: parseFloat(invoiceData.total_billed || 0).toFixed(2),
+            totalCollected: parseFloat(invoiceData.total_collected || 0).toFixed(2),
+            totalDeposits: parseFloat(depositData.total_deposits || 0).toFixed(2)
+        };
+
+        res.json(report);
+
+    } catch (err) {
+        console.error('Error generating financial report:', err);
+        res.status(500).json({ error: 'Failed to generate report.' });
+    }
+});
+
+// --- Staff & Schedule ---
 
 // GET: Display the Staff Management Page (List all users)
 app.get('/admin/staff', isAuthenticated, isAdmin, async (req, res) => {
