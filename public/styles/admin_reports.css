@@ -1,0 +1,72 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 16px rgba(13,110,253,0.08);
+    --success: #28a745;
+    --purple: #6f42c1;
+}
+
+.container.py-5 h2 {
+    color: var(--primary);
+    font-weight: 700;
+}
+
+.report-card {
+    border: none;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Re-using analytics card styles */
+.analytics-card {
+    border: none;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+    transition: all 0.3s ease;
+}
+
+.analytics-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-4px);
+}
+
+.analytics-card .card-body {
+    padding: 1.25rem;
+}
+
+/* Background Accents */
+.bg-light-green { background-color: rgba(40, 167, 69, 0.1) !important; }
+.bg-light-blue { background-color: rgba(13, 110, 253, 0.1) !important; }
+.bg-light-purple { background-color: rgba(111, 66, 193, 0.1) !important; }
+.text-purple { color: var(--purple); }
+
+/* Form Controls */
+.form-control {
+    height: 48px;
+    border-radius: 8px;
+}
+.form-label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    color: #555;
+}
+
+.btn-lg {
+     padding: 0.5rem 1rem;
+     height: 48px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .report-card .card-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .report-card .btn-lg {
+        width: 100%;
+    }
+}
