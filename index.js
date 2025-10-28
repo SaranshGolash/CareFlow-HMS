@@ -43,9 +43,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -486,17 +486,16 @@ app.get('/records', isAuthenticated, async (req, res) => {
     }
 });
 
+// GET: Patient views their own specific record
 app.get('/records/:id', isAuthenticated, async (req, res) => {
     const recordId = req.params.id;
     const userId = req.user.id; 
 
     try {
-        // --- UPDATED QUERY: JOIN with users AND LEFT JOIN with appointments ---
-        const query = `
+        // --- UPDATED QUERY (Added a parallel promise for files) ---
+        const recordQuery = `
             SELECT 
-                mr.*, 
-                u.username,
-                a.doctor_name
+                mr.*, u.username, a.doctor_name
             FROM 
                 medical_records mr
             JOIN 
@@ -506,15 +505,26 @@ app.get('/records/:id', isAuthenticated, async (req, res) => {
             WHERE 
                 mr.record_id = $1 AND mr.user_id = $2
         `;
-        const result = await db.query(query, [recordId, userId]);
-        const record = result.rows[0];
+        const recordPromise = db.query(recordQuery, [recordId, userId]);
+        
+        // --- NEW: Fetch linked files for this record ---
+        const filesPromise = db.query('SELECT * FROM patient_files WHERE record_id = $1 ORDER BY uploaded_at DESC', [recordId]);
+
+        // 4. Resolve all promises
+        const [recordResult, filesResult] = await Promise.all([recordPromise, filesPromise]);
+        
+        const record = recordResult.rows[0];
 
         if (!record) {
             req.flash('error_msg', 'Medical record not found or access denied.');
             return res.redirect('/records');
         }
+        
         logAudit(userId, 'VIEWED_OWN_RECORD', record.record_id, req);
-        res.render('view_record', { record: record });
+        res.render('view_record', { 
+            record: record,
+            patientFiles: filesResult.rows 
+        });
 
     } catch (err) {
         console.error(`Error fetching record ID ${recordId}:`, err);
