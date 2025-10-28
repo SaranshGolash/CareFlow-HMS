@@ -71,6 +71,55 @@
                             </div>
                         <% } %>
 
+                        <div class="mt-5">
+    <hr>
+    <h4 class="text-dark mb-3 mt-4"><i class="fas fa-vial me-2 text-primary"></i> Attached Files</h4>
+    
+    <% if (patientFiles && patientFiles.length > 0) { %>
+        <ul class="list-group mb-3">
+            <% patientFiles.forEach(file => { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-file-alt me-2 text-muted"></i>
+                        <a href="<%= file.file_path %>" target="_blank"><%= file.original_name %></a>
+                        <span class="badge bg-secondary ms-2"><%= file.file_type %></span>
+                    </div>
+                    <small class="text-muted"><%= new Date(file.uploaded_at).toLocaleDateString() %></small>
+                </li>
+            <% }); %>
+        </ul>
+    <% } else { %>
+        <p class="text-muted">No files are attached to this record.</p>
+    <% } %>
+
+    <% if (user && (user.role === 'admin' || user.role === 'doctor')) { %>
+        <hr>
+        <h5 class="mt-4">Attach New File</h5>
+        <form action="/doctor/upload-lab" method="POST" enctype="multipart/form-data" class="row g-3">
+            <input type="hidden" name="record_id" value="<%= record.record_id %>">
+            <input type="hidden" name="user_id" value="<%= record.user_id %>">
+            
+            <div class="col-md-5">
+                <label for="file_type" class="form-label">File Type</label>
+                <select id="file_type" name="file_type" class="form-select form-control" style="height: 48px;">
+                    <option value="Lab Result" selected>Lab Result</option>
+                    <option value="X-Ray">X-Ray</option>
+                    <option value="Referral">Referral</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-md-7">
+                <label for="labResult" class="form-label">Select File (PDF, PNG, JPG)</label>
+                <input type="file" class="form-control" id="labResult" name="labResult" accept=".pdf,.png,.jpg,.jpeg" required>
+            </div>
+            <div class="col-12 text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-upload me-2"></i> Attach File
+                </button>
+            </div>
+        </form>
+    <% } %>
+</div>
                     </div>
                     
                     <div class="card-footer text-end bg-white">
