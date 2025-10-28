@@ -20,7 +20,15 @@
                         <% users.forEach(u => { %>
                             <tr>
                                 <td><%= u.id %></td>
-                                <td><%= u.username %></td>
+                                <td>
+                                    <% if (u.role === 'user') { %>
+                                        <a href="/admin/patient/<%= u.id %>" title="View Patient Hub">
+                                            <%= u.username %>
+                                        </a>
+                                    <% } else { %>
+                                        <%= u.username %>
+                                    <% } %>
+                                </td>
                                 <td><%= u.email %></td>
                                 <td><span class="badge bg-<%= u.role === 'admin' ? 'danger' : (u.role === 'doctor' ? 'primary' : 'secondary') %>"><%= u.role %></span></td>
                                 <td>
