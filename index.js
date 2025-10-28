@@ -1865,7 +1865,7 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
 
     try {
         // 1. Fetch the record to get the patient's user_id
-        const recordResult = await db.query('SELECT * FROM medical_records WHERE record_id = $1', [recordId]);
+        const recordResult = await db.query('SELECT user_id FROM medical_records WHERE record_id = $1', [recordId]);
         if (recordResult.rows.length === 0) {
             req.flash('error_msg', 'Medical record not found.');
             return res.redirect('/doctor/dashboard');
@@ -1888,18 +1888,17 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
             WHERE mr.record_id = $1
         `;
         const recordPromise = db.query(recordQuery, [recordId]);
-        
+
         // --- NEW: Fetch linked files for this record ---
         const filesPromise = db.query('SELECT * FROM patient_files WHERE record_id = $1 ORDER BY uploaded_at DESC', [recordId]);
 
-        // 4. Resolve promises
+        // 4. Resolve all promises
         const [mainRecordResult, filesResult] = await Promise.all([recordPromise, filesPromise]);
 
         logAudit(doctorId, 'DOCTOR_VIEWED_RECORD', recordId, req);
-        
         res.render('view_record', { 
             record: mainRecordResult.rows[0],
-            patientFiles: filesResult.rows // <-- Pass the files
+            patientFiles: filesResult.rows 
         });
 
     } catch (err) {
