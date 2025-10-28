@@ -300,40 +300,50 @@ app.get('/newappointments', isAuthenticated, async (req, res) => {
 });
 
 // POST: Handle new appointment creation and queue a reminder
+// POST: Handle new appointment creation and queue a reminder
 app.post('/newappointments', isAuthenticated, async (req, res) => {
     const { patient_name, gender, phone, doctor_id, doctor_name, appointment_date, appointment_time } = req.body;
     const userId = req.user.id;
     
-    // Acquire a client from the connection pool for the transaction
     const client = await db.connect();
     
     try {
         await client.query('BEGIN');
-        // 1. Get the day of the week (0=Sunday, 1=Monday, etc.) from the submitted date
-        const selectedDate = new Date(appointment_date + "T00:00:00");
-        const dayOfWeek = selectedDate.getDay();
 
-        // 2. Check the doctor's schedule for that day
+        // --- SERVER-SIDE VALIDATION BLOCK ---
+        
+        // 1. Check the doctor's schedule using PostgreSQL's date functions
         const scheduleQuery = `
             SELECT start_time, end_time FROM doctor_schedules 
-            WHERE doctor_id = $1 AND day_of_week = $2
+            WHERE doctor_id = $1 
+              AND day_of_week = EXTRACT(DOW FROM $2::DATE) -- $2 is the 'YYYY-MM-DD' date string
         `;
-        const scheduleResult = await client.query(scheduleQuery, [doctor_id, dayOfWeek]);
+        // We pass the raw 'appointment_date' string to SQL
+        const scheduleResult = await client.query(scheduleQuery, [doctor_id, appointment_date]); 
 
         if (scheduleResult.rows.length === 0) {
             // If no rows are returned, the doctor does not work on this day.
             throw new Error("Validation Failed: The selected doctor is not available on this day.");
         }
 
-        // 3. Check if the submitted time is within the doctor's schedule
+        // 2. Check if the submitted time is within the doctor's schedule
         const slot = scheduleResult.rows[0];
         if (appointment_time < slot.start_time || appointment_time > slot.end_time) {
             // If the time is outside the slot, throw an error.
-            throw new Error(`Validation Failed: The selected time is outside the doctor's available hours (${new Date('1970-01-01T' + slot.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - ${new Date('1970-01-01T' + slot.end_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}).`);
+            throw new Error(`Validation Failed: The selected time is outside the doctor's available hours.`);
+        }
+        
+        // 3. Check if this exact slot is already booked
+        const bookingCheck = await client.query(
+            "SELECT 1 FROM appointments WHERE doctor_id = $1 AND appointment_date = $2 AND appointment_time = $3",
+            [doctor_id, appointment_date, appointment_time]
+        );
+        if (bookingCheck.rowCount > 0) {
+             throw new Error("Validation Failed: This time slot has just been booked. Please select another.");
         }
         // --- END OF VALIDATION ---
 
-        // 4. Insert the new appointment (if validation passed)
+        // 4. Insert the new appointment
         const appointmentQuery = `
             INSERT INTO appointments (patient_name, gender, phone, doctor_id, doctor_name, user_id, status, appointment_date, appointment_time) 
             VALUES ($1, $2, $3, $4, $5, $6, 'Pending', $7, $8)

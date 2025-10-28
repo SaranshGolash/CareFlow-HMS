@@ -33,6 +33,7 @@
             </div>
 
             <div class="col-lg-4">
+                <!-- Appointment Info Card -->
                 <div class="detail-card card shadow-sm mb-4">
                     <div class="card-header bg-light text-dark fw-bold">
                         <i class="fas fa-calendar-check me-2"></i> Appointment Info
@@ -42,7 +43,22 @@
                         <li class="list-group-item"><strong>Time:</strong> <%= new Date('1970-01-01T' + appointment.appointment_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) %></li>
                         <li class="list-group-item"><strong>Status:</strong> <span class="badge bg-success"><%= appointment.status %></span></li>
                     </ul>
+
+                    <!-- "Mark as Completed" Button -->
+                    <% if (appointment.status !== 'Completed' && appointment.status !== 'Canceled') { %>
+        <div class="card-body text-center">
+            <form action="/appointment/<%= appointment.id %>/complete" method="POST"
+                  onsubmit="return confirm('This will mark the appointment as completed and generate a default invoice. Are you sure?');">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-check-circle me-2"></i> Mark as Completed & Bill
+                </button>
+                        </form>
+                    </div>
+                    <% } %>
                 </div>
+
+    <!-- Vitals Summary Card -->
+    <div class="detail-card card shadow-sm">
 
                 <div class="detail-card card shadow-sm">
                     <div class="card-header bg-light text-dark fw-bold">
