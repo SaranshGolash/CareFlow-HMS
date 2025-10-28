@@ -915,6 +915,49 @@ app.post('/settings/password', isAuthenticated, async (req, res) => {
     }
 });
 
+// POST: Handles initial password creation for OAuth-only users
+app.post('/settings/create-password', isAuthenticated, async (req, res) => {
+    const { new_password, confirm_new_password } = req.body;
+    const userId = req.user.id;
+
+    // Server-side validation
+    if (!new_password || new_password.length < 6) {
+        req.flash('error_msg', 'Password must be at least 6 characters.');
+        return res.redirect('/settings');
+    }
+    if (new_password !== confirm_new_password) {
+        req.flash('error_msg', 'Passwords do not match.');
+        return res.redirect('/settings');
+    }
+
+    try {
+        // Check if user already has a password
+        const userResult = await db.query('SELECT password_hash FROM users WHERE id = $1', [userId]);
+        if (userResult.rows[0].password_hash) {
+            req.flash('error_msg', 'Your account already has a password. Use the "Change Password" form instead.');
+            return res.redirect('/settings');
+        }
+
+        // Hash the new password
+        const saltRounds = 10;
+        const new_password_hash = await bcrypt.hash(new_password, saltRounds);
+
+        // Update the database with the new password hash
+        await db.query('UPDATE users SET password_hash = $1 WHERE id = $2', [new_password_hash, userId]);
+        
+        // Log the security event
+        logAudit(userId, 'CREATED_MANUAL_PASSWORD', userId, req);
+
+        req.flash('success_msg', 'Password created successfully! You can now log in with your email and password.');
+        res.redirect('/settings');
+
+    } catch (err) {
+        console.error('Create password error:', err);
+        req.flash('error_msg', 'An error occurred while creating your password.');
+        res.redirect('/settings');
+    }
+});
+
 // GET: Display User's Inbox (Patient and Admin View)
 app.get('/inbox', isAuthenticated, async (req, res) => {
     const userId = req.user.id;
