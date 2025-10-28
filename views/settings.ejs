@@ -1,11 +1,14 @@
 <%- include('initials/header.ejs', { title: 'Settings' }) %>
 <link rel="stylesheet" href="/styles/settings.css">
     <div class="settings-container">
-        <div class="settings-card">
+        <div class="settings-card card shadow-md animate-on-scroll animate-slide-up card-3d-hover">
             <div class="card-body">
-                <h3 class="card-title mb-4 text-primary"><i class="fas fa-user-cog me-2"></i> Profile Settings</h3>
+                
+                <h3 class="card-title mb-4 text-primary animate-load-slide-up" style="animation-delay: 0.1s;">
+                    <i class="fas fa-user-cog me-2"></i> Profile Settings
+                </h3>
 
-                <form action="/settings/update" method="POST" class="row g-4">
+                <form action="/settings/update" method="POST" class="row g-4 animate-load-slide-up" style="animation-delay: 0.2s;">
                     <input type="hidden" name="user_id" value="<%= user.id %>">
                     
                     <div class="col-12">
@@ -47,7 +50,7 @@
                 
                 <hr class="my-5">
 
-                <form action="/settings/upload-insurance" method="POST" enctype="multipart/form-data" class="row g-4">
+                <form action="/settings/upload-insurance" method="POST" enctype="multipart/form-data" class="row g-4 animate-load-slide-up" style="animation-delay: 0.3s;">
                     <div class="col-12">
                         <h5 class="section-title">Insurance Card</h5>
                         <p class="text-muted small">Upload a clear image (JPG, PNG) or PDF of your insurance card.</p>
@@ -62,7 +65,7 @@
     
                     <div class="col-12">
                         <label for="insuranceCard" class="form-label">Upload New/Replacement Card</label>
-                        <input type="file" class="form-control" id="insuranceCard" name="insuranceCard" accept=".pdf,.png,.jpg,.jpeg" required>
+                        <input type="file" class="form-control" id="insuranceCard" name="insuranceCard" accept=".pdf,.png,.jpg,.jpeg">
                     </div>
     
                     <div class="col-12 text-end pt-3">
@@ -73,38 +76,87 @@
                 </form>
 
                 <hr class="my-5">
+                
+                <% if (!user.password_hash) { %>
+                
+                    <form action="/settings/create-password" method="POST" class="row g-4 animate-load-slide-up" style="animation-delay: 0.4s;" id="createPasswordForm">
+                        <div class="col-12">
+                            <h5 class="section-title">Create a Manual Password</h5>
+                            <p class="text-muted small">Your account is linked to a social provider (Google). Create a password here if you wish to log in with your email as well.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="new_password_create" class="form-label">New Password</label>
+                            <input id="new_password_create" name="new_password" type="password" class="form-control" placeholder="Min. 6 characters" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirm_new_password_create" class="form-label">Confirm New Password</label>
+                            <input id="confirm_new_password_create" name="confirm_new_password" type="password" class="form-control" placeholder="Re-enter new password" required>
+                        </div>
+                        <div class="col-12 text-end pt-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-key me-2"></i> Set Password
+                            </button>
+                        </div>
+                    </form>
+                
+                <% } else { %>
 
-                <form action="/settings/password" method="POST" class="row g-4">
-                    <input type="hidden" name="user_id" value="<%= user.id %>">
-                    
-                    <div class="col-12">
-                        <h5 class="section-title">Change Password</h5>
-                    </div>
+                    <form action="/settings/password" method="POST" class="row g-4 animate-load-slide-up" style="animation-delay: 0.4s;" id="changePasswordForm">
+                        <input type="hidden" name="user_id" value="<%= user.id %>">
+                        <div class="col-12">
+                            <h5 class="section-title">Change Password</h5>
+                        </div>
+                        <div class="col-12 verification-block p-3">
+                            <label for="current_password" class="form-label text-danger">Current Password*</label>
+                            <input id="current_password" name="current_password" type="password" class="form-control" required placeholder="Enter your current password">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="new_password_change" class="form-label">New Password</label>
+                            <input id="new_password_change" name="new_password" type="password" class="form-control" placeholder="Min. 6 characters">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirm_new_password_change" class="form-label">Confirm New Password</label>
+                            <input id="confirm_new_password_change" name="confirm_new_password" type="password" class="form-control" placeholder="Re-enter new password">
+                        </div>
+                        <div class="col-12 text-end pt-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-lock me-2"></i> Change Password
+                            </button>
+                        </div>
+                    </form>
 
-                    <div class="col-12 verification-block p-3">
-                        <label for="current_password" class="form-label text-danger">Current Password*</label>
-                        <input id="current_password" name="current_password" type="password" class="form-control" required placeholder="Enter your current password">
-                    </div>
-
-                    <div class="col-md-6">
-                        <label for="new_password" class="form-label">New Password (Optional)</label>
-                        <input id="new_password" name="new_password" type="password" class="form-control" placeholder="Min. 6 characters">
-                        <div class="form-text text-muted">Min 6 characters.</div>
-                    </div>
-                    
-                    <div class="col-md-6">
-                        <label for="confirm_new_password" class="form-label">Confirm New Password</label>
-                        <input id="confirm_new_password" name="confirm_new_password" type="password" class="form-control" placeholder="Re-enter new password">
-                    </div>
-                    
-                    <div class="col-12 text-end pt-3">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="fas fa-lock me-2"></i> Change Password
-                        </button>
-                    </div>
-                </form>
-
-            </div>
+                <% } %>
+                </div>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Validator for the "Change Password" form
+            const changePasswordForm = document.getElementById('changePasswordForm');
+            if (changePasswordForm) {
+                changePasswordForm.addEventListener('submit', function(e) {
+                    const newPass = document.getElementById('new_password_change').value;
+                    const confirmPass = document.getElementById('confirm_new_password_change').value;
+                    if (newPass && newPass !== confirmPass) {
+                        e.preventDefault();
+                        alert('Error: New Passwords do not match.');
+                    }
+                });
+            }
+
+            // Validator for the "Create Password" form
+            const createPasswordForm = document.getElementById('createPasswordForm');
+            if (createPasswordForm) {
+                createPasswordForm.addEventListener('submit', function(e) {
+                    const newPass = document.getElementById('new_password_create').value;
+                    const confirmPass = document.getElementById('confirm_new_password_create').value;
+                    if (newPass && newPass !== confirmPass) {
+                        e.preventDefault();
+                        alert('Error: Passwords do not match.');
+                    }
+                });
+            }
+        });
+    </script>
 <%- include('initials/footer.ejs') %>
