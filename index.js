@@ -2189,6 +2189,7 @@ app.post('/admin/wallet/adjust', isAuthenticated, isAdmin, async (req, res) => {
 
 // GET: New Medical Record Form (Admin Only)
 app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
+    const preselectedPatientId = req.query.patient_id;
     let patients = [];
     let appointments = []; // 1. Initialized to empty array
 
@@ -2210,7 +2211,8 @@ app.get('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
     res.render('newrecord', { 
         patients: patients, 
         appointments: appointments, // GUARANTEED to be an array (fetched or empty)
-        doctor_name: req.user.username 
+        doctor_name: req.user.username ,
+        preselectedPatientId: preselectedPatientId
     });
 });
 
