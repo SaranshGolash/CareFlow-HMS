@@ -9,13 +9,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalBilledEl = document.getElementById('totalBilled');
     const totalCollectedEl = document.getElementById('totalCollected');
     const totalDepositsEl = document.getElementById('totalDeposits');
+    // Only run this script if we are actually on the reports page
+    // (by checking if the main button exists).
+    if (!generateBtn) {
+        return; // Stop the script immediately if this isn't the reports page
+    }
 
     // Set default dates (e.g., first of the month to today)
     const today = new Date();
     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    endDateInput.value = today.toISOString().split('T')[0];
-    startDateInput.value = firstDay.toISOString().split('T')[0];
-
+    
+    // Add safety checks for inputs
+    if (endDateInput) {
+        endDateInput.value = today.toISOString().split('T')[0];
+    }
+    if (startDateInput) {
+        startDateInput.value = firstDay.toISOString().split('T')[0];
+    }
 
     generateBtn.addEventListener('click', async () => {
         const startDate = startDateInput.value;
