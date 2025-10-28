@@ -41,9 +41,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -1770,6 +1770,221 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
     }
 });
 
+// POST: Mark Appointment as Completed & Auto-Generate Invoice
+app.post('/appointment/:id/complete', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
+    const appointmentId = req.params.id;
+    const doctorId = req.user.id;
+
+    const client = await db.connect(); // Get a client from the pool for the transaction
+
+    try {
+        // 1. START TRANSACTION
+        await client.query('BEGIN');
+
+        // 2. Fetch the appointment to get patient ID, date, and verify status
+        const apptResult = await client.query(
+            "SELECT * FROM appointments WHERE id = $1 AND doctor_id = $2",
+            [appointmentId, doctorId]
+        );
+
+        if (apptResult.rows.length === 0) {
+            throw new Error("Appointment not found or you are not authorized to modify it.");
+        }
+        
+        const appointment = apptResult.rows[0];
+        
+        if (appointment.status === 'Completed' || appointment.status === 'Canceled') {
+            req.flash('error_msg', 'This appointment has already been completed or canceled.');
+            return res.redirect('/doctor/dashboard');
+        }
+
+        // 3. Find the "General Consultation" service from the catalog
+        const serviceResult = await client.query(
+            "SELECT * FROM services WHERE service_name = 'General Consultation' LIMIT 1"
+        );
+        
+        if (serviceResult.rows.length === 0) {
+            throw new Error("A service named 'General Consultation' must exist in the Service Catalog to auto-bill.");
+        }
+        
+        const defaultService = serviceResult.rows[0];
+        const serviceCost = parseFloat(defaultService.cost);
+
+        // 4. Create the new Invoice
+        const invoiceQuery = `
+            INSERT INTO invoices (user_id, record_id, invoice_date, due_date, total_amount, status)
+            VALUES ($1, $2, $3, $4, $5, 'Pending')
+            RETURNING invoice_id
+        `;
+        const dueDate = new Date(appointment.appointment_date);
+        dueDate.setDate(dueDate.getDate() + 14); // Set due date 14 days from appointment
+
+        const invoiceResult = await client.query(invoiceQuery, [
+            appointment.user_id,
+            null, // This invoice is linked to the appointment, not a manual record
+            appointment.appointment_date,
+            dueDate,
+            serviceCost
+        ]);
+        const newInvoiceId = invoiceResult.rows[0].invoice_id;
+
+        // 5. Create the Invoice Item
+        await client.query(
+            'INSERT INTO invoice_items (invoice_id, service_name, cost_per_unit, quantity) VALUES ($1, $2, $3, 1)',
+            [newInvoiceId, defaultService.service_name, serviceCost]
+        );
+
+        // 6. (OPTIONAL) Decrement Inventory if linked
+        if (defaultService.linked_inventory_item_id) {
+            const stockCheck = await client.query(
+                'SELECT current_stock FROM inventory WHERE item_id = $1 FOR UPDATE', 
+                [defaultService.linked_inventory_item_id]
+            );
+            
+            if (stockCheck.rows[0] && stockCheck.rows[0].current_stock > 0) {
+                await client.query(
+                    'UPDATE inventory SET current_stock = current_stock - 1, last_updated = CURRENT_TIMESTAMP WHERE item_id = $1',
+                    [defaultService.linked_inventory_item_id]
+                );
+            } else {
+                // Don't fail the whole transaction, just log a warning
+                console.warn(`Inventory item for service '${defaultService.service_name}' is out of stock.`);
+            }
+        }
+
+        // 7. Finally, mark the appointment as 'Completed'
+        await client.query(
+            "UPDATE appointments SET status = 'Completed' WHERE id = $1",
+            [appointmentId]
+        );
+
+        // 8. COMMIT TRANSACTION
+        await client.query('COMMIT');
+
+        req.flash('success_msg', `Appointment marked as 'Completed'. Invoice #${newInvoiceId} has been auto-generated.`);
+        res.redirect('/doctor/dashboard');
+
+    } catch (err) {
+        // 9. If anything fails, ROLLBACK
+        await client.query('ROLLBACK');
+        console.error('Error completing appointment transaction:', err);
+        req.flash('error_msg', `Failed to complete appointment: ${err.message}`);
+        res.redirect(`/doctor/appointment/${appointmentId}`);
+    } finally {
+        // 10. ALWAYS release the client
+        client.release();
+    }
+});
+
+// GET: Display the E-Prescribing Form (with inventory)
+app.get('/prescribe/:record_id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
+    const recordId = req.params.record_id;
+    try {
+        // Fetch both the record and the inventory in parallel
+        const recordPromise = db.query(`
+            SELECT mr.record_id, mr.user_id, u.username as patient_name
+            FROM medical_records mr
+            JOIN users u ON mr.user_id = u.id
+            WHERE mr.record_id = $1
+        `, [recordId]);
+        
+        const inventoryPromise = db.query(
+            "SELECT item_id, item_name, current_stock FROM inventory WHERE current_stock > 0 ORDER BY item_name"
+        );
+
+        const [recordResult, inventoryResult] = await Promise.all([recordPromise, inventoryPromise]);
+
+        if (recordResult.rows.length === 0) {
+            req.flash('error_msg', 'Medical record not found.');
+            return res.redirect('/dashboard');
+        }
+        
+        res.render('new_prescription', { 
+            record: recordResult.rows[0],
+            inventoryItems: inventoryResult.rows // Pass inventory items to the form
+        });
+    } catch (err) {
+        console.error('Error fetching record for prescription:', err);
+        req.flash('error_msg', 'Failed to load prescription form.');
+        res.redirect('/dashboard');
+    }
+});
+
+// POST: Save the New Prescription (with inventory logic)
+app.post('/prescribe', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
+    // 1. Get data from the form
+    const { record_id, user_id, inventory_selection, dosage, frequency, duration, notes } = req.body;
+    const doctorId = req.user.id;
+
+    // 2. Validate input
+    if (!record_id || !user_id || !inventory_selection || !dosage || !frequency) {
+        req.flash('error_msg', 'All required fields (Medication, Dosage, Frequency) must be filled.');
+        return res.redirect(`/prescribe/${record_id}`);
+    }
+
+    // 3. Split the compound value from the dropdown
+    // e.g., "12|Paracetamol 500mg" -> [12, "Paracetamol 500mg"]
+    const [itemId, itemName] = req.body.inventory_selection.split('|');
+    const linkedInventoryItemId = parseInt(itemId);
+    const medicationName = itemName;
+
+    const client = await db.connect(); // Get a client from the pool for the transaction
+
+    try {
+        // 4. START TRANSACTION
+        await client.query('BEGIN');
+
+        // 5. Check stock and lock the inventory row to prevent race conditions
+        const stockCheck = await client.query(
+            'SELECT current_stock FROM inventory WHERE item_id = $1 FOR UPDATE',
+            [linkedInventoryItemId]
+        );
+
+        if (stockCheck.rows.length === 0) {
+            throw new Error("Selected inventory item not found.");
+        }
+        
+        const currentStock = stockCheck.rows[0].current_stock;
+        if (currentStock < 1) {
+            // This check is for safety, though the form shouldn't show out-of-stock items
+            throw new Error(`Insufficient stock for "${medicationName}".`);
+        }
+
+        // 6. Decrement the stock in the 'inventory' table
+        await client.query(
+            'UPDATE inventory SET current_stock = current_stock - 1, last_updated = CURRENT_TIMESTAMP WHERE item_id = $1',
+            [linkedInventoryItemId]
+        );
+
+        // 7. Save the prescription to the 'prescriptions' table
+        const prescriptionQuery = `
+            INSERT INTO prescriptions 
+            (record_id, user_id, doctor_id, medication_name, dosage, frequency, duration, notes, linked_inventory_item_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        `;
+        await client.query(prescriptionQuery, [
+            record_id, user_id, doctorId, medicationName, dosage, frequency, duration, notes, linkedInventoryItemId
+        ]);
+
+        // 8. COMMIT TRANSACTION
+        await client.query('COMMIT');
+
+        req.flash('success_msg', `Prescription for "${medicationName}" issued successfully. Inventory updated.`);
+        res.redirect(`/doctor/record/${record_id}`); // Redirect back to the doctor's record view
+
+    } catch (err) {
+        // 9. If anything fails, ROLLBACK
+        await client.query('ROLLBACK');
+        console.error('Error issuing prescription transaction:', err);
+        // Send the specific database error message (e.g., "Insufficient stock")
+        req.flash('error_msg', `Failed to issue prescription: ${err.message}`);
+        res.redirect(`/prescribe/${record_id}`);
+    } finally {
+        // 10. ALWAYS release the client
+        client.release();
+    }
+});
+
 // ADMIN MANAGEMENT ROUTES
 
 // GET: Display the Financial Reports Page
@@ -2028,115 +2243,6 @@ app.post('/api/update-reminder-status', isAuthenticated, isAdmin, async (req, re
     } catch (err) {
         console.error('API Error: Could not update reminder statuses:', err);
         res.status(500).json({ error: 'Failed to update statuses in database' });
-    }
-});
-
-// GET: Display the E-Prescribing Form (with inventory)
-app.get('/prescribe/:record_id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
-    const recordId = req.params.record_id;
-    try {
-        // Fetch both the record and the inventory in parallel
-        const recordPromise = db.query(`
-            SELECT mr.record_id, mr.user_id, u.username as patient_name
-            FROM medical_records mr
-            JOIN users u ON mr.user_id = u.id
-            WHERE mr.record_id = $1
-        `, [recordId]);
-        
-        const inventoryPromise = db.query(
-            "SELECT item_id, item_name, current_stock FROM inventory WHERE current_stock > 0 ORDER BY item_name"
-        );
-
-        const [recordResult, inventoryResult] = await Promise.all([recordPromise, inventoryPromise]);
-
-        if (recordResult.rows.length === 0) {
-            req.flash('error_msg', 'Medical record not found.');
-            return res.redirect('/dashboard');
-        }
-        
-        res.render('new_prescription', { 
-            record: recordResult.rows[0],
-            inventoryItems: inventoryResult.rows // Pass inventory items to the form
-        });
-    } catch (err) {
-        console.error('Error fetching record for prescription:', err);
-        req.flash('error_msg', 'Failed to load prescription form.');
-        res.redirect('/dashboard');
-    }
-});
-
-// POST: Save the New Prescription (with inventory logic)
-app.post('/prescribe', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
-    // 1. Get data from the form
-    const { record_id, user_id, inventory_selection, dosage, frequency, duration, notes } = req.body;
-    const doctorId = req.user.id;
-
-    // 2. Validate input
-    if (!record_id || !user_id || !inventory_selection || !dosage || !frequency) {
-        req.flash('error_msg', 'All required fields (Medication, Dosage, Frequency) must be filled.');
-        return res.redirect(`/prescribe/${record_id}`);
-    }
-
-    // 3. Split the compound value from the dropdown
-    // e.g., "12|Paracetamol 500mg" -> [12, "Paracetamol 500mg"]
-    const [itemId, itemName] = req.body.inventory_selection.split('|');
-    const linkedInventoryItemId = parseInt(itemId);
-    const medicationName = itemName;
-
-    const client = await db.connect(); // Get a client from the pool for the transaction
-
-    try {
-        // 4. START TRANSACTION
-        await client.query('BEGIN');
-
-        // 5. Check stock and lock the inventory row to prevent race conditions
-        const stockCheck = await client.query(
-            'SELECT current_stock FROM inventory WHERE item_id = $1 FOR UPDATE',
-            [linkedInventoryItemId]
-        );
-
-        if (stockCheck.rows.length === 0) {
-            throw new Error("Selected inventory item not found.");
-        }
-        
-        const currentStock = stockCheck.rows[0].current_stock;
-        if (currentStock < 1) {
-            // This check is for safety, though the form shouldn't show out-of-stock items
-            throw new Error(`Insufficient stock for "${medicationName}".`);
-        }
-
-        // 6. Decrement the stock in the 'inventory' table
-        await client.query(
-            'UPDATE inventory SET current_stock = current_stock - 1, last_updated = CURRENT_TIMESTAMP WHERE item_id = $1',
-            [linkedInventoryItemId]
-        );
-
-        // 7. Save the prescription to the 'prescriptions' table
-        const prescriptionQuery = `
-            INSERT INTO prescriptions 
-            (record_id, user_id, doctor_id, medication_name, dosage, frequency, duration, notes, linked_inventory_item_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        `;
-        await client.query(prescriptionQuery, [
-            record_id, user_id, doctorId, medicationName, dosage, frequency, duration, notes, linkedInventoryItemId
-        ]);
-
-        // 8. COMMIT TRANSACTION
-        await client.query('COMMIT');
-
-        req.flash('success_msg', `Prescription for "${medicationName}" issued successfully. Inventory updated.`);
-        res.redirect(`/doctor/record/${record_id}`); // Redirect back to the doctor's record view
-
-    } catch (err) {
-        // 9. If anything fails, ROLLBACK
-        await client.query('ROLLBACK');
-        console.error('Error issuing prescription transaction:', err);
-        // Send the specific database error message (e.g., "Insufficient stock")
-        req.flash('error_msg', `Failed to issue prescription: ${err.message}`);
-        res.redirect(`/prescribe/${record_id}`);
-    } finally {
-        // 10. ALWAYS release the client
-        client.release();
     }
 });
 
