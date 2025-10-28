@@ -9,6 +9,8 @@ const OpenAI = require('openai');
 const nodemailer = require('nodemailer');
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const multer = require('multer');
+const fs = require('fs');
 require('dotenv').config();
 
 // FIX: Automatically convert Postgres NUMERIC (type code 1700) to JavaScript float
@@ -41,9 +43,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -239,6 +241,42 @@ const fetchInvoiceDetails = async (invoiceId, userId = null) => {
         client.release();
     }
 };
+
+// --- Multer Configuration for File Uploads ---
+// Ensure the /public/uploads directory exists
+const uploadDir = path.join(__dirname, 'public/uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Configure Multer's storage engine
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir); // Save files to 'public/uploads'
+    },
+    filename: function (req, file, cb) {
+        // Create a unique filename to prevent conflicts
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        const extension = path.extname(file.originalname);
+        cb(null, file.fieldname + '-' + uniqueSuffix + extension);
+    }
+});
+
+// File filter to accept only images and PDFs
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype === 'image/jpeg' || file.mimetype === 'image/png' || file.mimetype === 'application/pdf') {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type. Only JPG, PNG, and PDF are allowed.'), false);
+    }
+};
+
+// Initialize multer with the storage config, filter, and size limits (e.g., 5MB)
+const upload = multer({ 
+    storage: storage, 
+    fileFilter: fileFilter, 
+    limits: { fileSize: 1024 * 1024 * 5 } 
+});
 
 // --- ROUTES ---
 
@@ -802,6 +840,34 @@ app.post('/settings/update', isAuthenticated, async (req, res) => {
         } else {
             req.flash('error_msg', 'An error occurred during profile update.');
         }
+        res.redirect('/settings');
+    }
+});
+
+// POST: Handles patient's insurance card upload
+// upload.single('insuranceCard') must match the <input name="insuranceCard">
+app.post('/settings/upload-insurance', isAuthenticated, upload.single('insuranceCard'), async (req, res) => {
+    const userId = req.user.id;
+
+    if (!req.file) {
+        req.flash('error_msg', 'No file was uploaded. Please select a valid image or PDF.');
+        return res.redirect('/settings');
+    }
+
+    // File was uploaded successfully, now save the path to the database
+    const filePath = '/uploads/' + req.file.filename;
+
+    try {
+        await db.query('UPDATE users SET insurance_card_path = $1 WHERE id = $2', [filePath, userId]);
+        
+        // Update the session so the user sees the change immediately
+        req.user.insurance_card_path = filePath;
+        
+        req.flash('success_msg', 'Insurance card uploaded successfully.');
+        res.redirect('/settings');
+    } catch (err) {
+        console.error('Error saving insurance card path:', err);
+        req.flash('error_msg', 'Failed to save file path to database.');
         res.redirect('/settings');
     }
 });

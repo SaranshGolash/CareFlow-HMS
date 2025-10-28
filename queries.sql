@@ -270,3 +270,18 @@ ADD COLUMN linked_inventory_item_id INTEGER REFERENCES inventory(item_id) ON DEL
 
 ALTER TABLE services
 ADD COLUMN linked_inventory_item_id INTEGER REFERENCES inventory(item_id) ON DELETE SET NULL;
+
+-- 1. Add a column to the users table for the single insurance card
+ALTER TABLE users
+ADD COLUMN insurance_card_path VARCHAR(255);
+
+-- 2. Create a new table for multiple lab results/files, linked to a medical record
+CREATE TABLE patient_files (
+    file_id SERIAL PRIMARY KEY,
+    record_id INTEGER REFERENCES medical_records(record_id) ON DELETE CASCADE NOT NULL,
+    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE NOT NULL,
+    file_type VARCHAR(50) NOT NULL, -- e.g., 'Lab Result', 'X-Ray'
+    file_path VARCHAR(255) NOT NULL,
+    original_name VARCHAR(255),
+    uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
