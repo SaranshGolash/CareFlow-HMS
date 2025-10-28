@@ -20,9 +20,13 @@
                             <div class="col-md-12">
                                 <label for="patient_id" class="form-label">Patient Name<span class="required-asterisk">*</span>:</label>
                                 <select id="patient_id" name="patient_id" class="form-select form-control" required>
-                                    <option value="" disabled selected>Select Patient</option>
+                                    <option value="" disabled <%= !preselectedPatientId ? "selected" : "" %>>Select Patient</option>
                                     <% patients.forEach(patient => { %>
-                                        <option value="<%= patient.id %>"><%= patient.username %> (<%= patient.email %>)</option>
+                                    <option 
+                                        value="<%= patient.id %>" 
+                                        <%= (preselectedPatientId == patient.id) ? "selected" : "" %>>
+                                        <%= patient.username %> (<%= patient.email %>)
+                                    </option>
                                     <% }); %>
                                 </select>
                             </div>
