@@ -1756,11 +1756,11 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
             WHERE mr.record_id = $1
         `;
         const result = await db.query(query, [recordId]);
-        
-        // 4. Pass the fetched data (as a property named 'record') to the view
+
+        // 4. Log the action and render the view
+        logAudit(doctorId, 'DOCTOR_VIEWED_RECORD', recordId, req);
         res.render('view_record', { 
             record: result.rows[0] 
-            // Do NOT add any 'backUrl' logic here
         });
 
     } catch (err) {
