@@ -1,0 +1,51 @@
+:root {
+    --primary: #0d6efd;
+    --primary-light: #e7f1ff;
+    --border-radius: 12px;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.card {
+    border-radius: var(--border-radius);
+    border: 1px solid #eee;
+}
+
+.card-header {
+    font-weight: 600;
+}
+
+.table-responsive {
+    border-radius: var(--border-radius);
+    overflow: hidden;
+}
+
+.table thead th {
+    background-color: var(--primary-light);
+    border-bottom: 2px solid var(--primary);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.table tbody td {
+    vertical-align: middle;
+}
+
+/* Quick Action List Styling */
+.action-list .list-group-item {
+    font-weight: 500;
+    color: var(--primary);
+    font-size: 1.05rem;
+}
+.action-list .list-group-item i {
+    width: 20px;
+    margin-right: 8px;
+    text-align: center;
+}
+.action-list .list-group-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Badge colors */
+.badge.bg-success { background-color: #28a745 !important; }
+.badge.bg-warning { background-color: #ffc107 !important; color: #333; }
+.badge.bg-secondary { background-color: #6c757d !important; }
