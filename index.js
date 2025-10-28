@@ -1811,35 +1811,42 @@ app.get('/doctor/record/:id', isAuthenticated, isDoctorOrAdmin, async (req, res)
     const doctorId = req.user.id;
 
     try {
-        // 1. Fetch the record first to get the patient's user_id
-        const recordResult = await db.query('SELECT user_id FROM medical_records WHERE record_id = $1', [recordId]);
+        // 1. Fetch the record to get the patient's user_id
+        const recordResult = await db.query('SELECT * FROM medical_records WHERE record_id = $1', [recordId]);
         if (recordResult.rows.length === 0) {
             req.flash('error_msg', 'Medical record not found.');
             return res.redirect('/doctor/dashboard');
         }
         const patientId = recordResult.rows[0].user_id;
 
-        // 2. SECURITY CHECK: Verify the doctor has a relationship with this patient
+        // 2. SECURITY CHECK
         const hasRelationship = await checkDoctorPatientRelationship(doctorId, patientId);
         if (!hasRelationship) {
             req.flash('error_msg', 'Access Denied: You are not authorized to view this patient\'s record.');
             return res.redirect('/doctor/dashboard');
         }
         
-        // 3. Fetch full record details if authorized
-        const query = `
+        // 3. Fetch full record details
+        const recordQuery = `
             SELECT mr.*, u.username, a.doctor_name 
             FROM medical_records mr
             JOIN users u ON mr.user_id = u.id
             LEFT JOIN appointments a ON mr.appointment_id = a.id
             WHERE mr.record_id = $1
         `;
-        const result = await db.query(query, [recordId]);
+        const recordPromise = db.query(recordQuery, [recordId]);
+        
+        // --- NEW: Fetch linked files for this record ---
+        const filesPromise = db.query('SELECT * FROM patient_files WHERE record_id = $1 ORDER BY uploaded_at DESC', [recordId]);
 
-        // 4. Log the action and render the view
+        // 4. Resolve promises
+        const [mainRecordResult, filesResult] = await Promise.all([recordPromise, filesPromise]);
+
         logAudit(doctorId, 'DOCTOR_VIEWED_RECORD', recordId, req);
+        
         res.render('view_record', { 
-            record: result.rows[0] 
+            record: mainRecordResult.rows[0],
+            patientFiles: filesResult.rows // <-- Pass the files
         });
 
     } catch (err) {
