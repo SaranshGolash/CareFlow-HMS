@@ -1247,14 +1247,14 @@ app.get('/api/doctor-slots/:doctorId/:date', isAuthenticated, async (req, res) =
     const { doctorId, date } = req.params;
     
     try {
-        // This query now correctly casts TIME to TIMESTAMP before using generate_series
+        // This query correctly casts TIME to TIMESTAMP before using generate_series
         const query = `
             WITH schedule AS (
                 -- 1. Find the schedule for the given doctor and day
                 SELECT start_time, end_time 
                 FROM doctor_schedules
                 WHERE doctor_id = $1 
-                  AND day_of_week = EXTRACT(DOW FROM $2::DATE)
+                  AND day_of_week = EXTRACT(DOW FROM $2::DATE) -- $2 is the date string
             ),
             
             all_slots AS (
@@ -1266,6 +1266,7 @@ app.get('/api/doctor-slots/:doctorId/:date', isAuthenticated, async (req, res) =
                     '30 minutes'::interval
                 ) AS slot_timestamp -- This is now a full timestamp
                 FROM schedule s
+                -- This check prevents a crash if no schedule is found
                 WHERE s.start_time IS NOT NULL AND s.start_time < s.end_time 
             ),
             
