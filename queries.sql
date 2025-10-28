@@ -268,9 +268,6 @@ ADD COLUMN google_id VARCHAR(255) UNIQUE;
 ALTER TABLE prescriptions
 ADD COLUMN linked_inventory_item_id INTEGER REFERENCES inventory(item_id) ON DELETE SET NULL;
 
-ALTER TABLE services
-ADD COLUMN linked_inventory_item_id INTEGER REFERENCES inventory(item_id) ON DELETE SET NULL;
-
 -- 1. Add a column to the users table for the single insurance card
 ALTER TABLE users
 ADD COLUMN insurance_card_path VARCHAR(255);
