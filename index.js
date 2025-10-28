@@ -41,9 +41,9 @@ const pool = new pg.Pool({
     database: process.env.DB_NAME,
     password: process.env.DB_PASSWORD,
     port: process.env.DB_PORT,
-    ssl: {
+    /*ssl: {
         rejectUnauthorized: false
-    }
+    }*/
 });
 
 pool.connect()
@@ -1570,6 +1570,79 @@ app.post('/invoices/:id/pay-with-wallet', isAuthenticated, async (req, res) => {
         res.redirect(`/invoices/${invoiceId}`);
     } finally {
         client.release();
+    }
+});
+
+// --- DOCTOR MANAGEMENT ROUTES ---
+
+// GET: Complete Patient Management Hub
+app.get('/admin/patient/:id', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
+    const patientId = req.params.id;
+    
+    // Make sure we're not looking up an admin or doctor
+    const roleCheck = await db.query("SELECT role FROM users WHERE id = $1", [patientId]);
+    if (roleCheck.rows.length === 0 || roleCheck.rows[0].role !== 'user') {
+        req.flash('error_msg', 'This user is not a patient.');
+        return res.redirect('/admin/staff');
+    }
+
+    try {
+        // 1. Fetch User Info (including wallet)
+        const userPromise = db.query(
+            "SELECT id, username, email, phone, insurance_provider, policy_number, wallet_balance FROM users WHERE id = $1", 
+            [patientId]
+        );
+        
+        // 2. Fetch Upcoming Appointments
+        const apptPromise = db.query(
+            "SELECT * FROM appointments WHERE user_id = $1 AND appointment_date >= CURRENT_DATE ORDER BY appointment_date ASC LIMIT 5",
+            [patientId]
+        );
+
+        // 3. Fetch Recent Medical Records
+        const recordPromise = db.query(
+            "SELECT * FROM medical_records WHERE user_id = $1 ORDER BY record_date DESC LIMIT 5",
+            [patientId]
+        );
+
+        // 4. Fetch Outstanding Balance
+        const balancePromise = db.query(
+            "SELECT SUM(total_amount - amount_paid) AS outstanding_balance FROM invoices WHERE user_id = $1 AND status != 'Paid'",
+            [patientId]
+        );
+
+        // 5. Fetch Recent Wallet Transactions
+        const transactionPromise = db.query(
+            "SELECT * FROM wallet_transactions WHERE user_id = $1 ORDER BY created_at DESC LIMIT 5",
+            [patientId]
+        );
+
+        // Run all queries concurrently
+        const [
+            userResult, 
+            apptResult, 
+            recordResult, 
+            balanceResult, 
+            transactionResult
+        ] = await Promise.all([userPromise, apptPromise, recordPromise, balancePromise, transactionPromise]);
+        
+        // Format the data
+        const patient = userResult.rows[0];
+        const outstandingBalance = balanceResult.rows[0].outstanding_balance ? parseFloat(balanceResult.rows[0].outstanding_balance).toFixed(2) : '0.00';
+        patient.wallet_balance = parseFloat(patient.wallet_balance).toFixed(2);
+
+        res.render('admin_patient_view', {
+            patient: patient,
+            appointments: apptResult.rows,
+            records: recordResult.rows,
+            outstandingBalance: outstandingBalance,
+            transactions: transactionResult.rows
+        });
+
+    } catch (err) {
+        console.error('Error fetching patient hub data:', err);
+        req.flash('error_msg', 'Failed to load patient management hub.');
+        res.redirect('/admin/staff');
     }
 });
 
