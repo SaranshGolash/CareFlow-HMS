@@ -799,7 +799,9 @@ app.get('/dashboard', isAuthenticated, async (req, res) => {
 });
 
 app.get('/settings', isAuthenticated, (req, res) => {
-    res.render('settings');
+    res.render('settings', {
+        user: req.user
+    });
 });
 
 // POST: Handles Profile (username, email, insurance) Updates
@@ -2059,6 +2061,44 @@ app.post('/prescribe', isAuthenticated, isDoctorOrAdmin, async (req, res) => {
     } finally {
         // 10. ALWAYS release the client
         client.release();
+    }
+});
+
+// POST: Handles doctor's lab result upload
+// upload.single('labResult') must match the <input name="labResult">
+app.post('/doctor/upload-lab', isAuthenticated, isDoctorOrAdmin, upload.single('labResult'), async (req, res) => {
+    const { record_id, user_id, file_type } = req.body;
+    const doctorId = req.user.id;
+
+    if (!req.file) {
+        req.flash('error_msg', 'No file was uploaded.');
+        return res.redirect(`/doctor/record/${record_id}`);
+    }
+
+    const filePath = '/uploads/' + req.file.filename;
+    const originalName = req.file.originalname;
+
+    try {
+        // Security check: Ensure doctor has a relationship with this patient
+        const hasRelationship = await checkDoctorPatientRelationship(doctorId, user_id);
+        if (!hasRelationship) {
+            req.flash('error_msg', 'Access Denied: You are not authorized for this patient.');
+            return res.redirect('/doctor/dashboard');
+        }
+
+        // Insert the file record
+        await db.query(
+            'INSERT INTO patient_files (user_id, record_id, file_type, file_path, original_name) VALUES ($1, $2, $3, $4, $5)',
+            [user_id, record_id, file_type, filePath, originalName]
+        );
+        
+        req.flash('success_msg', 'Lab result uploaded and attached to record.');
+        res.redirect(`/doctor/record/${record_id}`);
+
+    } catch (err) {
+        console.error('Error saving lab result:', err);
+        req.flash('error_msg', 'Failed to attach file to database.');
+        res.redirect(`/doctor/record/${record_id}`);
     }
 });
 
