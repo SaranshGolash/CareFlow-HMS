@@ -2247,13 +2247,17 @@ app.post('/newrecord', isAuthenticated, isAdmin, async (req, res) => {
 
 // GET: Add Vitals Form (Admin Only)
 app.get('/add-vitals', isAuthenticated, isAdmin, async (req, res) => {
+    
+    const preselectedPatientId = req.query.patient_id;
+
     try {
         const patientResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
         const patients = patientResult.rows;
 
         res.render('add_vitals', { 
             patients: patients,
-            admin_username: req.user.username 
+            admin_username: req.user.username,
+            preselectedPatientId: preselectedPatientId 
         });
 
     } catch (err) {
@@ -2394,13 +2398,17 @@ app.get('/public-services', async (req, res) => {
 
 // GET: Display Invoice Generation Form (Admin Only)
 app.get('/new-invoice', isAuthenticated, isAdmin, async (req, res) => {
+
+    const preselectedPatientId = req.query.patient_id;
+
     try {
         const patientsResult = await db.query('SELECT id, username, email FROM users WHERE role = $1 ORDER BY username', ['user']);
         const services = await fetchServices(); 
         
         res.render('new_invoice', { 
             patients: patientsResult.rows,
-            services: services
+            services: services,
+            preselectedPatientId: preselectedPatientId
         });
     } catch (err) {
         console.error('Error loading invoice form data:', err);
