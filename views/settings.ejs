@@ -1,236 +1,162 @@
-<%- include('initials/header.ejs', { title: 'CareFlow - Sign Up' }) %>
+<%- include('initials/header.ejs', { title: 'Settings' }) %>
+<link rel="stylesheet" href="/styles/settings.css">
+    <div class="settings-container">
+        <div class="settings-card card shadow-md animate-on-scroll animate-slide-up">
+            <div class="card-body">
+                
+                <h3 class="card-title mb-4 text-primary animate-load-slide-up" style="animation-delay: 0.1s;">
+                    <i class="fas fa-user-cog me-2"></i> Profile Settings
+                </h3>
 
-<link rel="stylesheet" href="/styles/signup.css">
-
-<main class="signup-page">
-    <div class="signup-wrap">
-        <section class="signup-left animate-on-scroll animate-slide-up" style="transition-delay: 0.1s;" aria-hidden="true">
-            <div class="brand">
-                <h1>CareFlow</h1>
-                <p class="tag">Patient-first healthcare management</p>
-            </div>
-            <div class="hero-illustration" role="img" aria-labelledby="signupIllustrationTitle">
-                <svg id="signupIllustration" width="320" height="220" viewBox="0 0 320 220" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#6f42c1" stop-opacity="0.9"/><stop offset="1" stop-color="#0d6efd" stop-opacity="0.9"/></linearGradient></defs>
-                    <rect rx="18" width="320" height="220" fill="url(#g)"></rect>
-                    <g transform="translate(28,30)" fill="#fff" opacity="0.18"><circle cx="40" cy="40" r="40"></circle><rect x="100" y="10" width="160" height="8" rx="4"></rect><rect x="100" y="36" width="120" height="8" rx="4"></rect><rect x="100" y="62" width="80" height="8" rx="4"></rect></g>
-                </svg>
-            </div>
-            <p class="left-note">Join CareFlow to manage appointments, track patients, and streamline clinic workflows.</p>
-        </section>
-
-        <aside class="signup-right animate-on-scroll animate-slide-up" style="transition-delay: 0s;" aria-label="Create account form area">
-            <div class="card card-3d-hover" role="region" aria-labelledby="createAccountTitle">
-                <div class="card-body">
-                    <h2 id="createAccountTitle" class="card-title animate-load-slide-up" style="animation-delay: 0.2s;">Create an account</h2>
+                <form action="/settings/update" method="POST" class="row g-4 animate-load-slide-up" style="animation-delay: 0.2s;">
+                    <input type="hidden" name="user_id" value="<%= user.id %>">
                     
-                    <form action="/signup" method="POST" id="signupForm" novalidate class="animate-load-slide-up" style="animation-delay: 0.3s;">
-                        <div class="form-row">
-                            <label for="signupUsername" class="form-label">Full name</label>
-                            <input id="signupUsername" name="username" type="text" class="form-control" placeholder="Jane Doe" required autocomplete="name" aria-required="true">
-                        </div>
+                    <div class="col-12">
+                        <h5 class="section-title">Account Details</h5>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="username" class="form-label">Username</label>
+                        <input id="username" name="username" type="text" class="form-control" value="<%= user.username %>" required>
+                    </div>
 
-                        <div class="form-row two-col">
-                            <div>
-                                <label for="signupEmail" class="form-label">Email</label>
-                                <input id="signupEmail" name="email" type="email" class="form-control" placeholder="you@email.com" required autocomplete="email" aria-required="true">
-                            </div>
-                            <div>
-                                <label for="phone" class="form-label">Phone</label>
-                                <input id="phone" name="phone" type="tel" class="form-control" placeholder="9876543210" pattern="[0-9]{7,15}" autocomplete="tel" aria-describedby="phoneHelp">
-                                <div id="phoneHelp" class="form-text">Optional — numbers only, 7–15 digits.</div>
-                            </div>
-                        </div>
+                    <div class="col-md-6">
+                        <label for="email" class="form-label">Email</label>
+                        <input id="email" name="email" type="email" class="form-control" value="<%= user.email %>" required>
+                    </div>
+                    
+                    <div class="col-12 mt-4">
+                        <h5 class="section-title">Insurance Details</h5>
+                    </div>
 
-                        <div class="form-row two-col">
-                            <div>
-                                <label for="password" class="form-label">Password</label>
-                                <div class="input-with-icon">
-                                    <input id="password" name="password" type="password" class="form-control" minlength="6" required autocomplete="new-password" aria-required="true" aria-describedby="pwHelp" placeholder="Enter password">
-                                    <button type="button" class="pw-toggle-icon" data-target="password" aria-pressed="false" aria-label="Show password">
-                                        <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
-                                        <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.1 20.1 0 015-5m3-1.1A9 9 0 0112 5c7 0 11 7 11 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </button>
-                                </div>
-                            </div>
-                            <div>
-                                <label for="confirmPassword" class="form-label">Confirm password</label>
-                                <div class="input-with-icon">
-                                    <input id="confirmPassword" name="confirm_password" type="password" class="form-control" minlength="6" required autocomplete="new-password" aria-required="true" placeholder="Confirm password">
-                                    <button type="button" class="pw-toggle-icon" data-target="confirmPassword" aria-pressed="false" aria-label="Show confirm password">
-                                        <svg class="icon-eye" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
-                                        <svg class="icon-eye-off" width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M17.94 17.94A10.94 10.94 0 0112 19c-7 0-11-7-11-7a20.1 20.1 0 015-5m3-1.1A9 9 0 0112 5c7 0 11 7 11 7" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M1 1l22 22" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="col-md-6">
+                        <label for="insurance_provider" class="form-label">Insurance Provider</label>
+                        <input id="insurance_provider" name="insurance_provider" type="text" class="form-control" 
+                               value="<%= user.insurance_provider || '' %>" placeholder="e.g., United Healthcare">
+                    </div>
 
-                        <div class="form-row">
-                            <div class="pw-meter" aria-hidden="true">
-                                <div id="pwStrength" class="pw-strength"></div>
-                            </div>
-                            <div id="pwNote" class="pw-note" aria-live="polite"></div>
-                        </div>
+                    <div class="col-md-6">
+                        <label for="policy_number" class="form-label">Policy / Member ID</label>
+                        <input id="policy_number" name="policy_number" type="text" class="form-control" 
+                               value="<%= user.policy_number || '' %>" placeholder="e.g., XZ123456789">
+                    </div>
+                    
+                    <div class="col-12 text-end pt-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-save me-2"></i> Save Profile
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-5">
 
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary" id="signupBtn" disabled>
-                                <span id="signupBtnText">Create account</span>
+                <form action="/settings/upload-insurance" method="POST" enctype="multipart/form-data" class="row g-4 animate-load-slide-up" style="animation-delay: 0.3s;">
+                    <div class="col-12">
+                        <h5 class="section-title">Insurance Card</h5>
+                        <p class="text-muted small">Upload a clear image (JPG, PNG) or PDF of your insurance card.</p>
+        
+                        <% if (user.insurance_card_path) { %>
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle me-2"></i> Card on file: 
+                                <a href="<%= user.insurance_card_path %>" target="_blank" class="alert-link">View Uploaded Card</a>
+                            </div>
+                        <% } %>
+                    </div>
+    
+                    <div class="col-12">
+                        <label for="insuranceCard" class="form-label">Upload New/Replacement Card</label>
+                        <input type="file" class="form-control" id="insuranceCard" name="insuranceCard" accept=".pdf,.png,.jpg,.jpeg">
+                    </div>
+    
+                    <div class="col-12 text-end pt-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-upload me-2"></i> Upload Card
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-5">
+                
+                <% if (!user.password_hash) { %>
+                
+                    <form action="/settings/create-password" method="POST" class="row g-4 animate-load-slide-up" style="animation-delay: 0.4s;" id="createPasswordForm">
+                        <div class="col-12">
+                            <h5 class="section-title">Create a Manual Password</h5>
+                            <p class="text-muted small">Your account is linked to a social provider (Google). Create a password here if you wish to log in with your email as well.</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="new_password_create" class="form-label">New Password</label>
+                            <input id="new_password_create" name="new_password" type="password" class="form-control" placeholder="Min. 6 characters" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirm_new_password_create" class="form-label">Confirm New Password</label>
+                            <input id="confirm_new_password_create" name="confirm_new_password" type="password" class="form-control" placeholder="Re-enter new password" required>
+                        </div>
+                        <div class="col-12 text-end pt-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-key me-2"></i> Set Password
                             </button>
-                            <a href="/" class="btn btn-light">Cancel</a>
                         </div>
-                        <p class="small muted">By creating an account you agree to our <a href="/terms" class="muted-link">Terms</a> and <a href="/privacy" class="muted-link">Privacy Policy</a>.</p>
+                    </form>
+                
+                <% } else { %>
+
+                    <form action="/settings/password" method="POST" class="row g-4 animate-load-slide-up" style="animation-delay: 0.4s;" id="changePasswordForm">
+                        <input type="hidden" name="user_id" value="<%= user.id %>">
+                        <div class="col-12">
+                            <h5 class="section-title">Change Password</h5>
+                        </div>
+                        <div class="col-12 verification-block p-3">
+                            <label for="current_password" class="form-label text-danger">Current Password*</label>
+                            <input id="current_password" name="current_password" type="password" class="form-control" required placeholder="Enter your current password">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="new_password_change" class="form-label">New Password</label>
+                            <input id="new_password_change" name="new_password" type="password" class="form-control" placeholder="Min. 6 characters">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="confirm_new_password_change" class="form-label">Confirm New Password</label>
+                            <input id="confirm_new_password_change" name="confirm_new_password" type="password" class="form-control" placeholder="Re-enter new password">
+                        </div>
+                        <div class="col-12 text-end pt-3">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-lock me-2"></i> Change Password
+                            </button>
+                        </div>
                     </form>
 
-                    <div class="divider"><span>or</span></div>
-                    <div class="socials" style="margin-bottom: 1.5rem;">
-                         <a href="/auth/google" class="btn btn-social btn-google">
-                            <i class="fab fa-google me-2"></i> Sign up with Google
-                        </a>
-                    </div>
-
-                    <div class="alt animate-load-slide-up" style="animation-delay: 0.4s;">
-                        <p>Already have an account? <a href="/login" class="link-primary">Log in</a></p>
-                    </div>
+                <% } %>
                 </div>
-            </div>
-        </aside>
+        </div>
     </div>
-</main>
 
-<script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        console.log("Inline script on signup.ejs is running.");
-
-        // --- Initialize EmailJS ---
-        try {
-            emailjs.init({
-                publicKey: "yCJKnmiujlOeKNAtD", // Replace with your Public Key
-            });
-            console.log("EmailJS Initialized.");
-        } catch(e) {
-            console.error("Failed to initialize EmailJS:", e);
-        }
-
-        // --- Get All Form Elements ---
-        const signupForm = document.getElementById('signupForm');
-        const signupBtn = document.getElementById('signupBtn');
-        const signupUsername = document.getElementById('signupUsername');
-        const signupEmail = document.getElementById('signupEmail');
-        const passwordInput = document.getElementById('password');
-        const confirmPasswordInput = document.getElementById('confirmPassword');
-        const pwNote = document.getElementById('pwNote');
-        const strengthBar = document.getElementById('pwStrength');
-
-        // Safety check for all elements
-        if (!signupForm || !passwordInput || !confirmPasswordInput || !signupBtn || !pwNote || !strengthBar) {
-            console.error("One or more critical form elements are missing! Check all IDs.");
-            return;
-        }
-
-        // --- Password Scoring Logic ---
-        function scorePassword(s) {
-            let score = 0;
-            if (!s) return score;
-            if (s.length >= 6) score += 1;
-            if (s.length >= 10) score += 1;
-            if (/[A-Z]/.test(s)) score += 1;
-            if (/[0-9]/.test(s)) score += 1;
-            if (/[^A-Za-z0-9]/.test(s)) score += 1;
-            return score;
-        }
-
-        // --- Validation & UI Update Logic ---
-        function updateValidation() {
-            const password = passwordInput.value;
-            const confirmPassword = confirmPasswordInput.value;
-            const score = scorePassword(password);
-
-            if (strengthBar) {
-                const pct = Math.round((score / 5) * 100);
-                strengthBar.style.width = pct + '%';
-                if (score <= 1) strengthBar.style.background = '#dc3545';
-                else if (score <= 3) strengthBar.style.background = '#ffc107';
-                else strengthBar.style.background = '#198754';
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Validator for the "Change Password" form
+            const changePasswordForm = document.getElementById('changePasswordForm');
+            if (changePasswordForm) {
+                changePasswordForm.addEventListener('submit', function(e) {
+                    const newPass = document.getElementById('new_password_change').value;
+                    const confirmPass = document.getElementById('confirm_new_password_change').value;
+                    if (newPass && newPass !== confirmPass) {
+                        e.preventDefault();
+                        alert('Error: New Passwords do not match.');
+                    }
+                });
             }
 
-            let noteText = '';
-            let btnDisabled = true;
-
-            if (password.length > 0 && password.length < 6) {
-                noteText = 'Password must be at least 6 characters.';
-            } else if (confirmPassword.length > 0 && password !== confirmPassword) {
-                noteText = 'Passwords do not match.';
-            } else if (password.length >= 6 && password === confirmPassword) {
-                noteText = 'Passwords match.';
-                btnDisabled = false;
-            } else if (password.length >= 6) {
-                 noteText = 'Please confirm your password.';
+            // Validator for the "Create Password" form
+            const createPasswordForm = document.getElementById('createPasswordForm');
+            if (createPasswordForm) {
+                createPasswordForm.addEventListener('submit', function(e) {
+                    const newPass = document.getElementById('new_password_create').value;
+                    const confirmPass = document.getElementById('confirm_new_password_create').value;
+                    if (newPass && newPass !== confirmPass) {
+                        e.preventDefault();
+                        alert('Error: Passwords do not match.');
+                    }
+                });
             }
-
-            if (pwNote) {
-                pwNote.textContent = noteText;
-            }
-            signupBtn.disabled = btnDisabled;
-        }
-
-        passwordInput.addEventListener('input', updateValidation);
-        confirmPasswordInput.addEventListener('input', updateValidation);
-        
-        // --- Password Visibility Toggle Logic ---
-        function initToggleButtons() {
-            const toggles = document.querySelectorAll('.pw-toggle-icon');
-            toggles.forEach(t => {
-                const targetId = t.getAttribute('data-target');
-                const input = document.getElementById(targetId);
-                if (input) {
-                    t.addEventListener('click', function () {
-                        const isHidden = input.type === 'password';
-                        input.type = isHidden ? 'text' : 'password';
-                        t.classList.toggle('showing', isHidden);
-                    });
-                }
-            });
-        }
-        initToggleButtons();
-
-        // --- Email Sending Logic ---
-        function sendWelcomeEmail() {
-            const serviceID = 'service_p617k5f';   
-            const templateID = 'template_fr6wcec'; 
-
-            const templateParams = {
-                username: signupUsername.value,
-                email: signupEmail.value,
-            };
-
-            if (typeof emailjs !== 'undefined') {
-                console.log("Attempting to send email via EmailJS...");
-                emailjs.send(serviceID, templateID, templateParams)
-                    .then(function(response) {
-                       console.log('EmailJS SUCCESS!', response.status, response.text);
-                    }, function(error) {
-                       console.error('EmailJS FAILED...', error);
-                    });
-            } else {
-                console.error("EmailJS library is not loaded or initialized. Cannot send email.");
-            }
-        }
-
-        // --- Form Submission Handler ---
-        signupForm.addEventListener('submit', function (e) {
-            if (signupBtn.disabled) {
-                e.preventDefault();
-                return;
-            }
-            sendWelcomeEmail();
-            signupBtn.disabled = true;
-            document.getElementById('signupBtnText').textContent = 'Creating…';
         });
-
-        updateValidation(); // Initial check on page load
-    });
-</script>
-
+    </script>
 <%- include('initials/footer.ejs') %>
