@@ -662,6 +662,7 @@ app.post('/signup', async (req, res, next) => { // Added 'next'
     const { username, email, password, phone } = req.body;
     const saltRounds = 10;
 
+    // Server-side validation
     if (password !== req.body.confirm_password) {
         req.flash('error_msg', 'Passwords do not match.');
         return res.redirect('/signup');
@@ -676,17 +677,14 @@ app.post('/signup', async (req, res, next) => { // Added 'next'
             RETURNING * `;
         const result = await db.query(query, [username, email, password_hash, phone || null]);
         const newUser = result.rows[0];
-
-        // --- CRITICAL FIX: Use req.login() instead of req.session.user ---
         // This logs the user in via Passport's system
         req.login(newUser, (err) => {
             if (err) { return next(err); }
 
-            // Send welcome email (if you have this logic)
-            // await sendWelcomeEmail(newUser.email, newUser.username);
+            // (The frontend EmailJS has already sent the email, so no backend email logic is needed here)
 
             req.flash('success_msg', 'Registration successful! Welcome to CareFlow HMS.');
-            res.redirect('/');
+            res.redirect('/'); // Redirect to the homepage
         });
         // -------------------------------------------------------------
 
