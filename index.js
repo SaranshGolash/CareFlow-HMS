@@ -657,12 +657,11 @@ app.get('/signup', (req, res) => {
     res.render('signup');
 });
 
-app.post('/signup', async (req, res) => {
-    // FIX: Destructure the new 'phone' field from the request body
+// POST: Handle new user signup (Standardized with Passport)
+app.post('/signup', async (req, res, next) => { // Added 'next'
     const { username, email, password, phone } = req.body;
     const saltRounds = 10;
 
-    // Basic validation for password match on the server-side
     if (password !== req.body.confirm_password) {
         req.flash('error_msg', 'Passwords do not match.');
         return res.redirect('/signup');
@@ -671,26 +670,26 @@ app.post('/signup', async (req, res) => {
     try {
         const password_hash = await bcrypt.hash(password, saltRounds);
 
-        // FIX: Update the INSERT query to include the phone number
         const query = `
             INSERT INTO users (username, email, password_hash, phone) 
             VALUES ($1, $2, $3, $4) 
-            RETURNING id, username, email, role
-        `;
-        // Use 'phone || null' to handle the optional field
+            RETURNING * `;
         const result = await db.query(query, [username, email, password_hash, phone || null]);
         const newUser = result.rows[0];
 
-        // Log the user in immediately
-        req.session.user = {
-            id: newUser.id,
-            username: newUser.username,
-            email: newUser.email,
-            role: newUser.role
-        };
+        // --- CRITICAL FIX: Use req.login() instead of req.session.user ---
+        // This logs the user in via Passport's system
+        req.login(newUser, (err) => {
+            if (err) { return next(err); }
 
-        req.flash('success_msg', 'Registration successful! Welcome to CareFlow HMS.');
-        res.redirect('/');
+            // Send welcome email (if you have this logic)
+            // await sendWelcomeEmail(newUser.email, newUser.username);
+
+            req.flash('success_msg', 'Registration successful! Welcome to CareFlow HMS.');
+            res.redirect('/');
+        });
+        // -------------------------------------------------------------
+
     } catch (err) {
         if (err.code === '23505') {
             req.flash('error_msg', 'Username or email already exists.');
