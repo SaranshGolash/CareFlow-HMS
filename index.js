@@ -63,20 +63,23 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
+app.set('trust proxy', 1);
 
 // --- Session Configuration (with PostgreSQL Store) ---
-
 app.use(session({
     store: new pgSession({
         pool: db, // Use your existing pg.Pool (named 'db')
-        tableName: 'user_sessions' // A new table to store sessions
+        tableName: 'user_sessions', // The table we will create in Step 3
+        createTableIfMissing: true // Automatically create the table
     }),
-    secret: process.env.SESSION_SECRET, // Use the one from your .env
+    secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
         maxAge: 1000 * 60 * 60 * 24, // 24 hours
-        secure: process.env.NODE_ENV === 'production'
+        secure: true, // Requires HTTPS (Vercel provides this)
+        httpOnly: true,
+        sameSite: 'lax' // Good for security
     }
 }));
 
