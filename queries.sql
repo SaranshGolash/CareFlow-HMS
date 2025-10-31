@@ -89,9 +89,6 @@ CREATE TABLE invoice_items (
 ALTER TABLE medical_records
 ADD COLUMN invoice_id INTEGER REFERENCES invoices(invoice_id) ON DELETE SET NULL;
 
-ALTER TABLE invoices
-ADD COLUMN stripe_payment_intent_id VARCHAR(100);
-
 -- Create a table for secure messages/support tickets
 CREATE TABLE secure_messages (
     message_id SERIAL PRIMARY KEY,
@@ -282,3 +279,11 @@ CREATE TABLE patient_files (
     original_name VARCHAR(255),
     uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE "user_sessions" (
+  "sid" varchar NOT NULL COLLATE "default",
+  "sess" json NOT NULL,
+  "expire" timestamp(6) NOT NULL
+)
+WITH (OIDS=FALSE);
+ALTER TABLE "user_sessions" ADD CONSTRAINT "user_sessions_pkey" PRIMARY KEY ("sid") NOT DEFERRABLE INITIALLY IMMEDIATE;

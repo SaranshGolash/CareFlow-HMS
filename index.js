@@ -63,9 +63,15 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
 
-// Session configuration
+// --- Session Configuration (with PostgreSQL Store) ---
+const pgSession = require('connect-pg-simple')(session);
+
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key-very-secure',
+    store: new pgSession({
+        pool: db, // Use your existing pg.Pool (named 'db')
+        tableName: 'user_sessions' // A new table to store sessions
+    }),
+    secret: process.env.SESSION_SECRET, // Use the one from your .env
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -245,9 +251,9 @@ const fetchInvoiceDetails = async (invoiceId, userId = null) => {
 // --- Multer Configuration for File Uploads ---
 // Ensure the /public/uploads directory exists
 const uploadDir = path.join(__dirname, 'public/uploads');
-if (!fs.existsSync(uploadDir)){
+/*if (!fs.existsSync(uploadDir)){
     fs.mkdirSync(uploadDir, { recursive: true });
-}
+}*/
 
 // Configure Multer's storage engine
 const storage = multer.diskStorage({

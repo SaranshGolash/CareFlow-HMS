@@ -23,6 +23,7 @@
     "@google/generative-ai": "^0.24.1",
     "bcrypt": "^6.0.0",
     "connect-flash": "^0.1.1",
+    "connect-pg-simple": "^10.0.0",
     "dotenv": "^17.2.2",
     "ejs": "^3.1.10",
     "express": "^5.1.0",
