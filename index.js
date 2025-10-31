@@ -109,7 +109,7 @@ passport.deserializeUser(async (id, done) => {
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: "https://careflow-hms.vercel.app/auth/google/callback"
+    callbackURL: "https://care-flow-hms.vercel.app/auth/google/callback"
   },
   async (accessToken, refreshToken, profile, done) => {
     // This is the core "findOrCreate" logic
