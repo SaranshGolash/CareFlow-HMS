@@ -11,6 +11,7 @@ const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const multer = require('multer');
 const fs = require('fs');
+const pgSession = require('connect-pg-simple')(session);
 require('dotenv').config();
 
 // FIX: Automatically convert Postgres NUMERIC (type code 1700) to JavaScript float
@@ -64,7 +65,6 @@ app.use(express.json());
 app.use(methodOverride('_method'));
 
 // --- Session Configuration (with PostgreSQL Store) ---
-const pgSession = require('connect-pg-simple')(session);
 
 app.use(session({
     store: new pgSession({
